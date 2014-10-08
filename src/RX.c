@@ -19,6 +19,7 @@
 #include <stdbool.h>
 
 #include "RX.h"
+#include "time.h"
 
 #include "inc/hw_memmap.h"
 #include "inc/hw_ints.h"
@@ -37,13 +38,14 @@ static volatile uint16_t rxChannel[MAX_CHANNELS];
 void Timer1Handler(void) {
 	static uint8_t channelIndex = 0;
 	static uint32_t prev = 0;
+	static uint32_t prev_millis = 0; // TODO: Remove
 	
 	TimerIntClear(WTIMER1_BASE, TIMER_CAPA_EVENT); // Clear interrupt
 
 	uint32_t curr = TimerValueGet(WTIMER1_BASE, TIMER_A); // Read capture value
 	uint32_t diff = curr - prev; // Calculate diff
 	uint32_t diff_us = 1000000UL / (SysCtlClockGet() / diff); // Convert to us
-    prev = curr; // Store previous value
+	prev = curr; // Store previous value
 
 	// TODO: Should I just change witch egde it triggers on?
 	static bool last_edge = false;
@@ -51,8 +53,7 @@ void Timer1Handler(void) {
 
 	if (last_edge && !edge) { // Check that we are going from a positive to falling egde
 #if 0
-		UARTprintf("Channel: %u %u %d\n", period, diff_us,  millis);
-		millis = 0;
+		UARTprintf("%u %u %d\n", diff, diff_us,  micros() - prev_millis);
 #else
 		if (diff_us > 2700) { // Check if sync pulse is received - see: https://github.com/multiwii/baseflight/blob/master/src/drv_pwm.c
 			channelIndex = 0; // Reset channel index
@@ -74,6 +75,7 @@ void Timer1Handler(void) {
 	}
 
 	last_edge = edge;
+	prev_millis = micros();
 }
 
 void initRX(void) {

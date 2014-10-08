@@ -20,13 +20,13 @@
 
 #include "RX.h"
 #include "UART.h"
+#include "time.h"
 
 #include "inc/hw_memmap.h"
 #include "inc/tm4c123gh6pm.h"
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/sysctl.h"
-#include "driverlib/systick.h"
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 
 #if 0
@@ -39,27 +39,9 @@
 #define GPIO_RX_PIN       GPIO_PIN_4
 #endif
 
-#define delay(ms)         (SysCtlDelay(SysCtlClockGet() / 3000UL * (ms - 1))) // Delay macro used to set a delay in ms - TOOD: Explain -1
-
-volatile uint32_t millis;
-
-void SycTickHandler() {
-	millis++;
-}
-
-void SysTickbegin() {
-	SysTickPeriodSet(SysCtlClockGet() / 100000); // 1000 for miliseconds - TODO: Set back to 1000
-	SysTickIntRegister(SycTickHandler);
-	SysTickIntEnable();
-	SysTickEnable();
-}
-
 void RxHandler(void) {
 	GPIOIntClear(GPIO_RX_BASE, GPIO_RX_PIN); // Clear interrupt source
-/*
-	UARTprintf("Millis: %d\n", millis);
-	millis = 0;
-*/
+	//UARTprintf("Millis: %d\n", millis());
 }
 
 void initIO(void) {
@@ -81,14 +63,14 @@ int main(void) {
 	SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ); // Set clock to 80MHz (400MHz(PLL) / 2 / 2.5 = 80 MHz)
 
 	initUART();
-	SysTickbegin();
+	initTime();
 	initRX();
 	initIO();
 
 	IntMasterEnable();
 
-	UARTprintf("Started\r\n");
-	UARTprintf("CLK %d\r\n", SysCtlClockGet());
+	UARTprintf("Started\n");
+	UARTprintf("CLK %d\n", SysCtlClockGet());
 
 	while (1) {
 	}

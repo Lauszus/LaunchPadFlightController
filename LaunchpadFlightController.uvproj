@@ -422,6 +422,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\UART.c</FilePath>
             </File>
+            <File>
+              <FileName>time.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\time.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
