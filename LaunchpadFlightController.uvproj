@@ -412,6 +412,16 @@
               <FileType>4</FileType>
               <FilePath>.\lib\driverlib\rvmdk\driverlib.lib</FilePath>
             </File>
+            <File>
+              <FileName>RX.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\RX.c</FilePath>
+            </File>
+            <File>
+              <FileName>UART.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\UART.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
