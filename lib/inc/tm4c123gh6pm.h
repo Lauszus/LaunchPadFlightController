@@ -45,6 +45,8 @@
 // Interrupt assignments
 //
 //*****************************************************************************
+
+// Note that I commented these out, as they are defined in hw_ints.h
 /*
 #define INT_GPIOA               16          // GPIO Port A
 #define INT_GPIOB               17          // GPIO Port B
