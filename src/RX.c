@@ -38,7 +38,7 @@ static volatile uint16_t rxChannel[MAX_CHANNELS];
 void Timer1Handler(void) {
 	static uint8_t channelIndex = 0;
 	static uint32_t prev = 0;
-	static uint32_t prev_millis = 0; // TODO: Remove
+	static uint32_t prev_micros = 0; // TODO: Remove
 	
 	TimerIntClear(WTIMER1_BASE, TIMER_CAPA_EVENT); // Clear interrupt
 
@@ -75,7 +75,7 @@ void Timer1Handler(void) {
 	}
 
 	last_edge = edge;
-	prev_millis = micros();
+	prev_micros = micros();
 }
 
 void initRX(void) {

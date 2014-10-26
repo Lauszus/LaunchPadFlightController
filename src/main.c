@@ -21,6 +21,7 @@
 #include "RX.h"
 #include "UART.h"
 #include "time.h"
+#include "ppm.h"
 
 #include "inc/hw_memmap.h"
 #include "inc/tm4c123gh6pm.h"
@@ -59,20 +60,37 @@ void initIO(void) {
 
 int main(void) {
 	// Set the clocking to run directly from the external crystal/oscillator.
-	//SysCtlClockSet(SYSCTL_SYSDIV_1 | SYSCTL_USE_OSC | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ);
 	SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ); // Set clock to 80MHz (400MHz(PLL) / 2 / 2.5 = 80 MHz)
 
 	initUART();
 	initTime();
 	initRX();
 	initIO();
+	initPPM();
 
 	IntMasterEnable();
+	
+	delay(100); // Wait a little for everything to initialize
 
-	UARTprintf("Started\n");
 	UARTprintf("CLK %d\n", SysCtlClockGet());
+#if 0
+	const uint16_t min = getPeriod() / (20000/1060); // From SimonK firmware
+	const uint16_t max = getPeriod() / (20000/1860); // From SimonK firmware
+#else
+	const uint16_t min = 1060; // From SimonK firmware
+	const uint16_t max = 1860; // From SimonK firmware
+#endif
+	uint16_t width = min;
+
+	UARTprintf("min: %d, max: %d, period: %d\n", min, max, getPeriod());
 
 	while (1) {
+		UARTprintf("Width: %d\n", width);
+		//writePPMWidth(width++);
+		writePPMUs(width++);
+		if (width > max)
+			width = min;
+		delay(2);
 	}
 }
 
