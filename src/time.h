@@ -22,10 +22,10 @@
 extern "C" {
 #endif
 
-extern void initTime(void);
-extern void delay(uint32_t ms);
-extern uint32_t millis(void);
-extern uint32_t micros(void);
+void initTime(void);
+void delay(uint32_t ms);
+uint32_t millis(void);
+uint32_t micros(void);
 
 #ifdef __cplusplus
 }

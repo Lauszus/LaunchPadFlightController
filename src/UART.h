@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-extern void initUART(void);
+void initUART(void);
 
 #ifdef __cplusplus
 }

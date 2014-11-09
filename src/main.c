@@ -95,7 +95,8 @@ int main(void) {
 }
 
 // TODO:
-// Compare CPPM values with measured values from oscilloscope
-// SPI/MPU-6050
-// PPM output signal
-// EEPROM
+	// Compare CPPM values with measured values from oscilloscope
+	// SPI/MPU-6050
+	// PPM output signal
+		// Sync all PPM output signals
+	// EEPROM

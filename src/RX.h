@@ -21,8 +21,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-	
-extern void initRX(void);
+
+void initRX(void);
 
 #ifdef __cplusplus
 }

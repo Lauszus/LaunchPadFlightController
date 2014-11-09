@@ -22,11 +22,11 @@
 extern "C" {
 #endif
 
-extern void initPPM(void);
-extern void writePPMUs(uint16_t us);
-extern void writePPMWidth(uint16_t width);
-extern uint16_t getPeriod(void);
-	
+void initPPM(void);
+void writePPMUs(uint16_t us);
+void writePPMWidth(uint16_t width);
+uint16_t getPeriod(void);
+
 #ifdef __cplusplus
 }
 #endif

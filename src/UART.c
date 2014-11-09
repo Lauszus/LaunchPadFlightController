@@ -36,10 +36,10 @@ void initUART(void) {
 	GPIOPinConfigure(GPIO_PA0_U0RX);
 	GPIOPinConfigure(GPIO_PA1_U0TX);
 
-  // Since GPIO A0 and A1 are used for the UART function, they must be
-  // configured for use as a peripheral function (instead of GPIO).
-  GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+	// Since GPIO A0 and A1 are used for the UART function, they must be
+	// configured for use as a peripheral function (instead of GPIO).
+	GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
 
-	UARTStdioConfig(0, 115200, SysCtlClockGet());
+	UARTStdioConfig(0, 115200, SysCtlClockGet()); // Mode is set to 8N1
 	UARTEchoSet(false);
 }
