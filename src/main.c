@@ -22,6 +22,7 @@
 #include "UART.h"
 #include "time.h"
 #include "ppm.h"
+#include "MPU6500.h"
 
 #include "inc/hw_memmap.h"
 #include "inc/tm4c123gh6pm.h"
@@ -67,6 +68,11 @@ int main(void) {
 	initRX();
 	initIO();
 	initPPM();
+	
+	delay(100);
+	
+	//initMPU6500();
+	initMPU6500_i2c();
 
 	IntMasterEnable();
 	
