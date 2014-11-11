@@ -437,6 +437,16 @@
               <FileType>1</FileType>
               <FilePath>.\src\MPU6500.c</FilePath>
             </File>
+            <File>
+              <FileName>KalmanX.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\KalmanX.c</FilePath>
+            </File>
+            <File>
+              <FileName>KalmanY.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\KalmanY.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

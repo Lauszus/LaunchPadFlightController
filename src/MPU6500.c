@@ -20,6 +20,8 @@
 
 #include "MPU6500.h"
 #include "time.h"
+#include "KalmanX.h"
+#include "KalmanY.h"
 
 #include "inc/hw_memmap.h"
 #include "driverlib/gpio.h"
@@ -33,6 +35,61 @@
 
 #define SLAVE_ADDRESS	0x68
 #define RAD_TO_DEG 		57.295779513082320876798154814105f
+
+void printMPU6050Debug(void) {
+	float gyroRate[3];
+	static float gyroAngle[3] = { 0, 0, 0 };
+	int16_t accData[3], gyroData[3], gyroZero[3];
+
+	delay(100);
+
+	updateMPU6500(accData, gyroZero); // Get gyro zero values
+
+	delay(100);
+
+	KalmanXInit();
+	KalmanYInit();
+
+	while (1) {
+		updateMPU6500(accData, gyroData);
+
+		static uint32_t timer = 0;
+		float dt = (float)(micros() - timer) / 1000000.0f;
+		timer = micros();
+
+		for (uint8_t axis = 0; axis < 3; axis++) {
+			gyroRate[axis] = (float)(gyroData[axis] - gyroZero[axis]) / 16.4f;
+			gyroAngle[axis] += gyroRate[axis] * dt; // Gyro angle is only used for debugging
+		}
+
+		float roll  = atan2f(accData[1], accData[2]) * RAD_TO_DEG;
+		float pitch = atanf(-accData[0] / sqrtf(accData[1] * accData[1] + accData[2] * accData[2])) * RAD_TO_DEG;
+
+		static float compAngleX, compAngleY;
+		
+		float KalmanX = getAngleX(roll, gyroRate[0], dt);
+		float KalmanY = getAngleY(pitch, gyroRate[1], dt);
+
+		compAngleX = 0.93f * (compAngleX + gyroRate[0] * dt) + 0.07f * roll; // Calculate the angle using a Complimentary filter
+		compAngleY = 0.93f * (compAngleY + gyroRate[1] * dt) + 0.07f * pitch;
+
+#if 0
+		UARTprintf("%d\t%d\t\t", (int16_t)KalmanX, (int16_t)KalmanY);
+		UARTprintf("%d\t%d\t\t", (int16_t)compAngleX, (int16_t)compAngleY);
+		UARTprintf("%d\t%d\t\t", (int16_t)roll, (int16_t)pitch);
+		UARTprintf("%d\t%d\t%d\n", (int16_t)gyroAngle[0], (int16_t)gyroAngle[1], (int16_t)gyroAngle[2]);
+#else
+		UARTprintf("%d\t%d\t", (int16_t)roll, (int16_t)gyroAngle[0]);
+		delay(1);
+		UARTprintf("%d\t%d\t\t", (int16_t)compAngleX, (int16_t)KalmanX);
+		delay(1);
+		UARTprintf("%d\t%d\t", (int16_t)pitch, (int16_t)gyroAngle[1]);
+		delay(1);
+		UARTprintf("%d\t%d\t\n", (int16_t)compAngleY, (int16_t)KalmanY);
+#endif
+		delay(10);
+	}
+}
 
 void initMPU6500_i2c(void) {
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_I2C1); // Enable I2C1 peripheral
@@ -81,39 +138,8 @@ void initMPU6500_i2c(void) {
 #endif
 
 	delay(100); // Wait for sensor to stabilize
-
-	float gyroRate[3];
-	static float gyroAngle[3] = { 0, 0, 0 };
-	int16_t accData[3], gyroData[3], gyroZero[3];
-
-	updateMPU6500(accData, gyroZero);
-
-	delay(100);
-
-	while (1) {
-		updateMPU6500(accData, gyroData);
-
-		static uint32_t timer = 0;
-		float dt = (float)(micros() - timer) / 1000000.0f;
-		timer = micros();
-
-		for (uint8_t axis = 0; axis < 3; axis++) {
-			gyroRate[axis] = (float)(gyroData[axis] - gyroZero[axis]) / 16.4f;
-			gyroAngle[axis] += gyroRate[axis] * dt; // Gyro angle is only used for debugging
-		}
-
-		float roll  = atan2f(accData[1], accData[2]) * RAD_TO_DEG;
-		float pitch = atanf(-accData[0] / sqrt(accData[1] * accData[1] + accData[2] * accData[2])) * RAD_TO_DEG;
-
-		static float compAngleX, compAngleY;
-
-		compAngleX = 0.93f * (compAngleX + gyroRate[0] * dt) + 0.07f * roll; // Calculate the angle using a Complimentary filter
-		compAngleY = 0.93f * (compAngleY + gyroRate[1] * dt) + 0.07f * pitch;
-
-		UARTprintf("%d\t%d\t%d\t%d\t%d\t%d\t%d\n", (int16_t)compAngleX, (int16_t)compAngleY, (int16_t)roll, (int16_t)pitch, (int16_t)gyroAngle[0], (int16_t)gyroAngle[1], (int16_t)gyroAngle[2]);
-
-		delay(10);
-	}
+	
+	printMPU6050Debug();
 }
 
 void updateMPU6500(int16_t *accData, int16_t *gyroData) {
