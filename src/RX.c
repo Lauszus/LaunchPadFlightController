@@ -53,7 +53,7 @@ void Timer1Handler(void) {
 
 	if (last_edge && !edge) { // Check that we are going from a positive to falling egde
 #if 0
-		UARTprintf("%u %u %d\n", diff, diff_us,  micros() - prev_millis);
+		UARTprintf("%u %u %d\n", diff, diff_us,  micros() - prev_micros);
 #else
 		if (diff_us > 2700) { // Check if sync pulse is received - see: https://github.com/multiwii/baseflight/blob/master/src/drv_pwm.c
 			channelIndex = 0; // Reset channel index
