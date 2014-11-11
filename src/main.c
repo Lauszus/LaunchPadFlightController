@@ -86,23 +86,29 @@ int main(void) {
 	const uint16_t min = 1060; // From SimonK firmware
 	const uint16_t max = 1860; // From SimonK firmware
 #endif
-	uint16_t width = min;
+	//uint16_t width = min;
 
 	UARTprintf("min: %d, max: %d, period: %d\n", min, max, getPeriod());
 
+	writePPMUs(0, min); // PB6
+	writePPMUs(1, max); // PB7
+	writePPMUs(2, min); // PB4
+	writePPMUs(3, max); // PB5
+
 	while (1) {
+#if 0
 		UARTprintf("Width: %d\n", width);
 		//writePPMWidth(width++);
 		writePPMUs(width++);
 		if (width > max)
 			width = min;
 		delay(2);
+#endif
 	}
 }
 
 // TODO:
-	// Compare CPPM values with measured values from oscilloscope
 	// SPI/MPU-6050
-	// PPM output signal
-		// Sync all PPM output signals
+	// Sync all PPM output signals - is this needed?
+	// Check PPM output freqeuncy of Naze32
 	// EEPROM

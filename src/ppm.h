@@ -23,8 +23,8 @@ extern "C" {
 #endif
 
 void initPPM(void);
-void writePPMUs(uint16_t us);
-void writePPMWidth(uint16_t width);
+void writePPMUs(uint8_t motor, uint16_t us);
+void writePPMWidth(uint8_t motor, uint16_t width);
 uint16_t getPeriod(void);
 
 #ifdef __cplusplus

@@ -18,22 +18,28 @@ void initPPM(void) {
 
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB); // Enable GPIOC peripheral
 	GPIOPinConfigure(GPIO_PB6_M0PWM0); // Use altenate function
-	GPIOPinTypePWM(GPIO_PORTB_BASE, GPIO_PIN_6); // Use pin with PWM peripheral
+	GPIOPinConfigure(GPIO_PB7_M0PWM1); // Use altenate function
+	GPIOPinConfigure(GPIO_PB4_M0PWM2); // Use altenate function
+	GPIOPinConfigure(GPIO_PB5_M0PWM3); // Use altenate function
+	GPIOPinTypePWM(GPIO_PORTB_BASE, GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_4 | GPIO_PIN_5); // Use pin with PWM peripheral
 
 	// Configure the PWM generator for count down mode with immediate updates to the parameters.
 	PWMGenConfigure(PWM0_BASE, PWM_GEN_0, PWM_GEN_MODE_DOWN | PWM_GEN_MODE_NO_SYNC);
-	
+	PWMGenConfigure(PWM0_BASE, PWM_GEN_1, PWM_GEN_MODE_DOWN | PWM_GEN_MODE_NO_SYNC);
+
 	// Period is given by (SysClk * period) / divider
+	// The period is set to 20ms
 	period = (SysCtlClockGet() / 1000 * 20) / 32; // 50000
 	PWMGenPeriodSet(PWM0_BASE, PWM_GEN_0, period); // Set the period.
+	PWMGenPeriodSet(PWM0_BASE, PWM_GEN_1, period); // Set the period.
 
 	// Start the timers in generator 0.
 	PWMGenEnable(PWM0_BASE, PWM_GEN_0);
+	PWMGenEnable(PWM0_BASE, PWM_GEN_1);
 
 	// Enable the outputs.
-	//PWMOutputState(PWM0_BASE, (PWM_OUT_0_BIT | PWM_OUT_1_BIT), true);
-	PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT , true);
-	
+	PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT | PWM_OUT_1_BIT | PWM_OUT_2_BIT | PWM_OUT_3_BIT, true);
+
 /*
 //
     // Allow PWM0 generated interrupts.  This configuration is done to
@@ -52,10 +58,10 @@ uint16_t getPeriod(void) {
 	return period;
 }
 
-void writePPMUs(uint16_t us) {
-	writePPMWidth(period * us / 20000);
+void writePPMUs(uint8_t motor, uint16_t us) {
+	writePPMWidth(motor, period * us / 20000);
 }
 
-void writePPMWidth(uint16_t width) {
-	PWMPulseWidthSet(PWM0_BASE, PWM_OUT_0, width);
+void writePPMWidth(uint8_t motor, uint16_t width) {
+	PWMPulseWidthSet(PWM0_BASE, motor == 0 ? PWM_OUT_0 : motor == 1 ? PWM_OUT_1 : motor == 2 ? PWM_OUT_2 : PWM_OUT_3, width);
 }
