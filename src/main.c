@@ -72,7 +72,7 @@ int main(void) {
 	delay(100);
 	
 	//initMPU6500();
-	initMPU6500_i2c();
+	//initMPU6500_i2c();
 
 	IntMasterEnable();
 	
@@ -86,7 +86,7 @@ int main(void) {
 	const uint16_t min = 1060; // From SimonK firmware
 	const uint16_t max = 1860; // From SimonK firmware
 #endif
-	//uint16_t width = min;
+	uint16_t width = min;
 
 	UARTprintf("min: %d, max: %d, period: %d\n", min, max, getPeriod());
 
@@ -96,13 +96,13 @@ int main(void) {
 	writePPMUs(3, max); // PB5
 
 	while (1) {
-#if 0
+#if 1
 		UARTprintf("Width: %d\n", width);
 		//writePPMWidth(width++);
-		writePPMUs(width++);
+		writePPMUs(0, width++);
 		if (width > max)
 			width = min;
-		delay(2);
+		delay(5);
 #endif
 	}
 }

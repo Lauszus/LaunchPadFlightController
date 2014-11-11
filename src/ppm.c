@@ -11,16 +11,17 @@
 
 static uint16_t period;
 
-// TODO: Scope output
 void initPPM(void) {
-	SysCtlPWMClockSet(SYSCTL_PWMDIV_32); // Set divider to 32
+	//SysCtlPWMClockSet(SYSCTL_PWMDIV_32); // Set divider to 32
+	SysCtlPWMClockSet(SYSCTL_PWMDIV_4); // Set divider to 4
+
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM0); // Enable PWM peripheral
 
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB); // Enable GPIOC peripheral
-	GPIOPinConfigure(GPIO_PB6_M0PWM0); // Use altenate function
-	GPIOPinConfigure(GPIO_PB7_M0PWM1); // Use altenate function
-	GPIOPinConfigure(GPIO_PB4_M0PWM2); // Use altenate function
-	GPIOPinConfigure(GPIO_PB5_M0PWM3); // Use altenate function
+	GPIOPinConfigure(GPIO_PB6_M0PWM0); // Use alternate function
+	GPIOPinConfigure(GPIO_PB7_M0PWM1); // Use alternate function
+	GPIOPinConfigure(GPIO_PB4_M0PWM2); // Use alternate function
+	GPIOPinConfigure(GPIO_PB5_M0PWM3); // Use alternate function
 	GPIOPinTypePWM(GPIO_PORTB_BASE, GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_4 | GPIO_PIN_5); // Use pin with PWM peripheral
 
 	// Configure the PWM generator for count down mode with immediate updates to the parameters.
@@ -28,8 +29,10 @@ void initPPM(void) {
 	PWMGenConfigure(PWM0_BASE, PWM_GEN_1, PWM_GEN_MODE_DOWN | PWM_GEN_MODE_NO_SYNC);
 
 	// Period is given by (SysClk * period) / divider
-	// The period is set to 20ms
-	period = (SysCtlClockGet() / 1000 * 20) / 32; // 50000
+	// The period is set to 20ms (50 Hz)
+	//period = (SysCtlClockGet() / 1000 * 20) / 32; // 50000
+	// The period is set to 2.5ms (400 Hz)
+	period = (SysCtlClockGet() / 10000 * 25) / 4; // 50000
 	PWMGenPeriodSet(PWM0_BASE, PWM_GEN_0, period); // Set the period.
 	PWMGenPeriodSet(PWM0_BASE, PWM_GEN_1, period); // Set the period.
 
@@ -59,7 +62,8 @@ uint16_t getPeriod(void) {
 }
 
 void writePPMUs(uint8_t motor, uint16_t us) {
-	writePPMWidth(motor, period * us / 20000);
+	//writePPMWidth(motor, period * us / 20000); // 50 Hz
+	writePPMWidth(motor, period * us / 2500); // 400 Hz
 }
 
 void writePPMWidth(uint8_t motor, uint16_t width) {
