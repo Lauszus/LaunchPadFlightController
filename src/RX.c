@@ -29,17 +29,16 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/systick.h"
 #include "driverlib/timer.h"
-#include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor - TODO: Remove
+//#include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor - TODO: Remove
 
-static const uint8_t MAX_CHANNELS = 6;
-static volatile uint16_t rxChannel[MAX_CHANNELS];
+volatile uint16_t rxChannel[RX_NUM_CHANNELS];
 
 // TODO: Check that there is 6 valid channels
 void Timer1Handler(void) {
 	static uint8_t channelIndex = 0;
 	static uint32_t prev = 0;
-	static uint32_t prev_micros = 0; // TODO: Remove
-	
+	//static uint32_t prev_micros = 0; // TODO: Remove
+
 	TimerIntClear(WTIMER1_BASE, TIMER_CAPA_EVENT); // Clear interrupt
 
 	uint32_t curr = TimerValueGet(WTIMER1_BASE, TIMER_A); // Read capture value
@@ -57,8 +56,8 @@ void Timer1Handler(void) {
 #else
 		if (diff_us > 2700) { // Check if sync pulse is received - see: https://github.com/multiwii/baseflight/blob/master/src/drv_pwm.c
 			channelIndex = 0; // Reset channel index
-#if 1
-			for (uint8_t i = 0; i < MAX_CHANNELS; i++) {
+#if 0
+			for (uint8_t i = 0; i < RX_NUM_CHANNELS; i++) {
 				if (rxChannel[i] > 0)
 					UARTprintf("%u\t", rxChannel[i]);
 				else
@@ -68,14 +67,14 @@ void Timer1Handler(void) {
 #endif
 		} else {
 			rxChannel[channelIndex++] = diff_us;
-			if (channelIndex >= MAX_CHANNELS)
+			if (channelIndex >= RX_NUM_CHANNELS)
 				channelIndex = 0;
 		}
 #endif
 	}
 
 	last_edge = edge;
-	prev_micros = micros();
+	//prev_micros = micros();
 }
 
 void initRX(void) {

@@ -447,6 +447,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\KalmanY.c</FilePath>
             </File>
+            <File>
+              <FileName>PID.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\PID.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

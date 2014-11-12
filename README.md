@@ -6,7 +6,9 @@ _________
 
 This is a flight controller used for a quadcopter in X-configuration.
 
-It is written for the [Tiva C Series TM4C123G LaunchPad](<http://www.ti.com/tool/EK-TM4C123GXL>).
+It is written for the [Tiva C Series TM4C123G LaunchPad](http://www.ti.com/tool/EK-TM4C123GXL).
+
+In order to built this project you need to download Keil µVision IDE 4. Then open the [project file](LaunchPadFlightController.uvproj).
 
 The code is still in progress. I will update this readme with more information later on.
 

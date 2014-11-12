@@ -17,6 +17,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <math.h>
 
 #include "MPU6500.h"
 #include "time.h"
@@ -31,48 +32,45 @@
 #include "driverlib/sysctl.h"
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 
-#include "math.h"
-
 #define SLAVE_ADDRESS	0x68
 #define RAD_TO_DEG 		57.295779513082320876798154814105f
 
-void printMPU6050Debug(void) {
+#define GPIO_MPU_INT_PERIPH		SYSCTL_PERIPH_GPIOE
+#define GPIO_MPU_INT_BASE 		GPIO_PORTE_BASE
+#define GPIO_MPU_INT_PIN 		GPIO_PIN_3
+
+static int16_t gyroZero[3];
+
+bool dateReadyMPU6500(void) {
+	return GPIOPinRead(GPIO_MPU_INT_BASE, GPIO_MPU_INT_PIN);
+}
+
+void getMPU6500Angles(float *roll, float *pitch, float dt) {
+	int16_t accData[3], gyroData[3];
+	updateMPU6500(accData, gyroData);
+
 	float gyroRate[3];
-	static float gyroAngle[3] = { 0, 0, 0 };
-	int16_t accData[3], gyroData[3], gyroZero[3];
+	//static float gyroAngle[3] = { 0, 0, 0 };
+	for (uint8_t axis = 0; axis < 3; axis++) {
+		gyroRate[axis] = (float)(gyroData[axis] - gyroZero[axis]) / 16.4f;
+		//gyroAngle[axis] += gyroRate[axis] * dt; // Gyro angle is only used for debugging
+	}
 
-	delay(100);
+	float rollAcc  = atan2f(accData[1], accData[2]) * RAD_TO_DEG;
+	float pitchAcc = atanf(-accData[0] / sqrtf(accData[1] * accData[1] + accData[2] * accData[2])) * RAD_TO_DEG;
 
-	updateMPU6500(accData, gyroZero); // Get gyro zero values
+	*roll = getAngleX(rollAcc, gyroRate[0], dt);
+	*pitch = getAngleY(pitchAcc, gyroRate[1], dt);
+/*
+	static float compAngleX, compAngleY;
+	compAngleX = 0.93f * (compAngleX + gyroRate[0] * dt) + 0.07f * rollAcc; // Calculate the angle using a Complimentary filter
+	compAngleY = 0.93f * (compAngleY + gyroRate[1] * dt) + 0.07f * pitchAcc;
+*/
+}
 
-	delay(100);
-
-	KalmanXInit();
-	KalmanYInit();
-
+/*
+void printMPU6050Debug(void) {
 	while (1) {
-		updateMPU6500(accData, gyroData);
-
-		static uint32_t timer = 0;
-		float dt = (float)(micros() - timer) / 1000000.0f;
-		timer = micros();
-
-		for (uint8_t axis = 0; axis < 3; axis++) {
-			gyroRate[axis] = (float)(gyroData[axis] - gyroZero[axis]) / 16.4f;
-			gyroAngle[axis] += gyroRate[axis] * dt; // Gyro angle is only used for debugging
-		}
-
-		float roll  = atan2f(accData[1], accData[2]) * RAD_TO_DEG;
-		float pitch = atanf(-accData[0] / sqrtf(accData[1] * accData[1] + accData[2] * accData[2])) * RAD_TO_DEG;
-
-		static float compAngleX, compAngleY;
-		
-		float KalmanX = getAngleX(roll, gyroRate[0], dt);
-		float KalmanY = getAngleY(pitch, gyroRate[1], dt);
-
-		compAngleX = 0.93f * (compAngleX + gyroRate[0] * dt) + 0.07f * roll; // Calculate the angle using a Complimentary filter
-		compAngleY = 0.93f * (compAngleY + gyroRate[1] * dt) + 0.07f * pitch;
-
 #if 0
 		UARTprintf("%d\t%d\t\t", (int16_t)KalmanX, (int16_t)KalmanY);
 		UARTprintf("%d\t%d\t\t", (int16_t)compAngleX, (int16_t)compAngleY);
@@ -90,7 +88,7 @@ void printMPU6050Debug(void) {
 		delay(10);
 	}
 }
-
+*/
 void initMPU6500_i2c(void) {
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_I2C1); // Enable I2C1 peripheral
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA); // Enable GPIOA peripheral
@@ -104,7 +102,7 @@ void initMPU6500_i2c(void) {
 
 	I2CMasterInitExpClk(I2C1_BASE, SysCtlClockGet(), true); // Enable and set frequency to 400 kHz
 
-	uint8_t i2cBuffer[14]; // Buffer for I2C data
+	uint8_t i2cBuffer[4]; // Buffer for I2C data
 
 	i2cBuffer[0] = i2cRead(0x75);
 	if (i2cBuffer[0] == 0x70) // Read "WHO_AM_I" register
@@ -128,18 +126,37 @@ void initMPU6500_i2c(void) {
 	i2cBuffer[3] = 2 << 3; // Set Accelerometer Full Scale Range to ±8g
 	i2cWriteData(0x19, i2cBuffer, 4); // Write to all four registers at once
 
-#if 0
+#if 1
 	/* Enable Data Ready Interrupt on INT pin */
 	i2cBuffer[0] = (1 << 5) | (1 << 4); // Enable LATCH_INT_EN and INT_RD_CLEAR
-	                                  // When this bit is equal to 1, the INT pin is held high until the interrupt is cleared
-	                                  // When this bit is equal to 1, interrupt status bits are cleared on any read operation
+	                                    // When this bit is equal to 1, the INT pin is held high until the interrupt is cleared
+	                                    // When this bit is equal to 1, interrupt status bits are cleared on any read operation
 	i2cBuffer[1] = (1 << 0); // Enable DATA_RDY_EN - When set to 1, this bit enables the Data Ready interrupt, which occurs each time a write operation to all of the sensor registers has been completed
 	i2cWriteData(0x37, i2cBuffer, 2); // Write to both registers at once
 #endif
 
+	// Set INT input pin
+	SysCtlPeripheralEnable(GPIO_MPU_INT_PERIPH); // Enable GPIO peripheral
+	GPIOPinTypeGPIOInput(GPIO_MPU_INT_BASE, GPIO_MPU_INT_PIN); // Set as input
+
 	delay(100); // Wait for sensor to stabilize
-	
-	printMPU6050Debug();
+
+	//printMPU6050Debug();
+
+	while (!dateReadyMPU6500()) {
+		// Wait until date is ready
+	}
+
+	// TOOD: Read gyro values multiple times
+
+	int16_t accData[3]; // This is just tossed away
+	updateMPU6500(accData, gyroZero); // Get gyro zero values
+
+	KalmanXInit();
+	KalmanYInit();
+
+	setAngleX(0.0f); // Set staring angle
+	setAngleY(0.0f);
 }
 
 void updateMPU6500(int16_t *accData, int16_t *gyroData) {
@@ -216,17 +233,24 @@ void i2cReadData(uint8_t addr, uint8_t *data, uint8_t length) {
 	data[length - 1] = I2CMasterDataGet(I2C1_BASE); // Place data into data register
 }
 
+void spiSelect(bool enable) {
+	GPIOPinWrite(GPIO_PORTA_BASE, GPIO_PIN_3, enable ? 0 : GPIO_PIN_3); // The SS pin is active low
+}
+
 void initMPU6500(void) {
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_SSI0); // Enable SSI0 peripheral
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA); // Enable GPIOA peripheral
 
-	// Use altenate function
+	// Use alternate function
 	GPIOPinConfigure(GPIO_PA2_SSI0CLK);
-	GPIOPinConfigure(GPIO_PA3_SSI0FSS);
+	//GPIOPinConfigure(GPIO_PA3_SSI0FSS);
 	GPIOPinConfigure(GPIO_PA4_SSI0RX);
 	GPIOPinConfigure(GPIO_PA5_SSI0TX);
 
-	GPIOPinTypeSSI(GPIO_PORTA_BASE, GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5); // Use pin with SSI peripheral
+	GPIOPinTypeGPIOOutput(GPIO_PORTA_BASE, GPIO_PIN_3); // Set SS as output
+	spiSelect(false);
+
+	GPIOPinTypeSSI(GPIO_PORTA_BASE, GPIO_PIN_2 | GPIO_PIN_4 | GPIO_PIN_5); // Use pins with SSI peripheral
 
 	//SSIClockSourceSet(SSI0_BASE, SSI_CLOCK_SYSTEM); // Set clock source
 
@@ -270,15 +294,19 @@ void initMPU6500(void) {
 }
 
 void spiReadData(uint32_t addr, uint32_t *buffer) {
+	spiSelect(true);
 	SSIDataPut(SSI0_BASE, addr | 0x80); // Indicate read operation
 	while (SSIBusy(SSI0_BASE));
 	SSIDataGet(SSI0_BASE, buffer);
 	while (SSIBusy(SSI0_BASE));
+	spiSelect(false);
 }
 
 void spiWriteData(uint32_t addr, uint32_t buffer) {
+	spiSelect(true);
 	SSIDataPut(SSI0_BASE, addr);
 	while (SSIBusy(SSI0_BASE));
 	SSIDataPut(SSI0_BASE, buffer);
 	while (SSIBusy(SSI0_BASE));
+	spiSelect(false);
 }

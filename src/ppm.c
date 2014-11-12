@@ -43,22 +43,38 @@ void initPPM(void) {
 	// Enable the outputs.
 	PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT | PWM_OUT_1_BIT | PWM_OUT_2_BIT | PWM_OUT_3_BIT, true);
 
-/*
-//
-    // Allow PWM0 generated interrupts.  This configuration is done to
-    // differentiate fault interrupts from other PWM0 related interrupts.
-    PWMIntEnable(PWM0_BASE, PWM_INT_GEN_0);
-
-    // Enable the PWM0 LOAD interrupt on PWM0.
-    PWMGenIntTrigEnable(PWM0_BASE, PWM_GEN_0, PWM_INT_CNT_LOAD);
-
-    // Enable the PWM0 interrupts on the processor (NVIC).
-    IntEnable(INT_PWM0_0);
-*/
+	writePPMAllOff();
 }
 
 uint16_t getPeriod(void) {
 	return period;
+}
+
+void writePPMAllOff(void) {
+	// Turn of all motors
+	for (uint8_t i = 0; i < 4; i++)
+		writePPMUs(i, PPM_MIN);
+}
+
+// From Arduino source code: https://github.com/arduino/Arduino/blob/ide-1.5.x/hardware/arduino/avr/cores/arduino/WMath.cpp
+float map(float x, float in_min, float in_max, float out_min, float out_max) {
+  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
+void updateMotor(uint8_t motor, float value) {
+	// Motors are in the range from -100 to 100
+	if (value > 100.0f)
+		value = 100.0f;
+	else if (value < -100.0f)
+		value= -100.0f;
+
+	uint16_t motorOutput = map(value, -100, 100, PPM_MIN, PPM_MAX);
+	writePPMUs(motor, motorOutput);
+}
+
+void updateMotorsAll(float *values) {
+	for (uint8_t i = 0; i < 4; i++)
+		updateMotor(i, values[i]);
 }
 
 void writePPMUs(uint8_t motor, uint16_t us) {

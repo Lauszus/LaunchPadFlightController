@@ -15,28 +15,19 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 
-#ifndef __ppm_h__
-#define __ppm_h__
+#include <stdint.h>
+#include <stdbool.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "PID.h"
 
-#define PPM_MIN 1064 // From SimonK firmware
-#define PPM_MAX 1864 // From SimonK firmware
-
-void initPPM(void);
-void writePPMAllOff(void);
-void updateMotor(uint8_t motor, float value);
-void updateMotorsAll(float *values);
-void writePPMUs(uint8_t motor, uint16_t us);
-void writePPMWidth(uint8_t motor, uint16_t width);
-uint16_t getPeriod(void);
-
-float map(float x, float in_min, float in_max, float out_min, float out_max);
-
-#ifdef __cplusplus
+float updatePID(pid_t *pid, float restAngle, float inputAngle, float dt) {
+	/* Update PID values */
+	float error = (restAngle - inputAngle);
+	float pTerm = pid->Kp * error;
+	pid->integratedError += error * dt;
+	//integratedError = constrain(integratedError, -1.0, 1.0); // Limit the integrated error
+	float iTerm = pid->Ki * pid->integratedError;
+	float dTerm = pid->Kd * (error - pid->lastError) / dt;
+	pid->lastError = error;
+	return pTerm + iTerm + dTerm;
 }
-#endif
-
-#endif

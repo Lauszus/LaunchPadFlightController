@@ -22,6 +22,21 @@
 extern "C" {
 #endif
 
+enum {
+	RX_AILERON_CHAN = 0,
+	RX_ELEVATOR_CHAN,
+	RX_THROTTLE_CHAN,
+	RX_RUDDER_CHAN,
+	RX_AUX1_CHAN,
+	RX_AUX2_CHAN,
+	RX_NUM_CHANNELS,
+};
+
+#define RX_MIN_INPUT 665
+#define RX_MAX_INPUT 1730
+
+extern volatile uint16_t rxChannel[RX_NUM_CHANNELS];
+
 void initRX(void);
 
 #ifdef __cplusplus

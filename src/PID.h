@@ -15,25 +15,19 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 
-#ifndef __ppm_h__
-#define __ppm_h__
+#ifndef __pid_h__
+#define __pid_h__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define PPM_MIN 1064 // From SimonK firmware
-#define PPM_MAX 1864 // From SimonK firmware
+typedef struct {
+	float Kp, Ki, Kd; // PID variables
+	float lastError, integratedError;
+} __attribute__((packed)) pid_t;
 
-void initPPM(void);
-void writePPMAllOff(void);
-void updateMotor(uint8_t motor, float value);
-void updateMotorsAll(float *values);
-void writePPMUs(uint8_t motor, uint16_t us);
-void writePPMWidth(uint8_t motor, uint16_t width);
-uint16_t getPeriod(void);
-
-float map(float x, float in_min, float in_max, float out_min, float out_max);
+float updatePID(pid_t *pid, float restAngle, float inputAngle, float dt);
 
 #ifdef __cplusplus
 }
