@@ -80,7 +80,6 @@ __heap_limit
 ;******************************************************************************
 		EXTERN UARTStdioIntHandler
         ;EXTERN SycTickHandler
-		EXTERN RxHandler
 		;EXTERN Timer1Handler
 
 ;******************************************************************************
@@ -107,7 +106,7 @@ __Vectors
         DCD     IntDefaultHandler           ; The PendSV handler
         DCD     IntDefaultHandler           ; The SysTick handler
         DCD     IntDefaultHandler           ; GPIO Port A
-        DCD     RxHandler                   ; GPIO Port B
+        DCD     IntDefaultHandler           ; GPIO Port B
         DCD     IntDefaultHandler           ; GPIO Port C
         DCD     IntDefaultHandler           ; GPIO Port D
         DCD     IntDefaultHandler           ; GPIO Port E

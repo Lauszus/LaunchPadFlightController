@@ -32,34 +32,6 @@
 #include "driverlib/sysctl.h"
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 
-#if 0
-#define GPIO_RX_PERIPH		SYSCTL_PERIPH_GPIOB // Test code for switch 1
-#define GPIO_RX_BASE      GPIO_PORTB_BASE
-#define GPIO_RX_PIN       GPIO_PIN_5
-#else
-#define GPIO_RX_PERIPH		SYSCTL_PERIPH_GPIOF
-#define GPIO_RX_BASE      GPIO_PORTF_BASE
-#define GPIO_RX_PIN       GPIO_PIN_4
-#endif
-
-void RxHandler(void) {
-	GPIOIntClear(GPIO_RX_BASE, GPIO_RX_PIN); // Clear interrupt source
-	//UARTprintf("Millis: %d\n", millis());
-}
-
-void initIO(void) {
-	SysCtlPeripheralEnable(GPIO_RX_PERIPH); // Enable GPIO peripheral
-
-	GPIOPinTypeGPIOInput(GPIO_RX_BASE, GPIO_RX_PIN); // Set as input
-#if GPIO_RX_BASE == GPIO_PORTF_BASE && (GPIO_RX_PIN == GPIO_PIN_0 || GPIO_RX_PIN == GPIO_PIN_4) // Check if using built-in switch
-	GPIO_PORTF_PUR_R |= GPIO_RX_PIN; // Enable pull-up
-#endif
-
-	GPIOIntTypeSet(GPIO_RX_BASE, GPIO_RX_PIN, GPIO_BOTH_EDGES); // Enable interrupt on both falling and rising edge
-	GPIOIntRegister(GPIO_RX_BASE, RxHandler); // Register interrupt handler
-	GPIOIntEnable(GPIO_RX_BASE, GPIO_RX_PIN); // Enable interrupt
-}
-
 int main(void) {
 	// Set the clocking to run directly from the external crystal/oscillator.
 	SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ); // Set clock to 80MHz (400MHz(PLL) / 2 / 2.5 = 80 MHz)
@@ -69,7 +41,6 @@ int main(void) {
 	UARTprintf("Started\n");
 	initTime();
 	initRX();
-	initIO();
 	initPPM();
 
 	//initMPU6500();
