@@ -18,10 +18,11 @@ void initPPM(void) {
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM0); // Enable PWM peripheral
 
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB); // Enable GPIOC peripheral
-	GPIOPinConfigure(GPIO_PB6_M0PWM0); // Use alternate function
-	GPIOPinConfigure(GPIO_PB7_M0PWM1); // Use alternate function
-	GPIOPinConfigure(GPIO_PB4_M0PWM2); // Use alternate function
-	GPIOPinConfigure(GPIO_PB5_M0PWM3); // Use alternate function
+	// Use alternate function
+	GPIOPinConfigure(GPIO_PB6_M0PWM0);
+	GPIOPinConfigure(GPIO_PB7_M0PWM1);
+	GPIOPinConfigure(GPIO_PB4_M0PWM2);
+	GPIOPinConfigure(GPIO_PB5_M0PWM3);
 	GPIOPinTypePWM(GPIO_PORTB_BASE, GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_4 | GPIO_PIN_5); // Use pin with PWM peripheral
 
 	// Configure the PWM generator for count down mode with immediate updates to the parameters.
