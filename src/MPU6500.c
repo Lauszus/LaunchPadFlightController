@@ -33,6 +33,7 @@
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 
 #define SLAVE_ADDRESS	0x68
+#define PI 				3.1415926535897932384626433832795f
 #define RAD_TO_DEG 		57.295779513082320876798154814105f
 
 #define GPIO_MPU_INT_PERIPH		SYSCTL_PERIPH_GPIOE
@@ -49,8 +50,13 @@ void getMPU6500Angles(float *roll, float *pitch, float dt) {
 	int16_t accData[3], gyroData[3];
 	updateMPU6500(accData, gyroData);
 
-	float gyroRate[3];
+	// Source: https://github.com/cleanflight/cleanflight
+	const float accz_lpf_cutoff = 5.0f;
+	const float fc_acc = 0.5f / (PI * accz_lpf_cutoff); // Calculate RC time constant used in the accZ lpf
+	static float accz_smooth = 0;
+	accz_smooth = accz_smooth + (dt / (fc_acc + dt)) * (accData[2] - accz_smooth); // Low pass filter
 
+	float gyroRate[3];
 	for (uint8_t axis = 0; axis < 3; axis++)
 		gyroRate[axis] = (float)(gyroData[axis] - gyroZero[axis]) / 16.4f;
 
@@ -62,8 +68,8 @@ void getMPU6500Angles(float *roll, float *pitch, float dt) {
 	for (uint8_t axis = 0; axis < 3; axis++)
 		gyroAngle[axis] += gyroRate[axis] * dt; // Gyro angle is only used for debugging
 */
-	float pitchAcc  = atan2f(accData[1], accData[2]) * RAD_TO_DEG;
-	float rollAcc = atanf(accData[0] / sqrtf(accData[1] * accData[1] + accData[2] * accData[2])) * RAD_TO_DEG;
+	float pitchAcc  = atan2f(accData[1], accz_smooth) * RAD_TO_DEG;
+	float rollAcc = atanf(accData[0] / sqrtf(accData[1] * accData[1] + accz_smooth * accz_smooth)) * RAD_TO_DEG;
 
 	*roll = getAngleX(rollAcc, gyroRate[1], dt);
 	*pitch = getAngleY(pitchAcc, gyroRate[0], dt);
@@ -104,6 +110,7 @@ void printMPU6050Debug(void) {
 void initMPU6500_i2c(void) {
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_I2C1); // Enable I2C1 peripheral
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA); // Enable GPIOA peripheral
+	SysCtlDelay(2);	// Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 
 	// Use altenate function
 	GPIOPinConfigure(GPIO_PA6_I2C1SCL);
@@ -113,6 +120,8 @@ void initMPU6500_i2c(void) {
 	GPIOPinTypeI2C(GPIO_PORTA_BASE, GPIO_PIN_7); // Use pin with I2C peripheral
 
 	I2CMasterInitExpClk(I2C1_BASE, SysCtlClockGet(), true); // Enable and set frequency to 400 kHz
+
+	delay(100);
 
 	uint8_t i2cBuffer[4]; // Buffer for I2C data
 
@@ -176,13 +185,13 @@ void updateMPU6500(int16_t *accData, int16_t *gyroData) {
 
 	i2cReadData(0x3B, buf, 14);
 
-	accData[0] = (buf[0] << 8) | buf[1];
-	accData[1] = (buf[2] << 8) | buf[3];
-	accData[2] = (buf[4] << 8) | buf[5];
+	accData[0] = (buf[0] << 8) | buf[1]; // X
+	accData[1] = (buf[2] << 8) | buf[3]; // Y
+	accData[2] = (buf[4] << 8) | buf[5]; // Z
 
-	gyroData[0] = (buf[8] << 8) | buf[9];
-	gyroData[1] = (buf[10] << 8) | buf[11];
-	gyroData[2] = (buf[12] << 8) | buf[13];
+	gyroData[0] = (buf[8] << 8) | buf[9]; // X
+	gyroData[1] = (buf[10] << 8) | buf[11]; // Y
+	gyroData[2] = (buf[12] << 8) | buf[13]; // Z
 }
 
 void i2cWrite(uint8_t addr, uint8_t data) {
