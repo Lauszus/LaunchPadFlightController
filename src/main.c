@@ -102,13 +102,31 @@ int main(void) {
 				motors[1] -= pitchOut * pitchGain;
 				motors[2] += pitchOut * pitchGain;
 				motors[3] -= pitchOut * pitchGain;
+
 /*
 				motors[0] -= yawOut * yawGain;
 				motors[1] += yawOut * yawGain;
 				motors[2] += yawOut * yawGain;
 				motors[3] -= yawOut * yawGain;
 */
+
+				// Pitch Control
+				float elevator = map(rxChannel[RX_ELEVATOR_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+				motors[0] += elevator / 2.0f;
+				motors[1] -= elevator / 2.0f;
+				motors[2] += elevator / 2.0f;
+				motors[3] -= elevator / 2.0f;
+				
+				// Roll Control
+				float aileron = map(rxChannel[RX_AILERON_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+				motors[0] -= aileron / 2;
+				motors[1] -= aileron / 2;
+				motors[2] += aileron / 2;
+				motors[3] += aileron / 2;
+
 				updateMotorsAll(motors);
+				
+				//UARTprintf("%d\t%d\n", (int16_t)elevator, (int16_t)aileron);
 #if 0
 				UARTprintf("%d\t%d\t\t", (int16_t)roll, (int16_t)pitch);
 				UARTprintf("%d\t%d\t\t", (int16_t)rollOut, (int16_t)pitchOut);
