@@ -27,4 +27,6 @@ The code is still in progress. I will update this readme with more information l
 
 Note that the motor layout follow the Naze32 in x-configuration i.e. motor 1 is bottom right, motor 2 is top right, motor 3 is bottom left and motor 4 is top left when looking from the back.
 
+Also make sure that pitch increase when pitching quadcopter downward and roll should increase when tilting quadcopter clockwise.
+
 For more information send me an email at <kristianl@tkjelectronics.dk>.
