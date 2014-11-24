@@ -61,7 +61,7 @@ int main(void) {
 	pidRoll.integratedError = 0.0f;
 	pidRoll.lastError = 0.0f;
 
-	pidPitch = pidRoll;
+	pidPitch = pidRoll; // Use same PID values for both pitch and roll
 
 	static uint32_t timer = 0;
 
@@ -70,46 +70,54 @@ int main(void) {
 	static float rollGain = 1.0f, pitchGain = 1.0f;
 
 	while (1) {
-		if (rxChannel[RX_AUX1_CHAN] < 1000)
-			writePPMAllOff();
-		else if (dateReadyMPU6500()) {
+#if 1
+		if (dateReadyMPU6500()) {
 			float dt = (float)(micros() - timer) / 1000000.0f;
 			//UARTprintf("%d\n", micros() - timer);
 			timer = micros();
 
 			float roll, pitch;
 			getMPU6500Angles(&roll, &pitch, dt);
-			float rollOut = updatePID(&pidRoll, 0.0f, roll, dt); // TODO: Make set point adjustable
-			float pitchOut = updatePID(&pidPitch, 0.0f, pitch, dt);
 
-			float throttle = map(rxChannel[RX_THROTTLE_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
-			for (uint8_t i = 0; i < 4; i++)
-				motors[i] = throttle;
+			if (rxChannel[RX_AUX1_CHAN] < 1000) {
+				writePPMAllOff();
+				pidRoll.integratedError = 0.0f;
+				pidRoll.lastError = 0.0f;
+				pidPitch.integratedError = 0.0f;
+				pidPitch.lastError = 0.0f;
+			} else {
+				float rollOut = updatePID(&pidRoll, 0.0f, roll, dt); // TODO: Make setPoint adjustable
+				float pitchOut = updatePID(&pidPitch, 0.0f, pitch, dt);
 
-			motors[0] -= rollOut * rollGain;
-			motors[1] -= rollOut * rollGain;
-			motors[2] += rollOut * rollGain;
-			motors[3] += rollOut * rollGain;
+				float throttle = map(rxChannel[RX_THROTTLE_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+				for (uint8_t i = 0; i < 4; i++)
+					motors[i] = throttle;
 
-			motors[0] += pitchOut * pitchGain;
-			motors[1] -= pitchOut * pitchGain;
-			motors[2] += pitchOut * pitchGain;
-			motors[3] -= pitchOut * pitchGain;
+				motors[0] -= rollOut * rollGain;
+				motors[1] -= rollOut * rollGain;
+				motors[2] += rollOut * rollGain;
+				motors[3] += rollOut * rollGain;
+
+				motors[0] += pitchOut * pitchGain;
+				motors[1] -= pitchOut * pitchGain;
+				motors[2] += pitchOut * pitchGain;
+				motors[3] -= pitchOut * pitchGain;
 /*
-			motors[0] -= yawOut * yawGain;
-			motors[1] += yawOut * yawGain;
-			motors[2] += yawOut * yawGain;
-			motors[3] -= yawOut * yawGain;
+				motors[0] -= yawOut * yawGain;
+				motors[1] += yawOut * yawGain;
+				motors[2] += yawOut * yawGain;
+				motors[3] -= yawOut * yawGain;
 */
-			updateMotorsAll(motors);
+				updateMotorsAll(motors);
 #if 0
-			UARTprintf("%d\t%d\t\t", (int16_t)roll, (int16_t)pitch);
-			UARTprintf("%d\t%d\t\t", (int16_t)rollOut, (int16_t)pitchOut);
-			UARTprintf("%d\t%d\t%d\t%d\n", (int16_t)motors[0], (int16_t)motors[1], (int16_t)motors[2], (int16_t)motors[3]);
-			UARTFlushTx(false);
+				UARTprintf("%d\t%d\t\t", (int16_t)roll, (int16_t)pitch);
+				UARTprintf("%d\t%d\t\t", (int16_t)rollOut, (int16_t)pitchOut);
+				UARTprintf("%d\t%d\t%d\t%d\n", (int16_t)motors[0], (int16_t)motors[1], (int16_t)motors[2], (int16_t)motors[3]);
+				UARTFlushTx(false);
 #endif
+			}
 		}
-
+#endif
 #if 0
 		for (int8_t i = -100; i < 100; i++) {
 			updateMotor(0, i);
