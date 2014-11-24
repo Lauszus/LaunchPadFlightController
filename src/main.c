@@ -79,7 +79,8 @@ int main(void) {
 			float roll, pitch;
 			getMPU6500Angles(&roll, &pitch, dt);
 
-			if (rxChannel[RX_AUX1_CHAN] < 1000) {
+			// TODO: Arm using throttle low and yaw right
+			if (rxChannel[RX_AUX1_CHAN] < 1000 || rxChannel[RX_THROTTLE_CHAN] < RX_MIN_INPUT + 25) {
 				writePPMAllOff();
 				pidRoll.integratedError = 0.0f;
 				pidRoll.lastError = 0.0f;
