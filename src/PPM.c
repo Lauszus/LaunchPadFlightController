@@ -1,7 +1,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "ppm.h"
+#include "PPM.h"
 
 #include "inc/hw_memmap.h"
 #include "driverlib/gpio.h"

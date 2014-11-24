@@ -21,7 +21,7 @@
 #include "RX.h"
 #include "UART.h"
 #include "time.h"
-#include "ppm.h"
+#include "PPM.h"
 #include "PID.h"
 #include "MPU6500.h"
 
@@ -151,5 +151,8 @@ int main(void) {
 // TODO:
 	// SPI/MPU-6050
 	// Sync all PPM output signals - is this needed?
-	// Check PPM output freqeuncy of Naze32
+	// Check PPM output frequency of Naze32
 	// EEPROM
+	// SysCtlDelay(2);	//insert a few cycles after enabling the peripheral to allow the clock to be fully activated.
+	// Adjust PID values using switches
+	// Only enable peripheral once

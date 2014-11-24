@@ -428,9 +428,9 @@
               <FilePath>.\src\time.c</FilePath>
             </File>
             <File>
-              <FileName>ppm.c</FileName>
+              <FileName>PPM.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\ppm.c</FilePath>
+              <FilePath>.\src\PPM.c</FilePath>
             </File>
             <File>
               <FileName>MPU6500.c</FileName>
