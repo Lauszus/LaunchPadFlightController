@@ -17,6 +17,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 
 #include "RX.h"
 #include "UART.h"
@@ -53,10 +54,12 @@ int main(void) {
 	UARTprintf("CLK %d\n", SysCtlClockGet());
 	UARTprintf("min: %d, max: %d, period: %d\n", PPM_MIN, PPM_MAX, getPeriod());
 
+	const float restAngleRoll = 0.51f, restAnglePitch = -1.7f;
+	
 	pid_t pidRoll, pidPitch;
 
-	pidRoll.Kp = 0.5f;
-	pidRoll.Ki = 0.0f;
+	pidRoll.Kp = 1.75f;
+	pidRoll.Ki = 1.0f;//2.3f;
 	pidRoll.Kd = 0.0f;
 	pidRoll.integratedError = 0.0f;
 	pidRoll.lastError = 0.0f;
@@ -79,6 +82,9 @@ int main(void) {
 			float roll, pitch;
 			getMPU6500Angles(&roll, &pitch, dt);
 
+			/*UARTprintf("%d.%d\t%d.%d\n", (int16_t)roll, (int16_t)abs(roll * 100.0f) % 100, (int16_t)pitch, (int16_t)abs(pitch * 100.0f) % 100);
+			UARTFlushTx(false);*/
+
 			// TODO: Arm using throttle low and yaw right
 			if (rxChannel[RX_AUX1_CHAN] < 1000 || rxChannel[RX_THROTTLE_CHAN] < RX_MIN_INPUT + 25) {
 				writePPMAllOff();
@@ -87,8 +93,8 @@ int main(void) {
 				pidPitch.integratedError = 0.0f;
 				pidPitch.lastError = 0.0f;
 			} else {
-				float rollOut = updatePID(&pidRoll, 0.0f, roll, dt); // TODO: Make setPoint adjustable
-				float pitchOut = updatePID(&pidPitch, 0.0f, pitch, dt);
+				float rollOut = updatePID(&pidRoll, restAngleRoll, roll, dt); // TODO: Make setPoint adjustable
+				float pitchOut = updatePID(&pidPitch, restAnglePitch, pitch, dt);
 
 				float throttle = map(rxChannel[RX_THROTTLE_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
 				for (uint8_t i = 0; i < 4; i++)
@@ -180,6 +186,6 @@ int main(void) {
 	// Sync all PPM output signals - is this needed?
 	// Check PPM output frequency of Naze32
 	// EEPROM
-	// SysCtlDelay(2);	//insert a few cycles after enabling the peripheral to allow the clock to be fully activated.
+	// SysCtlDelay(2);	// Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 	// Adjust PID values using switches
 	// Only enable peripheral once
