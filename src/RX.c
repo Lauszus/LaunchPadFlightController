@@ -33,7 +33,7 @@
 
 volatile uint16_t rxChannel[RX_NUM_CHANNELS];
 
-// TODO: Check that there is 6 valid channels
+// TODO: Check that there is 6 valid channels and there is no connection loss
 void Timer1Handler(void) {
 	static uint8_t channelIndex = 0;
 	static uint32_t prev = 0;
