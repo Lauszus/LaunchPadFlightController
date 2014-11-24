@@ -12,4 +12,19 @@ In order to built this project you need to download Keil µVision IDE 4. Then op
 
 The code is still in progress. I will update this readme with more information later on.
 
+# Pinout
+
+| Pin | Connection |
+|-----|------------|
+| PB6 |   Motor 1  |
+| PB7 |   Motor 2  |
+| PB4 |   Motor 3  |
+| PB5 |   Motor 4  |
+| PC6 | CPPM input |
+| PA6 |     SCL    |
+| PA7 |     SDA    |
+| PE3 |     INT    |
+
+Note that the motor layout follow the Naze32 in x-configuration i.e. motor 1 is bottom right, motor 2 is top right, motor 3 is bottom left and motor 4 is top left when looking from the back.
+
 For more information send me an email at <kristianl@tkjelectronics.dk>.
