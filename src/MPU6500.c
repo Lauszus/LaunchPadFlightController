@@ -50,17 +50,29 @@ void getMPU6500Angles(float *roll, float *pitch, float dt) {
 	updateMPU6500(accData, gyroData);
 
 	float gyroRate[3];
-	//static float gyroAngle[3] = { 0, 0, 0 };
-	for (uint8_t axis = 0; axis < 3; axis++) {
+
+	for (uint8_t axis = 0; axis < 3; axis++)
 		gyroRate[axis] = (float)(gyroData[axis] - gyroZero[axis]) / 16.4f;
-		//gyroAngle[axis] += gyroRate[axis] * dt; // Gyro angle is only used for debugging
-	}
 
-	float rollAcc  = atan2f(accData[1], accData[2]) * RAD_TO_DEG;
-	float pitchAcc = atanf(-accData[0] / sqrtf(accData[1] * accData[1] + accData[2] * accData[2])) * RAD_TO_DEG;
+	// Pitch should increase when pitching quadcopter downward
+	// and roll should increase when tilting quadcopter clockwise
+	gyroRate[1] = -gyroRate[1];
+/*
+	static float gyroAngle[3] = { 0, 0, 0 };
+	for (uint8_t axis = 0; axis < 3; axis++)
+		gyroAngle[axis] += gyroRate[axis] * dt; // Gyro angle is only used for debugging
+*/
+	float pitchAcc  = atan2f(accData[1], accData[2]) * RAD_TO_DEG;
+	float rollAcc = atanf(accData[0] / sqrtf(accData[1] * accData[1] + accData[2] * accData[2])) * RAD_TO_DEG;
 
-	*roll = getAngleX(rollAcc, gyroRate[0], dt);
-	*pitch = getAngleY(pitchAcc, gyroRate[1], dt);
+	*roll = getAngleX(rollAcc, gyroRate[1], dt);
+	*pitch = getAngleY(pitchAcc, gyroRate[0], dt);
+/*
+	UARTprintf("%d\t%d\t%d\t\t", (int16_t)rollAcc, (int16_t)gyroAngle[1], (int16_t)*roll);
+	delay(1);
+	UARTprintf("%d\t%d\t%d\n", (int16_t)pitchAcc, (int16_t)gyroAngle[0], (int16_t)*pitch);
+	UARTFlushTx(false);
+*/
 /*
 	static float compAngleX, compAngleY;
 	compAngleX = 0.93f * (compAngleX + gyroRate[0] * dt) + 0.07f * rollAcc; // Calculate the angle using a Complimentary filter
