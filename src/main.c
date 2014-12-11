@@ -54,7 +54,7 @@ int main(void) {
 	UARTprintf("CLK %d\n", SysCtlClockGet());
 	UARTprintf("min: %d, max: %d, period: %d\n", PPM_MIN, PPM_MAX, getPeriod());
 
-	const float restAngleRoll = 0.51f, restAnglePitch = -1.7f;
+	const float restAngleRoll = 1.67f, restAnglePitch = -2.55f; // TODO: Make a calibration routine for these values
 	
 	pid_t pidRoll, pidPitch;
 
@@ -93,7 +93,7 @@ int main(void) {
 				pidPitch.integratedError = 0.0f;
 				pidPitch.lastError = 0.0f;
 			} else {
-				float rollOut = updatePID(&pidRoll, restAngleRoll, roll, dt); // TODO: Make setPoint adjustable
+				float rollOut = updatePID(&pidRoll, restAngleRoll, roll, dt);
 				float pitchOut = updatePID(&pidPitch, restAnglePitch, pitch, dt);
 
 				float throttle = map(rxChannel[RX_THROTTLE_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
@@ -126,10 +126,10 @@ int main(void) {
 				
 				// Roll Control
 				float aileron = map(rxChannel[RX_AILERON_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
-				motors[0] -= aileron / 2;
-				motors[1] -= aileron / 2;
-				motors[2] += aileron / 2;
-				motors[3] += aileron / 2;
+				motors[0] -= aileron / 2.0f;
+				motors[1] -= aileron / 2.0f;
+				motors[2] += aileron / 2.0f;
+				motors[3] += aileron / 2.0f;
 
 				updateMotorsAll(motors);
 				

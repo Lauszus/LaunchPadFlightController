@@ -29,7 +29,7 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/systick.h"
 #include "driverlib/timer.h"
-//#include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor - TODO: Remove
+//#include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 
 volatile uint16_t rxChannel[RX_NUM_CHANNELS];
 

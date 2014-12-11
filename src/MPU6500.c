@@ -62,14 +62,13 @@ void getMPU6500Angles(float *roll, float *pitch, float dt) {
 
 	// Pitch should increase when pitching quadcopter downward
 	// and roll should increase when tilting quadcopter clockwise
-	gyroRate[1] = -gyroRate[1];
-/*
+
 	static float gyroAngle[3] = { 0, 0, 0 };
 	for (uint8_t axis = 0; axis < 3; axis++)
 		gyroAngle[axis] += gyroRate[axis] * dt; // Gyro angle is only used for debugging
-*/
-	float pitchAcc  = atan2f(accData[1], accz_smooth) * RAD_TO_DEG;
+
 	float rollAcc = atanf(accData[0] / sqrtf(accData[1] * accData[1] + accz_smooth * accz_smooth)) * RAD_TO_DEG;
+	float pitchAcc  = atan2f(-accData[1], -accz_smooth) * RAD_TO_DEG;
 
 	*roll = getAngleX(rollAcc, gyroRate[1], dt);
 	*pitch = getAngleY(pitchAcc, gyroRate[0], dt);
@@ -150,8 +149,8 @@ void initMPU6500_i2c(void) {
 #if 1
 	/* Enable Data Ready Interrupt on INT pin */
 	i2cBuffer[0] = (1 << 5) | (1 << 4); // Enable LATCH_INT_EN and INT_RD_CLEAR
-	                                    // When this bit is equal to 1, the INT pin is held high until the interrupt is cleared
-	                                    // When this bit is equal to 1, interrupt status bits are cleared on any read operation
+										// When this bit is equal to 1, the INT pin is held high until the interrupt is cleared
+										// When this bit is equal to 1, interrupt status bits are cleared on any read operation
 	i2cBuffer[1] = (1 << 0); // Enable DATA_RDY_EN - When set to 1, this bit enables the Data Ready interrupt, which occurs each time a write operation to all of the sensor registers has been completed
 	i2cWriteData(0x37, i2cBuffer, 2); // Write to both registers at once
 #endif
@@ -264,14 +263,17 @@ void initMPU6500(void) {
 
 	// Use alternate function
 	GPIOPinConfigure(GPIO_PA2_SSI0CLK);
-	//GPIOPinConfigure(GPIO_PA3_SSI0FSS);
 	GPIOPinConfigure(GPIO_PA4_SSI0RX);
 	GPIOPinConfigure(GPIO_PA5_SSI0TX);
 
+#if 0
+	GPIOPinConfigure(GPIO_PA3_SSI0FSS);
+	GPIOPinTypeSSI(GPIO_PORTA_BASE, GPIO_PIN_2 | GPIO_PIN_3 | GPIO_PIN_4 | GPIO_PIN_5); // Use pins with SSI peripheral
+#else
 	GPIOPinTypeGPIOOutput(GPIO_PORTA_BASE, GPIO_PIN_3); // Set SS as output
 	spiSelect(false);
-
 	GPIOPinTypeSSI(GPIO_PORTA_BASE, GPIO_PIN_2 | GPIO_PIN_4 | GPIO_PIN_5); // Use pins with SSI peripheral
+#endif
 
 	//SSIClockSourceSet(SSI0_BASE, SSI_CLOCK_SYSTEM); // Set clock source
 
@@ -326,7 +328,6 @@ void spiReadData(uint32_t addr, uint32_t *buffer) {
 void spiWriteData(uint32_t addr, uint32_t buffer) {
 	spiSelect(true);
 	SSIDataPut(SSI0_BASE, addr);
-	while (SSIBusy(SSI0_BASE));
 	SSIDataPut(SSI0_BASE, buffer);
 	while (SSIBusy(SSI0_BASE));
 	spiSelect(false);
