@@ -34,6 +34,7 @@
 void initUART(void) {
 	// Enable the GPIO port containing the pins that will be used.
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+	SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 
 	// Configure the GPIO pin muxing for the UART function.
 	// This is only necessary if your part supports GPIO pin function muxing.

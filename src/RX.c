@@ -79,8 +79,10 @@ void Timer1Handler(void) {
 
 void initRX(void) {
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER1); // Enable Wide Timer1 peripheral
+	SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC); // Enable GPIOC peripheral
+	SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 	GPIOPinConfigure(GPIO_PC6_WT1CCP0); // Use altenate function
 	GPIOPinTypeTimer(GPIO_PORTC_BASE, GPIO_PIN_6); // Use pin with timer peripheral
 

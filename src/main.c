@@ -212,6 +212,5 @@ int main(void) {
 	// Sync all PPM output signals - is this needed?
 	// Check PPM output frequency of Naze32
 	// EEPROM
-	// SysCtlDelay(2);	// Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 	// Adjust PID values using switches
 	// Only enable peripheral once

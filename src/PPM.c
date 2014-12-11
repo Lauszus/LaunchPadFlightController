@@ -16,8 +16,10 @@ void initPPM(void) {
 	SysCtlPWMClockSet(SYSCTL_PWMDIV_4); // Set divider to 4
 
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM0); // Enable PWM peripheral
-
+	SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB); // Enable GPIOC peripheral
+	SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
+
 	// Use alternate function
 	GPIOPinConfigure(GPIO_PB6_M0PWM0);
 	GPIOPinConfigure(GPIO_PB7_M0PWM1);

@@ -120,6 +120,7 @@ void printMPU6050Debug(void) {
 */
 void initMPU6500_i2c(void) {
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_I2C1); // Enable I2C1 peripheral
+	SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA); // Enable GPIOA peripheral
 	SysCtlDelay(2);	// Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 
@@ -169,6 +170,7 @@ void initMPU6500_i2c(void) {
 
 	// Set INT input pin
 	SysCtlPeripheralEnable(GPIO_MPU_INT_PERIPH); // Enable GPIO peripheral
+	SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 	GPIOPinTypeGPIOInput(GPIO_MPU_INT_BASE, GPIO_MPU_INT_PIN); // Set as input
 
 	delay(100); // Wait for sensor to stabilize
@@ -271,7 +273,9 @@ void spiSelect(bool enable) {
 
 void initMPU6500(void) {
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_SSI0); // Enable SSI0 peripheral
+	SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA); // Enable GPIOA peripheral
+	SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 
 	// Use alternate function
 	GPIOPinConfigure(GPIO_PA2_SSI0CLK);
