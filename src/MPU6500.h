@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-bool dateReadyMPU6500(void);
+bool dataReadyMPU6500(void);
 void getMPU6500Angles(float *roll, float *pitch, float dt);
 void getMPU6500Gyro(int16_t *gyroData);
 

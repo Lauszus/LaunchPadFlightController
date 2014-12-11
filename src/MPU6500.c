@@ -42,7 +42,7 @@
 
 static int16_t gyroZero[3];
 
-bool dateReadyMPU6500(void) {
+bool dataReadyMPU6500(void) {
 	return GPIOPinRead(GPIO_MPU_INT_BASE, GPIO_MPU_INT_PIN);
 }
 
@@ -177,7 +177,7 @@ void initMPU6500_i2c(void) {
 
 	//printMPU6050Debug();
 
-	while (!dateReadyMPU6500()) {
+	while (!dataReadyMPU6500()) {
 		// Wait until date is ready
 	}
 

@@ -98,7 +98,7 @@ int main(void) {
 			pidPitch.lastError = 0.0f;
 			pidYaw.integratedError = 0.0f;
 			pidYaw.lastError = 0.0f;
-		} else if (dateReadyMPU6500()) {
+		} else if (dataReadyMPU6500()) {
 			float dt = (float)(micros() - timer) / 1000000.0f;
 			//UARTprintf("%d\n", micros() - timer);
 			timer = micros();
