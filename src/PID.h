@@ -21,6 +21,9 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+	
+// From Arduino source code
+#define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 
 typedef struct {
 	float Kp, Ki, Kd; // PID variables

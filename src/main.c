@@ -117,6 +117,9 @@ int main(void) {
 				motors[3] -= yawOut * yawGain;
 */
 
+				for (uint8_t i = 0; i < 4; i++)
+					motors[i] = constrain(motors[i], -50.0f, 50.0f);
+
 				// Pitch Control
 				float elevator = map(rxChannel[RX_ELEVATOR_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
 				motors[0] += elevator / 2.0f;
