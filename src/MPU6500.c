@@ -46,7 +46,7 @@ bool dateReadyMPU6500(void) {
 	return GPIOPinRead(GPIO_MPU_INT_BASE, GPIO_MPU_INT_PIN);
 }
 
-void getMPU6050Gyro(int16_t *gyroData) {
+void getMPU6500Gyro(int16_t *gyroData) {
 	uint8_t buf[6];
 
 	i2cReadData(0x43, buf, 6);

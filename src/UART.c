@@ -51,9 +51,9 @@ void initUART(void) {
 
 void printPIDValues(void) {
 	UARTprintf("%d.%04d\t%d.%04d\t%d.%04d\n",
-																	(int16_t)pidRoll.Kp, (int16_t)abs(pidRoll.Kp * 10000.0f) % 10000,
-																	(int16_t)pidRoll.Ki, (int16_t)abs(pidRoll.Ki * 10000.0f) % 10000,
-																	(int16_t)pidRoll.Kd, (int16_t)abs(pidRoll.Kd * 10000.0f) % 10000);
+                                           (int16_t)pidRoll.Kp, (int16_t)abs(pidRoll.Kp * 10000.0f) % 10000,
+                                           (int16_t)pidRoll.Ki, (int16_t)abs(pidRoll.Ki * 10000.0f) % 10000,
+                                           (int16_t)pidRoll.Kd, (int16_t)abs(pidRoll.Kd * 10000.0f) % 10000);
 	UARTFlushTx(false);
 }
 
@@ -93,7 +93,7 @@ void checkUARTData(void) {
 				return;
 		}
 		dataInput[i + 1] = '\0'; // Add null-character
-		UARTprintf("%s\n", dataInput); // Echo send chars back
+		UARTprintf("%s\n", dataInput); // Echo message back
 		setValues(dataInput);
 	}
 }

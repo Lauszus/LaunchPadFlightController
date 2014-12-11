@@ -91,7 +91,7 @@ int main(void) {
 
 #if ACRO_MODE
 			int16_t gyroData[3];
-			getMPU6050Gyro(gyroData);
+			getMPU6500Gyro(gyroData);
 			
 			/*UARTprintf("%d\t%d\t%d\n", gyroData[0], gyroData[1], gyroData[2]);
 			UARTFlushTx(false);*/

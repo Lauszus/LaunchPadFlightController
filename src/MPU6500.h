@@ -24,7 +24,7 @@ extern "C" {
 
 bool dateReadyMPU6500(void);
 void getMPU6500Angles(float *roll, float *pitch, float dt);
-void getMPU6050Gyro(int16_t *gyroData);
+void getMPU6500Gyro(int16_t *gyroData);
 
 void initMPU6500_i2c(void);
 void updateMPU6500(int16_t *accData, int16_t *gyroData);
