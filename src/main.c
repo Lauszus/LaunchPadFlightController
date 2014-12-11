@@ -35,6 +35,11 @@
 
 #define ACRO_MODE 1
 
+#define SYSCTL_PERIPH_LED SYSCTL_PERIPH_GPIOF
+#define GPIO_LED_BASE     GPIO_PORTF_BASE
+#define GPIO_RED_LED      GPIO_PIN_1
+#define GPIO_GREEN_LED    GPIO_PIN_3
+
 int main(void) {
 	// Set the clocking to run directly from the external crystal/oscillator.
 	SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ); // Set clock to 80MHz (400MHz(PLL) / 2 / 2.5 = 80 MHz)
@@ -48,6 +53,10 @@ int main(void) {
 
 	//initMPU6500();
 	initMPU6500_i2c();
+	
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_LED); // Enable GPIOF peripheral
+	SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
+	GPIOPinTypeGPIOOutput(GPIO_LED_BASE, GPIO_RED_LED | GPIO_GREEN_LED); // Set red and blue LEDs as outputs
 
 	IntMasterEnable();
 
@@ -103,7 +112,9 @@ int main(void) {
 			armed = false;
 		} else
 			armed = true;
-		
+
+		GPIOPinWrite(GPIO_PORTF_BASE, GPIO_RED_LED | GPIO_GREEN_LED, !validRXData || rxChannel[RX_AUX1_CHAN] < 1000 ? GPIO_GREEN_LED : GPIO_RED_LED); // Turn on red led if there is valid data and AUX channel is in armed position otherwise turn on green LED
+
 		if (dataReadyMPU6500()) {
 			float dt = (float)(micros() - timer) / 1000000.0f;
 			//UARTprintf("%d\n", micros() - timer);
