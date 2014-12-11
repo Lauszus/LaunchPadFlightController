@@ -155,17 +155,17 @@ int main(void) {
 
 			// Pitch Control
 			float elevator = map(rxChannel[RX_ELEVATOR_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
-			motors[0] += elevator / 2.0f;
-			motors[1] -= elevator / 2.0f;
-			motors[2] += elevator / 2.0f;
-			motors[3] -= elevator / 2.0f;
+			motors[0] += elevator;
+			motors[1] -= elevator;
+			motors[2] += elevator;
+			motors[3] -= elevator;
 			
 			// Roll Control
 			float aileron = map(rxChannel[RX_AILERON_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
-			motors[0] -= aileron / 2.0f;
-			motors[1] -= aileron / 2.0f;
-			motors[2] += aileron / 2.0f;
-			motors[3] += aileron / 2.0f;
+			motors[0] -= aileron;
+			motors[1] -= aileron;
+			motors[2] += aileron;
+			motors[3] += aileron;
 
 			// Rudder Control
 			float rudder = map(rxChannel[RX_RUDDER_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
