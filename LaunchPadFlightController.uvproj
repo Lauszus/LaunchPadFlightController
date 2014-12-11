@@ -452,6 +452,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\PID.c</FilePath>
             </File>
+            <File>
+              <FileName>ustdlib.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\lib\utils\ustdlib.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
