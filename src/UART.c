@@ -76,6 +76,10 @@ void setValues(char *input) {
 		pidPitch.Kp = pidRoll.Kp;
 		pidPitch.Ki = pidRoll.Ki;
 		pidPitch.Kd = pidRoll.Kd;
+		
+		pidYaw.Kp = pidRoll.Kp * 2.0f;
+		pidYaw.Ki = pidRoll.Ki * 2.0f;
+		pidYaw.Kd = pidRoll.Kd * 2.0f;
 
 		printPIDValues(); // Print new PID Values
 	}

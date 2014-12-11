@@ -30,7 +30,7 @@ typedef struct {
 	float lastError, integratedError;
 } __attribute__((packed)) pid_t;
 
-extern pid_t pidRoll, pidPitch;
+extern pid_t pidRoll, pidPitch, pidYaw;
 
 float updatePID(pid_t *pid, float restAngle, float inputAngle, float dt);
 

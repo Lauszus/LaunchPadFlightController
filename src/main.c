@@ -61,8 +61,9 @@ int main(void) {
 #endif
 
 #if ACRO_MODE
+	// 0.0200.0.1000.0.0000
 	pidRoll.Kp = 0.02f;
-	pidRoll.Ki = 0.0f;
+	pidRoll.Ki = 0.10f;
 	pidRoll.Kd = 0.0f;
 #else
 	pidRoll.Kp = 1.75f;
@@ -73,16 +74,20 @@ int main(void) {
 	pidRoll.lastError = 0.0f;
 
 	pidPitch = pidRoll; // Use same PID values for both pitch and roll
+	pidYaw = pidRoll;
+
+	pidYaw.Kp *= 2.0f;
+	pidYaw.Ki *= 2.0f;
+	pidYaw.Kd *= 2.0f;
 
 	static uint32_t timer = 0;
 
 	// Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
 	static float motors[4] = { -100.0f, -100.0f, -100.0f, -100.0f };
-	static float rollGain = 1.0f, pitchGain = 1.0f;
+	static float rollGain = 1.0f, pitchGain = 1.0f, yawGain = 1.0f;
 
 	while (1) {
 		checkUARTData();
-
 #if 1
 		bool validRXData = true;
 		for (uint8_t i = 0; i < RX_NUM_CHANNELS; i++) {
@@ -124,6 +129,7 @@ int main(void) {
 			float rollOut = updatePID(&pidRoll, restAngleRoll, roll, dt);
 			float pitchOut = updatePID(&pidPitch, restAnglePitch, pitch, dt);
 #endif
+			float yawOut = updatePID(&pidYaw, 0, gyroData[2], dt);
 
 			float throttle = map(rxChannel[RX_THROTTLE_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
 			for (uint8_t i = 0; i < 4; i++)
@@ -139,12 +145,10 @@ int main(void) {
 			motors[2] += pitchOut * pitchGain;
 			motors[3] -= pitchOut * pitchGain;
 
-/*
 			motors[0] -= yawOut * yawGain;
 			motors[1] += yawOut * yawGain;
 			motors[2] += yawOut * yawGain;
 			motors[3] -= yawOut * yawGain;
-*/
 
 			for (uint8_t i = 0; i < 4; i++)
 				motors[i] = constrain(motors[i], -50.0f, 50.0f);
@@ -162,6 +166,13 @@ int main(void) {
 			motors[1] -= aileron / 2.0f;
 			motors[2] += aileron / 2.0f;
 			motors[3] += aileron / 2.0f;
+
+			// Rudder Control
+			float rudder = map(rxChannel[RX_RUDDER_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+			motors[0] -= rudder;
+			motors[1] += rudder;
+			motors[2] += rudder;
+			motors[3] -= rudder;
 
 			updateMotorsAll(motors);
 			

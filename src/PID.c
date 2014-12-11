@@ -20,7 +20,7 @@
 
 #include "PID.h"
 
-pid_t pidRoll, pidPitch;
+pid_t pidRoll, pidPitch, pidYaw;
 
 float updatePID(pid_t *pid, float restAngle, float inputAngle, float dt) {
 	/* Update PID values */
