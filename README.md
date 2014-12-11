@@ -14,9 +14,8 @@ The code is still in progress. I will update this readme with more information l
 
 # Current setup
 
-* Tiva C Series TM4C123G LaunchPad
+* Microcontroller: Tiva C Series TM4C123G LaunchPad
 * IMU: MPU-6500
-
 * Motors: Sunnysky X2204 2300kv
 * ESC's: Blue Series 12A RapidESC (SimonK v2013-05-15)
 * Props: Gemfan 5x3
@@ -24,6 +23,7 @@ The code is still in progress. I will update this readme with more information l
 * LiPo: Turnigy nano-tech 1500 mAh
 * RX: OrangeRX R615X
 * TX: Turnigy 9XR
+* TX module: OrangeRX 2.4GHz transmitter module
 
 # Pinout
 
