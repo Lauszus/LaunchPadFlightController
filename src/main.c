@@ -59,8 +59,6 @@ int main(void) {
 #if !ACRO_MODE
 	const float restAngleRoll = 1.67f, restAnglePitch = -2.55f; // TODO: Make a calibration routine for these values
 #endif
-	
-	pid_t pidRoll, pidPitch;
 
 #if ACRO_MODE
 	pidRoll.Kp = 0.02f;
@@ -83,6 +81,8 @@ int main(void) {
 	static float rollGain = 1.0f, pitchGain = 1.0f;
 
 	while (1) {
+		checkUARTData();
+
 #if 1
 		if (dateReadyMPU6500()) {
 			float dt = (float)(micros() - timer) / 1000000.0f;
@@ -92,11 +92,14 @@ int main(void) {
 #if ACRO_MODE
 			int16_t gyroData[3];
 			getMPU6050Gyro(gyroData);
+			
+			/*UARTprintf("%d\t%d\t%d\n", gyroData[0], gyroData[1], gyroData[2]);
+			UARTFlushTx(false);*/
 #else
 			float roll, pitch;
 			getMPU6500Angles(&roll, &pitch, dt);
 			
-			/*UARTprintf("%d.%d\t%d.%d\n", (int16_t)roll, (int16_t)abs(roll * 100.0f) % 100, (int16_t)pitch, (int16_t)abs(pitch * 100.0f) % 100);
+			/*UARTprintf("%d.%02d\t%d.%02d\n", (int16_t)roll, (int16_t)abs(roll * 100.0f) % 100, (int16_t)pitch, (int16_t)abs(pitch * 100.0f) % 100);
 			UARTFlushTx(false);*/
 #endif
 

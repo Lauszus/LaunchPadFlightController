@@ -20,6 +20,8 @@
 
 #include "PID.h"
 
+pid_t pidRoll, pidPitch;
+
 float updatePID(pid_t *pid, float restAngle, float inputAngle, float dt) {
 	/* Update PID values */
 	float error = (restAngle - inputAngle);
