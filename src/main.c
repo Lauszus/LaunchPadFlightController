@@ -99,6 +99,10 @@ int main(void) {
 	static float rollGain = 1.0f, pitchGain = 1.0f, yawGain = 1.0f;
 	
 	static bool armed = false;
+	
+	while (!validRXData || rxChannel[RX_AUX1_CHAN] > 1000) {
+		// Wait until we have valid data and we are unarmed
+	}
 
 	while (1) {
 		checkUARTData();
