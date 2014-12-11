@@ -40,6 +40,10 @@ void delay(uint32_t ms) {
 	SysCtlDelay(SysCtlClockGet() / 3000UL * ms); // TOOD: Check if it needs to be tuned
 }
 
+void delayMicroseconds(uint32_t us) {
+	SysCtlDelay(SysCtlClockGet() / 3000000UL * us); // TOOD: Check if it needs to be tuned
+}
+
 uint32_t millis(void) {
 	return counter / 1000UL;
 }
