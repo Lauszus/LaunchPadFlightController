@@ -71,7 +71,11 @@ void setValues(char *input) {
 			char *pStart = ustrstr(input, "SD,") + 3; // Find location of "SD,"
 			pidRoll.Kd = ustrtof(pStart, NULL);
 		}
-		pidPitch = pidRoll; // Use same PID values for both pitch and roll
+		// Use same PID values for both pitch and roll
+		pidPitch.Kp = pidRoll.Kp;
+		pidPitch.Ki = pidRoll.Ki;
+		pidPitch.Kd = pidRoll.Kd;
+
 		printPIDValues(); // Print new PID Values
 	}
 }
