@@ -80,6 +80,8 @@ int main(void) {
 	pidYaw.Kp *= 2.0f;
 	pidYaw.Ki *= 2.0f;
 	pidYaw.Kd *= 2.0f;
+	
+	printPIDValues();
 
 	static uint32_t timer = 0;
 

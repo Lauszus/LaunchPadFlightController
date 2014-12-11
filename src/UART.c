@@ -29,7 +29,7 @@
 #include "driverlib/pin_map.h"
 #include "driverlib/sysctl.h"
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
-#include <utils/ustdlib.h>
+#include "utils/ustdlib.h"
 
 void initUART(void) {
 	// Enable the GPIO port containing the pins that will be used.
@@ -61,17 +61,15 @@ void printPIDValues(void) {
 void setValues(char *input) {
   if (input[0] == 'G' && input[1] == 'P') // Send "GP;" to get the current PID Values
 		printPIDValues(); // Print PID Values
-  else if (input[0] == 'S') { // Set different values
-		if (input[1] == 'P') {
-			char *pStart = ustrstr(input, "SP,") + 3; // Find location of "SP,"
-			pidRoll.Kp = ustrtof(pStart, NULL);
-		} else if (input[1] == 'I') {
-			char *pStart = ustrstr(input, "SI,") + 3; // Find location of "SI,"
-			pidRoll.Ki = ustrtof(pStart, NULL);
-		} else if (input[1] == 'D') {
-			char *pStart = ustrstr(input, "SD,") + 3; // Find location of "SD,"
-			pidRoll.Kd = ustrtof(pStart, NULL);
-		}
+  else if (input[0] == 'S' && input[2] == ',') { // Set different values
+		float value = ustrtof(input + 3, NULL); // Skip first three letters
+		if (input[1] == 'P')
+			pidRoll.Kp = value;
+		else if (input[1] == 'I')
+			pidRoll.Ki = value;
+		else if (input[1] == 'D')
+			pidRoll.Kd = value;
+
 		// Use same PID values for both pitch and roll
 		pidPitch.Kp = pidRoll.Kp;
 		pidPitch.Ki = pidRoll.Ki;
