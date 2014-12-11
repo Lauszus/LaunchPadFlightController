@@ -112,13 +112,13 @@ int main(void) {
 #if ACRO_MODE
 			int16_t gyroData[3];
 			getMPU6500Gyro(gyroData);
-			
+
 			/*UARTprintf("%d\t%d\t%d\n", gyroData[0], gyroData[1], gyroData[2]);
 			UARTFlushTx(false);*/
 #else
 			float roll, pitch;
 			getMPU6500Angles(&roll, &pitch, dt);
-			
+
 			/*UARTprintf("%d.%02d\t%d.%02d\n", (int16_t)roll, (int16_t)abs(roll * 100.0f) % 100, (int16_t)pitch, (int16_t)abs(pitch * 100.0f) % 100);
 			UARTFlushTx(false);*/
 #endif
@@ -160,7 +160,7 @@ int main(void) {
 			motors[1] -= elevator;
 			motors[2] += elevator;
 			motors[3] -= elevator;
-			
+
 			// Roll Control
 			float aileron = map(rxChannel[RX_AILERON_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
 			motors[0] -= aileron;
@@ -176,7 +176,7 @@ int main(void) {
 			motors[3] -= rudder;
 
 			updateMotorsAll(motors);
-			
+
 			//UARTprintf("%d\t%d\n", (int16_t)elevator, (int16_t)aileron);
 #if 0
 			UARTprintf("%d\t%d\t\t", (int16_t)roll, (int16_t)pitch);

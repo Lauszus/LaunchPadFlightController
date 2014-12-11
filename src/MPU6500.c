@@ -53,7 +53,7 @@ void getMPU6500Gyro(int16_t *gyroData) {
 	gyroData[0] = (buf[0] << 8) | buf[1]; // X
 	gyroData[1] = (buf[2] << 8) | buf[3]; // Y
 	gyroData[2] = (buf[4] << 8) | buf[5]; // Z
-	
+
 	for (uint8_t axis = 0; axis < 3; axis++)
 		gyroData[axis] -= gyroZero[axis];
 }
@@ -75,9 +75,9 @@ void getMPU6500Angles(float *roll, float *pitch, float dt) {
 	// Pitch should increase when pitching quadcopter downward
 	// and roll should increase when tilting quadcopter clockwise
 
-	static float gyroAngle[3] = { 0, 0, 0 };
+	/*static float gyroAngle[3] = { 0, 0, 0 };
 	for (uint8_t axis = 0; axis < 3; axis++)
-		gyroAngle[axis] += gyroRate[axis] * dt; // Gyro angle is only used for debugging
+		gyroAngle[axis] += gyroRate[axis] * dt; // Gyro angle is only used for debugging*/
 
 	float rollAcc = atanf(accData[0] / sqrtf(accData[1] * accData[1] + accz_smooth * accz_smooth)) * RAD_TO_DEG;
 	float pitchAcc  = atan2f(-accData[1], -accz_smooth) * RAD_TO_DEG;
@@ -214,7 +214,7 @@ void i2cWrite(uint8_t addr, uint8_t data) {
 void i2cWriteData(uint8_t addr, uint8_t *data, uint8_t length) {
 	I2CMasterSlaveAddrSet(I2C1_BASE, SLAVE_ADDRESS, false); // Set to write mode
 
-	I2CMasterDataPut(I2C1_BASE, addr); // Place addreess into data register
+	I2CMasterDataPut(I2C1_BASE, addr); // Place address into data register
 	I2CMasterControl(I2C1_BASE, I2C_MASTER_CMD_BURST_SEND_START); // Send start condition
 	while (I2CMasterBusy(I2C1_BASE)); // Wait until transfer is done
 
@@ -232,7 +232,7 @@ void i2cWriteData(uint8_t addr, uint8_t *data, uint8_t length) {
 uint8_t i2cRead(uint8_t addr) {
 	I2CMasterSlaveAddrSet(I2C1_BASE, SLAVE_ADDRESS, false); // Set to write mode
 
-	I2CMasterDataPut(I2C1_BASE, addr); // Place addreess into data register
+	I2CMasterDataPut(I2C1_BASE, addr); // Place address into data register
 	I2CMasterControl(I2C1_BASE, I2C_MASTER_CMD_SINGLE_SEND); // Send data
 	while (I2CMasterBusy(I2C1_BASE)); // Wait until transfer is done
 
@@ -246,7 +246,7 @@ uint8_t i2cRead(uint8_t addr) {
 void i2cReadData(uint8_t addr, uint8_t *data, uint8_t length) {
 	I2CMasterSlaveAddrSet(I2C1_BASE, SLAVE_ADDRESS, false); // Set to write mode
 
-	I2CMasterDataPut(I2C1_BASE, addr); // Place addreess into data register
+	I2CMasterDataPut(I2C1_BASE, addr); // Place address into data register
 	I2CMasterControl(I2C1_BASE, I2C_MASTER_CMD_SINGLE_SEND); // Send data
 	while (I2CMasterBusy(I2C1_BASE)); // Wait until transfer is done
 
