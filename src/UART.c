@@ -76,7 +76,7 @@ void setValues(char *input) {
 		pidPitch.Kd = pidRoll.Kd;
 
 		pidYaw.Kp = pidRoll.Kp * 2.0f; // TODO: Tune these separately
-		pidYaw.Ki = pidRoll.Ki * 2.0f;
+		pidYaw.Ki = pidRoll.Ki * 2.8f; // I increased this in order for it to stop yawing slowly
 		pidYaw.Kd = pidRoll.Kd * 2.0f;
 
 		printPIDValues(); // Print new PID Values

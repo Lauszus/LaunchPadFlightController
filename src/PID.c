@@ -27,7 +27,7 @@ float updatePID(pid_t *pid, float restAngle, float inputAngle, float dt) {
 	float error = (restAngle - inputAngle);
 	float pTerm = pid->Kp * error;
 	pid->integratedError += error * dt;
-	pid->integratedError = constrain(pid->integratedError, -2.0f, 2.0f); // Limit the integrated error
+	pid->integratedError = constrain(pid->integratedError, -10.0f, 10.0f); // Limit the integrated error
 	float iTerm = pid->Ki * pid->integratedError;
 	float dTerm = pid->Kd * (error - pid->lastError) / dt;
 	pid->lastError = error;

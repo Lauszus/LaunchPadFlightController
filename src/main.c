@@ -71,8 +71,8 @@ int main(void) {
 
 #if ACRO_MODE
 	// 0.0200.0.1000.0.0000
-	pidRoll.Kp = 0.02f;
-	pidRoll.Ki = 0.10f;
+	pidRoll.Kp = 0.016f;
+	pidRoll.Ki = 0.050f;
 	pidRoll.Kd = 0.0f;
 #else
 	pidRoll.Kp = 1.75f;
@@ -83,11 +83,11 @@ int main(void) {
 	pidRoll.lastError = 0.0f;
 
 	pidPitch = pidRoll; // Use same PID values for both pitch and roll
-	pidYaw = pidRoll;
 
 	// x2 the values work pretty well - TODO: Fine-tune these
+	pidYaw = pidRoll;
 	pidYaw.Kp *= 2.0f;
-	pidYaw.Ki *= 2.0f;
+	pidYaw.Ki *= 2.8f; // I increased this in order for it to stop yawing slowly
 	pidYaw.Kd *= 2.0f;
 	
 	printPIDValues();
