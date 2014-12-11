@@ -92,11 +92,6 @@ int main(void) {
 	while (1) {
 		checkUARTData();
 #if 1
-		bool validRXData = true;
-		for (uint8_t i = 0; i < RX_NUM_CHANNELS; i++) {
-				if (rxChannel[i] == 0) // Make sure that all are above 0
-					validRXData = false;
-		}
 		// TODO: Arm using throttle low and yaw right
 		if (!validRXData || rxChannel[RX_AUX1_CHAN] < 1000 || rxChannel[RX_THROTTLE_CHAN] < RX_MIN_INPUT + 25) {
 			writePPMAllOff();

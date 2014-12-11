@@ -32,6 +32,7 @@
 //#include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 
 volatile uint16_t rxChannel[RX_NUM_CHANNELS];
+volatile bool validRXData;
 
 void Timer1Handler(void) {
 	static uint8_t channelIndex = 0;
@@ -55,6 +56,11 @@ void Timer1Handler(void) {
 #else
 		if (diff_us > 2700) { // Check if sync pulse is received - see: https://github.com/multiwii/baseflight/blob/master/src/drv_pwm.c
 			channelIndex = 0; // Reset channel index
+			validRXData = true;
+			for (uint8_t i = 0; i < RX_NUM_CHANNELS; i++) {
+				if (rxChannel[i] == 0) // Make sure that all are above 0
+					validRXData = false;
+			}
 #if 0
 			for (uint8_t i = 0; i < RX_NUM_CHANNELS; i++) {
 				if (rxChannel[i] > 0)
@@ -64,11 +70,8 @@ void Timer1Handler(void) {
 			}
 			UARTprintf("\n");
 #endif
-		} else {
+		} else if (channelIndex < RX_NUM_CHANNELS)
 			rxChannel[channelIndex++] = diff_us;
-			if (channelIndex >= RX_NUM_CHANNELS)
-				channelIndex = 0;
-		}
 #endif
 	}
 
@@ -95,4 +98,6 @@ void initRX(void) {
 	TimerIntEnable(WTIMER1_BASE, TIMER_CAPA_EVENT); // Enable timer capture A event interrupt
 	IntEnable(INT_WTIMER1A); // Enable wide Timer 1A interrupt
 	TimerEnable(WTIMER1_BASE, TIMER_A); // Enable Timer 1A
+	
+	validRXData = false;
 }

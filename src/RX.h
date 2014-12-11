@@ -36,6 +36,7 @@ enum {
 #define RX_MAX_INPUT 1730
 
 extern volatile uint16_t rxChannel[RX_NUM_CHANNELS];
+extern volatile bool validRXData;
 
 void initRX(void);
 
