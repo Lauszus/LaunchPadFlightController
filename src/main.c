@@ -92,7 +92,12 @@ int main(void) {
 	
 	printPIDValues();
 
-	static uint32_t timer = 0;
+#if ACRO_MODE
+	static int16_t gyroData[3];
+#else
+	float roll, pitch;
+#endif
+	static uint32_t imuTimer = 0, pidTimer = 0;
 
 	// Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
 	static float motors[4] = { -100.0f, -100.0f, -100.0f, -100.0f };
@@ -120,89 +125,93 @@ int main(void) {
 		GPIOPinWrite(GPIO_PORTF_BASE, GPIO_RED_LED | GPIO_GREEN_LED, !validRXData || rxChannel[RX_AUX1_CHAN] < 1000 ? GPIO_GREEN_LED : GPIO_RED_LED); // Turn on red led if there is valid data and AUX channel is in armed position otherwise turn on green LED
 
 		if (dataReadyMPU6500()) {
-			float dt = (float)(micros() - timer) / 1000000.0f;
-			//UARTprintf("%d\n", micros() - timer);
-			timer = micros();
+			float dt = (float)(micros() - imuTimer) / 1000000.0f;
+			//UARTprintf("%d\n", micros() - imuTimer);
+			imuTimer = micros();
 
 #if ACRO_MODE
-			int16_t gyroData[3];
 			getMPU6500Gyro(gyroData);
 
 			/*UARTprintf("%d\t%d\t%d\n", gyroData[0], gyroData[1], gyroData[2]);
 			UARTFlushTx(false);*/
 #else
-			float roll, pitch;
 			getMPU6500Angles(&roll, &pitch, dt);
 
 			/*UARTprintf("%d.%02d\t%d.%02d\n", (int16_t)roll, (int16_t)abs(roll * 100.0f) % 100, (int16_t)pitch, (int16_t)abs(pitch * 100.0f) % 100);
 			UARTFlushTx(false);*/
 #endif
+		}
+		
+		float dt = (float)(micros() - pidTimer);
+		if (armed && dt > 2500) { // Limit to 2.5ms (400 Hz)
+			//UARTprintf("%d\n", micros() - pidTimer);
+			pidTimer = micros();
+			dt /= 1000000.0f; // Convert to seconds
 
-			if (armed) {
 #if ACRO_MODE
-				float rollOut = updatePID(&pidRoll, 0, gyroData[1], dt);
-				float pitchOut = updatePID(&pidPitch, 0, gyroData[0], dt);
+			float rollOut = updatePID(&pidRoll, 0, gyroData[1], dt);
+			float pitchOut = updatePID(&pidPitch, 0, gyroData[0], dt);
 #else
-				float rollOut = updatePID(&pidRoll, restAngleRoll, roll, dt);
-				float pitchOut = updatePID(&pidPitch, restAnglePitch, pitch, dt);
+			float rollOut = updatePID(&pidRoll, restAngleRoll, roll, dt);
+			float pitchOut = updatePID(&pidPitch, restAnglePitch, pitch, dt);
 #endif
-				float yawOut = updatePID(&pidYaw, 0, gyroData[2], dt);
+			float yawOut = updatePID(&pidYaw, 0, gyroData[2], dt);
 
-				float throttle = map(rxChannel[RX_THROTTLE_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
-				for (uint8_t i = 0; i < 4; i++)
-					motors[i] = throttle;
+			float throttle = map(rxChannel[RX_THROTTLE_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+			for (uint8_t i = 0; i < 4; i++)
+				motors[i] = throttle;
 
-				motors[0] -= rollOut * rollGain;
-				motors[1] -= rollOut * rollGain;
-				motors[2] += rollOut * rollGain;
-				motors[3] += rollOut * rollGain;
+			motors[0] -= rollOut * rollGain;
+			motors[1] -= rollOut * rollGain;
+			motors[2] += rollOut * rollGain;
+			motors[3] += rollOut * rollGain;
 
-				motors[0] += pitchOut * pitchGain;
-				motors[1] -= pitchOut * pitchGain;
-				motors[2] += pitchOut * pitchGain;
-				motors[3] -= pitchOut * pitchGain;
+			motors[0] += pitchOut * pitchGain;
+			motors[1] -= pitchOut * pitchGain;
+			motors[2] += pitchOut * pitchGain;
+			motors[3] -= pitchOut * pitchGain;
 
-				motors[0] -= yawOut * yawGain;
-				motors[1] += yawOut * yawGain;
-				motors[2] += yawOut * yawGain;
-				motors[3] -= yawOut * yawGain;
+			motors[0] -= yawOut * yawGain;
+			motors[1] += yawOut * yawGain;
+			motors[2] += yawOut * yawGain;
+			motors[3] -= yawOut * yawGain;
 
-				for (uint8_t i = 0; i < 4; i++)
-					motors[i] = constrain(motors[i], -50.0f, 50.0f);
+			for (uint8_t i = 0; i < 4; i++)
+				motors[i] = constrain(motors[i], -50.0f, 50.0f);
 
-				// Pitch Control
-				float elevator = map(rxChannel[RX_ELEVATOR_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
-				motors[0] += elevator;
-				motors[1] -= elevator;
-				motors[2] += elevator;
-				motors[3] -= elevator;
+			// Pitch Control
+			float elevator = map(rxChannel[RX_ELEVATOR_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+			motors[0] += elevator / 2.0f;
+			motors[1] -= elevator / 2.0f;
+			motors[2] += elevator / 2.0f;
+			motors[3] -= elevator / 2.0f;
 
-				// Roll Control
-				float aileron = map(rxChannel[RX_AILERON_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
-				motors[0] -= aileron;
-				motors[1] -= aileron;
-				motors[2] += aileron;
-				motors[3] += aileron;
+			// Roll Control
+			float aileron = map(rxChannel[RX_AILERON_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+			motors[0] -= aileron / 2.0f;
+			motors[1] -= aileron / 2.0f;
+			motors[2] += aileron / 2.0f;
+			motors[3] += aileron / 2.0f;
 
-				// Rudder Control
-				float rudder = map(rxChannel[RX_RUDDER_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
-				motors[0] -= rudder;
-				motors[1] += rudder;
-				motors[2] += rudder;
-				motors[3] -= rudder;
+			// Rudder Control
+			float rudder = map(rxChannel[RX_RUDDER_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+			motors[0] -= rudder;
+			motors[1] += rudder;
+			motors[2] += rudder;
+			motors[3] -= rudder;
 
-				updateMotorsAll(motors);
+			updateMotorsAll(motors);
 
-				//UARTprintf("%d\t%d\n", (int16_t)elevator, (int16_t)aileron);
+			//UARTprintf("%d\t%d\n", (int16_t)elevator, (int16_t)aileron);
 #if 0
-				UARTprintf("%d\t%d\t\t", (int16_t)roll, (int16_t)pitch);
-				UARTprintf("%d\t%d\t\t", (int16_t)rollOut, (int16_t)pitchOut);
-				UARTprintf("%d\t%d\t%d\t%d\n", (int16_t)motors[0], (int16_t)motors[1], (int16_t)motors[2], (int16_t)motors[3]);
-				UARTFlushTx(false);
+			UARTprintf("%d\t%d\t\t", (int16_t)roll, (int16_t)pitch);
+			UARTprintf("%d\t%d\t\t", (int16_t)rollOut, (int16_t)pitchOut);
+			UARTprintf("%d\t%d\t%d\t%d\n", (int16_t)motors[0], (int16_t)motors[1], (int16_t)motors[2], (int16_t)motors[3]);
+			UARTFlushTx(false);
 #endif
-			}
 		}
 #endif
+
 #if 0
 		for (int8_t i = -100; i < 100; i++) {
 			updateMotor(0, i);
@@ -244,7 +253,7 @@ int main(void) {
 // TODO:
 	// Save PID values in EEPROM
 	// Adjust PID values using pots on transmitter
-	// Only enable peripheral once
+	// Only enable peripheral clock once
 	// Tune yaw PID values separately
-	// Should I limit loop time to 2.5ms (400Hz)?
 	// Make limit of integrated error adjustable
+	// Get self-level working
