@@ -76,6 +76,7 @@ int main(void) {
 	pidPitch = pidRoll; // Use same PID values for both pitch and roll
 	pidYaw = pidRoll;
 
+	// x2 the values work pretty well - TODO: Fine-tune these
 	pidYaw.Kp *= 2.0f;
 	pidYaw.Ki *= 2.0f;
 	pidYaw.Kd *= 2.0f;
@@ -227,4 +228,6 @@ int main(void) {
 	// Save PID values in EEPROM
 	// Adjust PID values using pots on transmitter
 	// Only enable peripheral once
-	// Tune yaw separately
+	// Tune yaw PID values separately
+	// Should I limit loop time to 2.5ms (400Hz)?
+	// Make limit of integrated error adjustable

@@ -45,7 +45,7 @@ void Timer1Handler(void) {
 	uint32_t diff_us = 1000000UL / (SysCtlClockGet() / diff); // Convert to us
 	prev = curr; // Store previous value
 
-	// TODO: Should I just change witch egde it triggers on?
+	// TODO: Should I just change which egde it triggers on?
 	static bool last_edge = false;
 	bool edge = GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_6);
 

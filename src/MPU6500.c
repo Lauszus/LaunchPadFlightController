@@ -189,7 +189,7 @@ void initMPU6500_i2c(void) {
 	KalmanXInit();
 	KalmanYInit();
 
-	setAngleX(0.0f); // Set staring angle
+	setAngleX(0.0f); // Set starting angle
 	setAngleY(0.0f);
 }
 
