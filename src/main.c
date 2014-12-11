@@ -33,6 +33,8 @@
 #include "driverlib/sysctl.h"
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 
+#define ACRO_MODE 1
+
 int main(void) {
 	// Set the clocking to run directly from the external crystal/oscillator.
 	SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ); // Set clock to 80MHz (400MHz(PLL) / 2 / 2.5 = 80 MHz)
@@ -54,13 +56,21 @@ int main(void) {
 	UARTprintf("CLK %d\n", SysCtlClockGet());
 	UARTprintf("min: %d, max: %d, period: %d\n", PPM_MIN, PPM_MAX, getPeriod());
 
+#if !ACRO_MODE
 	const float restAngleRoll = 1.67f, restAnglePitch = -2.55f; // TODO: Make a calibration routine for these values
+#endif
 	
 	pid_t pidRoll, pidPitch;
 
+#if ACRO_MODE
+	pidRoll.Kp = 0.02f;
+	pidRoll.Ki = 0.0f;
+	pidRoll.Kd = 0.0f;
+#else
 	pidRoll.Kp = 1.75f;
 	pidRoll.Ki = 1.0f;//2.3f;
 	pidRoll.Kd = 0.0f;
+#endif
 	pidRoll.integratedError = 0.0f;
 	pidRoll.lastError = 0.0f;
 
@@ -79,11 +89,16 @@ int main(void) {
 			//UARTprintf("%d\n", micros() - timer);
 			timer = micros();
 
+#if ACRO_MODE
+			int16_t gyroData[3];
+			getMPU6050Gyro(gyroData);
+#else
 			float roll, pitch;
 			getMPU6500Angles(&roll, &pitch, dt);
-
+			
 			/*UARTprintf("%d.%d\t%d.%d\n", (int16_t)roll, (int16_t)abs(roll * 100.0f) % 100, (int16_t)pitch, (int16_t)abs(pitch * 100.0f) % 100);
 			UARTFlushTx(false);*/
+#endif
 
 			// TODO: Arm using throttle low and yaw right
 			if (rxChannel[RX_AUX1_CHAN] < 1000 || rxChannel[RX_THROTTLE_CHAN] < RX_MIN_INPUT + 25) {
@@ -93,8 +108,13 @@ int main(void) {
 				pidPitch.integratedError = 0.0f;
 				pidPitch.lastError = 0.0f;
 			} else {
+#if ACRO_MODE
+				float rollOut = updatePID(&pidRoll, 0, gyroData[1], dt);
+				float pitchOut = updatePID(&pidPitch, 0, gyroData[0], dt);
+#else
 				float rollOut = updatePID(&pidRoll, restAngleRoll, roll, dt);
 				float pitchOut = updatePID(&pidPitch, restAnglePitch, pitch, dt);
+#endif
 
 				float throttle = map(rxChannel[RX_THROTTLE_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
 				for (uint8_t i = 0; i < 4; i++)

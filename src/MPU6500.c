@@ -46,6 +46,18 @@ bool dateReadyMPU6500(void) {
 	return GPIOPinRead(GPIO_MPU_INT_BASE, GPIO_MPU_INT_PIN);
 }
 
+void getMPU6050Gyro(int16_t *gyroData) {
+	uint8_t buf[6];
+
+	i2cReadData(0x43, buf, 6);
+	gyroData[0] = (buf[0] << 8) | buf[1]; // X
+	gyroData[1] = (buf[2] << 8) | buf[3]; // Y
+	gyroData[2] = (buf[4] << 8) | buf[5]; // Z
+	
+	for (uint8_t axis = 0; axis < 3; axis++)
+		gyroData[axis] -= gyroZero[axis];
+}
+
 void getMPU6500Angles(float *roll, float *pitch, float dt) {
 	int16_t accData[3], gyroData[3];
 	updateMPU6500(accData, gyroData);
