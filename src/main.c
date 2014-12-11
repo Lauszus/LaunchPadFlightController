@@ -224,9 +224,7 @@ int main(void) {
 }
 
 // TODO:
-	// SPI/MPU-6050
-	// Sync all PPM output signals - is this needed?
-	// Check PPM output frequency of Naze32
-	// EEPROM
-	// Adjust PID values using switches
+	// Save PID values in EEPROM
+	// Adjust PID values using pots on transmitter
 	// Only enable peripheral once
+	// Tune yaw separately
