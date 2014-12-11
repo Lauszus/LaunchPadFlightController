@@ -88,6 +88,8 @@ int main(void) {
 	// Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
 	static float motors[4] = { -100.0f, -100.0f, -100.0f, -100.0f };
 	static float rollGain = 1.0f, pitchGain = 1.0f, yawGain = 1.0f;
+	
+	static bool armed = false;
 
 	while (1) {
 		checkUARTData();
@@ -95,13 +97,14 @@ int main(void) {
 		// TODO: Arm using throttle low and yaw right
 		if (!validRXData || rxChannel[RX_AUX1_CHAN] < 1000 || rxChannel[RX_THROTTLE_CHAN] < RX_MIN_INPUT + 25) {
 			writePPMAllOff();
-			pidRoll.integratedError = 0.0f;
-			pidRoll.lastError = 0.0f;
-			pidPitch.integratedError = 0.0f;
-			pidPitch.lastError = 0.0f;
-			pidYaw.integratedError = 0.0f;
-			pidYaw.lastError = 0.0f;
-		} else if (dataReadyMPU6500()) {
+			pidRoll.integratedError = pidRoll.lastError = 0.0f;
+			pidPitch.integratedError = pidPitch.lastError = 0.0f;
+			pidYaw.integratedError = pidYaw.lastError = 0.0f;
+			armed = false;
+		} else
+			armed = true;
+		
+		if (dataReadyMPU6500()) {
 			float dt = (float)(micros() - timer) / 1000000.0f;
 			//UARTprintf("%d\n", micros() - timer);
 			timer = micros();
@@ -120,67 +123,69 @@ int main(void) {
 			UARTFlushTx(false);*/
 #endif
 
+			if (armed) {
 #if ACRO_MODE
-			float rollOut = updatePID(&pidRoll, 0, gyroData[1], dt);
-			float pitchOut = updatePID(&pidPitch, 0, gyroData[0], dt);
+				float rollOut = updatePID(&pidRoll, 0, gyroData[1], dt);
+				float pitchOut = updatePID(&pidPitch, 0, gyroData[0], dt);
 #else
-			float rollOut = updatePID(&pidRoll, restAngleRoll, roll, dt);
-			float pitchOut = updatePID(&pidPitch, restAnglePitch, pitch, dt);
+				float rollOut = updatePID(&pidRoll, restAngleRoll, roll, dt);
+				float pitchOut = updatePID(&pidPitch, restAnglePitch, pitch, dt);
 #endif
-			float yawOut = updatePID(&pidYaw, 0, gyroData[2], dt);
+				float yawOut = updatePID(&pidYaw, 0, gyroData[2], dt);
 
-			float throttle = map(rxChannel[RX_THROTTLE_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
-			for (uint8_t i = 0; i < 4; i++)
-				motors[i] = throttle;
+				float throttle = map(rxChannel[RX_THROTTLE_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+				for (uint8_t i = 0; i < 4; i++)
+					motors[i] = throttle;
 
-			motors[0] -= rollOut * rollGain;
-			motors[1] -= rollOut * rollGain;
-			motors[2] += rollOut * rollGain;
-			motors[3] += rollOut * rollGain;
+				motors[0] -= rollOut * rollGain;
+				motors[1] -= rollOut * rollGain;
+				motors[2] += rollOut * rollGain;
+				motors[3] += rollOut * rollGain;
 
-			motors[0] += pitchOut * pitchGain;
-			motors[1] -= pitchOut * pitchGain;
-			motors[2] += pitchOut * pitchGain;
-			motors[3] -= pitchOut * pitchGain;
+				motors[0] += pitchOut * pitchGain;
+				motors[1] -= pitchOut * pitchGain;
+				motors[2] += pitchOut * pitchGain;
+				motors[3] -= pitchOut * pitchGain;
 
-			motors[0] -= yawOut * yawGain;
-			motors[1] += yawOut * yawGain;
-			motors[2] += yawOut * yawGain;
-			motors[3] -= yawOut * yawGain;
+				motors[0] -= yawOut * yawGain;
+				motors[1] += yawOut * yawGain;
+				motors[2] += yawOut * yawGain;
+				motors[3] -= yawOut * yawGain;
 
-			for (uint8_t i = 0; i < 4; i++)
-				motors[i] = constrain(motors[i], -50.0f, 50.0f);
+				for (uint8_t i = 0; i < 4; i++)
+					motors[i] = constrain(motors[i], -50.0f, 50.0f);
 
-			// Pitch Control
-			float elevator = map(rxChannel[RX_ELEVATOR_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
-			motors[0] += elevator;
-			motors[1] -= elevator;
-			motors[2] += elevator;
-			motors[3] -= elevator;
+				// Pitch Control
+				float elevator = map(rxChannel[RX_ELEVATOR_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+				motors[0] += elevator;
+				motors[1] -= elevator;
+				motors[2] += elevator;
+				motors[3] -= elevator;
 
-			// Roll Control
-			float aileron = map(rxChannel[RX_AILERON_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
-			motors[0] -= aileron;
-			motors[1] -= aileron;
-			motors[2] += aileron;
-			motors[3] += aileron;
+				// Roll Control
+				float aileron = map(rxChannel[RX_AILERON_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+				motors[0] -= aileron;
+				motors[1] -= aileron;
+				motors[2] += aileron;
+				motors[3] += aileron;
 
-			// Rudder Control
-			float rudder = map(rxChannel[RX_RUDDER_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
-			motors[0] -= rudder;
-			motors[1] += rudder;
-			motors[2] += rudder;
-			motors[3] -= rudder;
+				// Rudder Control
+				float rudder = map(rxChannel[RX_RUDDER_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+				motors[0] -= rudder;
+				motors[1] += rudder;
+				motors[2] += rudder;
+				motors[3] -= rudder;
 
-			updateMotorsAll(motors);
+				updateMotorsAll(motors);
 
-			//UARTprintf("%d\t%d\n", (int16_t)elevator, (int16_t)aileron);
+				//UARTprintf("%d\t%d\n", (int16_t)elevator, (int16_t)aileron);
 #if 0
-			UARTprintf("%d\t%d\t\t", (int16_t)roll, (int16_t)pitch);
-			UARTprintf("%d\t%d\t\t", (int16_t)rollOut, (int16_t)pitchOut);
-			UARTprintf("%d\t%d\t%d\t%d\n", (int16_t)motors[0], (int16_t)motors[1], (int16_t)motors[2], (int16_t)motors[3]);
-			UARTFlushTx(false);
+				UARTprintf("%d\t%d\t\t", (int16_t)roll, (int16_t)pitch);
+				UARTprintf("%d\t%d\t\t", (int16_t)rollOut, (int16_t)pitchOut);
+				UARTprintf("%d\t%d\t%d\t%d\n", (int16_t)motors[0], (int16_t)motors[1], (int16_t)motors[2], (int16_t)motors[3]);
+				UARTFlushTx(false);
 #endif
+			}
 		}
 #endif
 #if 0
