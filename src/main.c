@@ -39,12 +39,12 @@ int main(void) {
 	// Set the clocking to run directly from the external crystal/oscillator.
 	SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ); // Set clock to 80MHz (400MHz(PLL) / 2 / 2.5 = 80 MHz)
 
+	initPPM();
 	initUART();
 	delay(100);
 	UARTprintf("Started\n");
 	initTime();
 	initRX();
-	initPPM();
 
 	//initMPU6500();
 	initMPU6500_i2c();
