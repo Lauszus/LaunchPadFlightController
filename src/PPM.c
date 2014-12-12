@@ -34,7 +34,7 @@ void initPPM(void) {
 
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM0); // Enable PWM peripheral
 	SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
-	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB); // Enable GPIOC peripheral
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB); // Enable GPIOB peripheral
 	SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 
 	// Use alternate function
@@ -78,7 +78,7 @@ void writePPMAllOff(void) {
 
 // From Arduino source code: https://github.com/arduino/Arduino/blob/ide-1.5.x/hardware/arduino/avr/cores/arduino/WMath.cpp
 float map(float x, float in_min, float in_max, float out_min, float out_max) {
-  return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
 }
 
 void updateMotor(uint8_t motor, float value) {

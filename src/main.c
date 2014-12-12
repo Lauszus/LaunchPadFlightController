@@ -53,7 +53,7 @@ int main(void) {
 
 	//initMPU6500();
 	initMPU6500_i2c();
-	
+
 	SysCtlPeripheralEnable(SYSCTL_PERIPH_LED); // Enable GPIOF peripheral
 	SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 	GPIOPinTypeGPIOOutput(GPIO_LED_BASE, GPIO_RED_LED | GPIO_GREEN_LED); // Set red and blue LEDs as outputs
@@ -89,7 +89,7 @@ int main(void) {
 	pidYaw.Kp *= 2.0f;
 	pidYaw.Ki *= 2.8f; // I increased this in order for it to stop yawing slowly
 	pidYaw.Kd *= 2.0f;
-	
+
 	printPIDValues();
 
 #if ACRO_MODE
@@ -102,9 +102,9 @@ int main(void) {
 	// Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
 	static float motors[4] = { -100.0f, -100.0f, -100.0f, -100.0f };
 	static float rollGain = 1.0f, pitchGain = 1.0f, yawGain = 1.0f;
-	
+
 	static bool armed = false;
-	
+
 	while (!validRXData || rxChannel[RX_AUX1_CHAN] > 1000) {
 		// Wait until we have valid data and we are unarmed
 	}
@@ -112,6 +112,8 @@ int main(void) {
 	while (1) {
 		checkUARTData();
 #if 1
+		// Make sure there is valid data, AUX channel is armed and that throttle is applied
+		// The throttle check can be removed if one prefer the motors to spin once it is armed
 		// TODO: Arm using throttle low and yaw right
 		if (!validRXData || rxChannel[RX_AUX1_CHAN] < 1000 || rxChannel[RX_THROTTLE_CHAN] < RX_MIN_INPUT + 25) {
 			writePPMAllOff();
@@ -141,7 +143,7 @@ int main(void) {
 			UARTFlushTx(false);*/
 #endif
 		}
-		
+
 		float dt = (float)(micros() - pidTimer);
 		if (armed && dt > 2500) { // Limit to 2.5ms (400 Hz)
 			//UARTprintf("%d\n", micros() - pidTimer);

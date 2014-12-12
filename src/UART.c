@@ -46,7 +46,7 @@ void initUART(void) {
 	// configured for use as a peripheral function (instead of GPIO).
 	GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
 
-	UARTStdioConfig(0, 115200, SysCtlClockGet()); // Mode is set to 8N1
+	UARTStdioConfig(0, 115200, SysCtlClockGet()); // Mode is set to 8N1 on UART0
 	UARTEchoSet(false);
 }
 
