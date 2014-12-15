@@ -29,7 +29,6 @@
 static uint16_t period;
 
 void initPPM(void) {
-    //SysCtlPWMClockSet(SYSCTL_PWMDIV_32); // Set divider to 32
     SysCtlPWMClockSet(SYSCTL_PWMDIV_4); // Set divider to 4
 
     SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM0); // Enable PWM peripheral
@@ -48,9 +47,7 @@ void initPPM(void) {
     PWMGenConfigure(PWM0_BASE, PWM_GEN_0, PWM_GEN_MODE_DOWN | PWM_GEN_MODE_NO_SYNC);
     PWMGenConfigure(PWM0_BASE, PWM_GEN_1, PWM_GEN_MODE_DOWN | PWM_GEN_MODE_NO_SYNC);
 
-    // Period is given by (SysClk * period) / divider
-    // The period is set to 20ms (50 Hz)
-    //period = (SysCtlClockGet() / 1000 * 20) / 32; // 50000
+    // The value is given by (SysClk * period) / divider
     // The period is set to 2.5ms (400 Hz)
     period = (SysCtlClockGet() / 10000 * 25) / 4; // 50000
     PWMGenPeriodSet(PWM0_BASE, PWM_GEN_0, period); // Set the period.
@@ -102,7 +99,6 @@ void updateMotorsAll(float *values) {
 }
 
 void writePPMUs(uint8_t motor, uint16_t us) {
-    //writePPMWidth(motor, period * us / 20000); // 50 Hz
     writePPMWidth(motor, period * us / 2500); // 400 Hz
 }
 
