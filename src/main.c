@@ -33,6 +33,7 @@
 #include "driverlib/sysctl.h"
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 
+// Only acro mode is actually working for now
 #define ACRO_MODE 1
 
 #define SYSCTL_PERIPH_LED SYSCTL_PERIPH_GPIOF
@@ -110,7 +111,7 @@ int main(void) {
 
     while (1) {
         checkUARTData();
-#if 1
+
         // Make sure there is valid data, AUX channel is armed and that throttle is applied
         // The throttle check can be removed if one prefer the motors to spin once it is armed
         // TODO: Arm using throttle low and yaw right
@@ -211,43 +212,6 @@ int main(void) {
             UARTFlushTx(false);
 #endif
         }
-#endif
-
-#if 0
-        for (int8_t i = -100; i < 100; i++) {
-            updateMotor(0, i);
-            UARTprintf("%d\n", i);
-            delay(20);
-        }
-        for (int8_t i = 100; i > -100; i--) {
-            updateMotor(0, i);
-            UARTprintf("%d\n", i);
-            delay(20);
-        }
-#endif
-#if 0
-        static uint16_t width = PPM_MIN;
-        static bool upCounting = true;
-
-        if (rxChannel[RX_AUX1_CHAN] < 1000) { // Used to stop motor output
-            width = PPM_MIN;
-            upCounting = true;
-        }
-
-        UARTprintf("Width: %d\n", width);
-        for (uint8_t i = 0; i < 4; i++)
-            writePPMUs(i, width);
-
-        if (upCounting)
-            width++;
-        else
-            width--;
-        if (upCounting && width > PPM_MAX)
-            upCounting = false;
-        else if (!upCounting && width < PPM_MIN)
-            upCounting = true;
-        delay(5);
-#endif
     }
 }
 
@@ -257,4 +221,5 @@ int main(void) {
     // Only enable peripheral clock once
     // Tune yaw PID values separately
     // Make limit of integrated error adjustable
-    // Get self-level working
+    // Get self-level working - enable DLPF for accelerometer
+    // Use SPI instead of I2C

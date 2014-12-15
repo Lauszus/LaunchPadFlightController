@@ -97,8 +97,7 @@ void getMPU6500Angles(float *roll, float *pitch, float dt) {
 */
 }
 
-/*
-void printMPU6050Debug(void) {
+/*void printMPU6050Debug(void) {
     while (1) {
 #if 0
         UARTprintf("%d\t%d\t\t", (int16_t)KalmanX, (int16_t)KalmanY);
@@ -116,8 +115,8 @@ void printMPU6050Debug(void) {
 #endif
         delay(10);
     }
-}
-*/
+}*/
+
 void initMPU6500_i2c(void) {
     SysCtlPeripheralEnable(SYSCTL_PERIPH_I2C1); // Enable I2C1 peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
@@ -158,17 +157,15 @@ void initMPU6500_i2c(void) {
     i2cBuffer[2] = 3 << 3; // Set Gyro Full Scale Range to +-2000deg/s
     i2cBuffer[3] = 2 << 3; // Set Accelerometer Full Scale Range to +-8g
     // TODO: Enable DLPF for accelerometer as well:
-    // i2cBuffer[4] = 0x03; // 41 Hz Acc filtering, 
+    //i2cBuffer[4] = 0x03; // 41 Hz Acc filtering
     i2cWriteData(0x19, i2cBuffer, 4); // Write to all four registers at once
 
-#if 1
     /* Enable Data Ready Interrupt on INT pin */
     i2cBuffer[0] = (1 << 5) | (1 << 4); // Enable LATCH_INT_EN and INT_RD_CLEAR
                                         // When this bit is equal to 1, the INT pin is held high until the interrupt is cleared
                                         // When this bit is equal to 1, interrupt status bits are cleared on any read operation
     i2cBuffer[1] = (1 << 0); // Enable DATA_RDY_EN - When set to 1, this bit enables the Data Ready interrupt, which occurs each time a write operation to all of the sensor registers has been completed
     i2cWriteData(0x37, i2cBuffer, 2); // Write to both registers at once
-#endif
 
     // Set INT input pin
     SysCtlPeripheralEnable(GPIO_MPU_INT_PERIPH); // Enable GPIO peripheral
@@ -183,7 +180,7 @@ void initMPU6500_i2c(void) {
         // Wait until date is ready
     }
 
-    // TOOD: Read gyro values multiple times
+    // TOOD: Read gyro values multiple times and check if it's moved while doing so
 
     int16_t accData[3]; // This is just tossed away
     updateMPU6500(accData, gyroZero); // Get gyro zero values
