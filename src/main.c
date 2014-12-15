@@ -178,9 +178,6 @@ int main(void) {
             motors[2] += yawOut;
             motors[3] -= yawOut;
 
-            for (uint8_t i = 0; i < 4; i++)
-                motors[i] = constrain(motors[i], -50.0f, 50.0f);
-
             // Roll Control
             float aileron = map(rxChannel[RX_AILERON_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
             motors[0] -= aileron / 2.0f;
