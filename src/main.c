@@ -101,7 +101,6 @@ int main(void) {
 
 	// Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
 	static float motors[4] = { -100.0f, -100.0f, -100.0f, -100.0f };
-	static float rollGain = 1.0f, pitchGain = 1.0f, yawGain = 1.0f;
 
 	static bool armed = false;
 
@@ -163,20 +162,20 @@ int main(void) {
 			for (uint8_t i = 0; i < 4; i++)
 				motors[i] = throttle;
 
-			motors[0] -= rollOut * rollGain;
-			motors[1] -= rollOut * rollGain;
-			motors[2] += rollOut * rollGain;
-			motors[3] += rollOut * rollGain;
+			motors[0] -= rollOut;
+			motors[1] -= rollOut;
+			motors[2] += rollOut;
+			motors[3] += rollOut;
 
-			motors[0] += pitchOut * pitchGain;
-			motors[1] -= pitchOut * pitchGain;
-			motors[2] += pitchOut * pitchGain;
-			motors[3] -= pitchOut * pitchGain;
+			motors[0] += pitchOut;
+			motors[1] -= pitchOut;
+			motors[2] += pitchOut;
+			motors[3] -= pitchOut;
 
-			motors[0] -= yawOut * yawGain;
-			motors[1] += yawOut * yawGain;
-			motors[2] += yawOut * yawGain;
-			motors[3] -= yawOut * yawGain;
+			motors[0] -= yawOut;
+			motors[1] += yawOut;
+			motors[2] += yawOut;
+			motors[3] -= yawOut;
 
 			for (uint8_t i = 0; i < 4; i++)
 				motors[i] = constrain(motors[i], -50.0f, 50.0f);
