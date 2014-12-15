@@ -154,16 +154,18 @@ void initMPU6500_i2c(void) {
 	i2cWrite(0x6B, (1 << 3) | (1 << 0)); // Disable sleep mode, disable temperature sensor and use PLL as clock reference
 
 	i2cBuffer[0] = 0; // Set the sample rate to 1kHz - 1kHz/(1+0) = 1kHz
-	i2cBuffer[1] = 0x03; // Disable FSYNC and set 44 Hz Acc filtering, 42 Hz Gyro filtering, 1 KHz sampling
-	i2cBuffer[2] = 3 << 3; // Set Gyro Full Scale Range to ±2000deg/s
-	i2cBuffer[3] = 2 << 3; // Set Accelerometer Full Scale Range to ±8g
+	i2cBuffer[1] = 0x03; // Disable FSYNC and set 41 Hz Gyro filtering, 1 KHz sampling
+	i2cBuffer[2] = 3 << 3; // Set Gyro Full Scale Range to +-2000deg/s
+	i2cBuffer[3] = 2 << 3; // Set Accelerometer Full Scale Range to +-8g
+	// TODO: Enable DLPF for accelerometer as well:
+	// i2cBuffer[4] = 0x03; // 41 Hz Acc filtering, 
 	i2cWriteData(0x19, i2cBuffer, 4); // Write to all four registers at once
 
 #if 1
 	/* Enable Data Ready Interrupt on INT pin */
 	i2cBuffer[0] = (1 << 5) | (1 << 4); // Enable LATCH_INT_EN and INT_RD_CLEAR
-										// When this bit is equal to 1, the INT pin is held high until the interrupt is cleared
-										// When this bit is equal to 1, interrupt status bits are cleared on any read operation
+	                                    // When this bit is equal to 1, the INT pin is held high until the interrupt is cleared
+                                        // When this bit is equal to 1, interrupt status bits are cleared on any read operation
 	i2cBuffer[1] = (1 << 0); // Enable DATA_RDY_EN - When set to 1, this bit enables the Data Ready interrupt, which occurs each time a write operation to all of the sensor registers has been completed
 	i2cWriteData(0x37, i2cBuffer, 2); // Write to both registers at once
 #endif
@@ -304,7 +306,7 @@ void initMPU6500(void) {
 	delay(100);
 
 	// PWR_MGMT_1
-	// Auto selects the best available clock source – PLL if ready, else use the Internal oscillator
+	// Auto selects the best available clock source - PLL if ready, else use the Internal oscillator
 	// Disable sleep mode
 	spiWriteData(0x6B, 0x01);
 
