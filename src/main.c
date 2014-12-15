@@ -181,19 +181,19 @@ int main(void) {
             for (uint8_t i = 0; i < 4; i++)
                 motors[i] = constrain(motors[i], -50.0f, 50.0f);
 
-            // Pitch Control
-            float elevator = map(rxChannel[RX_ELEVATOR_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
-            motors[0] += elevator / 2.0f;
-            motors[1] -= elevator / 2.0f;
-            motors[2] += elevator / 2.0f;
-            motors[3] -= elevator / 2.0f;
-
             // Roll Control
             float aileron = map(rxChannel[RX_AILERON_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
             motors[0] -= aileron / 2.0f;
             motors[1] -= aileron / 2.0f;
             motors[2] += aileron / 2.0f;
             motors[3] += aileron / 2.0f;
+
+            // Pitch Control
+            float elevator = map(rxChannel[RX_ELEVATOR_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+            motors[0] += elevator / 2.0f;
+            motors[1] -= elevator / 2.0f;
+            motors[2] += elevator / 2.0f;
+            motors[3] -= elevator / 2.0f;
 
             // Rudder Control
             float rudder = map(rxChannel[RX_RUDDER_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
@@ -223,3 +223,4 @@ int main(void) {
     // Make limit of integrated error adjustable
     // Get self-level working - enable DLPF for accelerometer
     // Use SPI instead of I2C
+    // Set Kd as well
