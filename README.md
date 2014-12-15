@@ -12,6 +12,10 @@ In order to built this project you need to download Keil µVision IDE 4. Then op
 
 The code is still in progress. I will update this readme with more information later on.
 
+# Video demonstrations
+
+Some video demonstrations of the flight controller can be seen at my [YouTube channel](https://www.youtube.com/user/kslauszus).
+
 # Current setup
 
 * Microcontroller: Tiva C Series TM4C123G LaunchPad
