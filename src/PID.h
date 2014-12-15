@@ -26,8 +26,8 @@ extern "C" {
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
 
 typedef struct {
-	float Kp, Ki, Kd; // PID variables
-	float lastError, integratedError;
+    float Kp, Ki, Kd; // PID variables
+    float lastError, integratedError;
 } __attribute__((packed)) pid_t;
 
 extern pid_t pidRoll, pidPitch, pidYaw;

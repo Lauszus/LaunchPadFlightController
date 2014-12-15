@@ -26,28 +26,28 @@
 static volatile uint32_t counter;
 
 void SycTickHandler() {
-	counter++;
+    counter++;
 }
 
 void initTime(void) {
-	SysTickPeriodSet(SysCtlClockGet() / 1000000UL); // 1000 for miliseconds & 1000000 for microseconds
-	SysTickIntRegister(SycTickHandler);
-	SysTickIntEnable();
-	SysTickEnable();
+    SysTickPeriodSet(SysCtlClockGet() / 1000000UL); // 1000 for miliseconds & 1000000 for microseconds
+    SysTickIntRegister(SycTickHandler);
+    SysTickIntEnable();
+    SysTickEnable();
 }
 
 void delay(uint32_t ms) {
-	SysCtlDelay(SysCtlClockGet() / 3000UL * ms); // TOOD: Check if it needs to be tuned
+    SysCtlDelay(SysCtlClockGet() / 3000UL * ms); // TOOD: Check if it needs to be tuned
 }
 
 void delayMicroseconds(uint32_t us) {
-	SysCtlDelay(SysCtlClockGet() / 3000000UL * us); // TOOD: Check if it needs to be tuned
+    SysCtlDelay(SysCtlClockGet() / 3000000UL * us); // TOOD: Check if it needs to be tuned
 }
 
 uint32_t millis(void) {
-	return counter / 1000UL;
+    return counter / 1000UL;
 }
 
 uint32_t micros(void) {
-	return counter;
+    return counter;
 }

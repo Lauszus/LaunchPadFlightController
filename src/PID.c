@@ -23,13 +23,13 @@
 pid_t pidRoll, pidPitch, pidYaw;
 
 float updatePID(pid_t *pid, float restAngle, float inputAngle, float dt) {
-	/* Update PID values */
-	float error = (restAngle - inputAngle);
-	float pTerm = pid->Kp * error;
-	pid->integratedError += error * dt;
-	pid->integratedError = constrain(pid->integratedError, -10.0f, 10.0f); // Limit the integrated error
-	float iTerm = pid->Ki * pid->integratedError;
-	float dTerm = pid->Kd * (error - pid->lastError) / dt;
-	pid->lastError = error;
-	return pTerm + iTerm + dTerm;
+    /* Update PID values */
+    float error = (restAngle - inputAngle);
+    float pTerm = pid->Kp * error;
+    pid->integratedError += error * dt;
+    pid->integratedError = constrain(pid->integratedError, -10.0f, 10.0f); // Limit the integrated error
+    float iTerm = pid->Ki * pid->integratedError;
+    float dTerm = pid->Kd * (error - pid->lastError) / dt;
+    pid->lastError = error;
+    return pTerm + iTerm + dTerm;
 }
