@@ -25,7 +25,7 @@
 
 static volatile uint32_t counter;
 
-void SycTickHandler() {
+void SycTickHandler(void) {
     counter++;
 }
 
