@@ -32,7 +32,7 @@ typedef struct {
 
 extern pid_t pidRoll, pidPitch, pidYaw;
 
-float updatePID(pid_t *pid, float restAngle, float inputAngle, float dt);
+float updatePID(pid_t *pid, float setPoint, float input, float dt);
 
 #ifdef __cplusplus
 }

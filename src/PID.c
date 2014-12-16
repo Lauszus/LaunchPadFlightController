@@ -22,9 +22,8 @@
 
 pid_t pidRoll, pidPitch, pidYaw;
 
-float updatePID(pid_t *pid, float restAngle, float inputAngle, float dt) {
-    /* Update PID values */
-    float error = (restAngle - inputAngle);
+float updatePID(pid_t *pid, float setPoint, float input, float dt) {
+    float error = setPoint - input;
     float pTerm = pid->Kp * error;
     pid->integratedError += error * dt;
     pid->integratedError = constrain(pid->integratedError, -10.0f, 10.0f); // Limit the integrated error
