@@ -150,14 +150,18 @@ int main(void) {
             pidTimer = micros();
             dt /= 1000000.0f; // Convert to seconds
 
+            float aileron = map(rxChannel[RX_AILERON_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+            float elevator = map(rxChannel[RX_ELEVATOR_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+            float rudder = map(rxChannel[RX_RUDDER_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+
 #if ACRO_MODE
-            float rollOut = updatePID(&pidRoll, 0, gyroData[1], dt);
-            float pitchOut = updatePID(&pidPitch, 0, gyroData[0], dt);
+            float rollOut = updatePID(&pidRoll, aileron * 15.0f, gyroData[1], dt);
+            float pitchOut = updatePID(&pidPitch, elevator * 15.0f, gyroData[0], dt);
 #else
             float rollOut = updatePID(&pidRoll, restAngleRoll, roll, dt);
             float pitchOut = updatePID(&pidPitch, restAnglePitch, pitch, dt);
 #endif
-            float yawOut = updatePID(&pidYaw, 0, gyroData[2], dt);
+            float yawOut = updatePID(&pidYaw, rudder * 30.0f, gyroData[2], dt);
 
             float throttle = map(rxChannel[RX_THROTTLE_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
             for (uint8_t i = 0; i < 4; i++)
@@ -177,27 +181,6 @@ int main(void) {
             motors[1] += yawOut;
             motors[2] += yawOut;
             motors[3] -= yawOut;
-
-            // Roll Control
-            float aileron = map(rxChannel[RX_AILERON_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
-            motors[0] -= aileron / 2.0f;
-            motors[1] -= aileron / 2.0f;
-            motors[2] += aileron / 2.0f;
-            motors[3] += aileron / 2.0f;
-
-            // Pitch Control
-            float elevator = map(rxChannel[RX_ELEVATOR_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
-            motors[0] += elevator / 2.0f;
-            motors[1] -= elevator / 2.0f;
-            motors[2] += elevator / 2.0f;
-            motors[3] -= elevator / 2.0f;
-
-            // Rudder Control
-            float rudder = map(rxChannel[RX_RUDDER_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
-            motors[0] -= rudder;
-            motors[1] += rudder;
-            motors[2] += rudder;
-            motors[3] -= rudder;
 
             updateMotorsAll(motors);
 
@@ -221,3 +204,4 @@ int main(void) {
     // Get self-level working - enable DLPF for accelerometer
     // Use SPI instead of I2C
     // Set Kd as well
+    // Controls should be setPoint for PID controller
