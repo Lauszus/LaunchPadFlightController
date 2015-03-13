@@ -25,6 +25,7 @@
 #include "PPM.h"
 #include "PID.h"
 #include "MPU6500.h"
+#include "sonar.h"
 
 #include "inc/hw_memmap.h"
 #include "inc/tm4c123gh6pm.h"
@@ -51,6 +52,7 @@ int main(void) {
     UARTprintf("Started\n");
     initTime();
     initRX();
+    initSonar();
 
     //initMPU6500();
     initMPU6500_i2c();

@@ -457,6 +457,11 @@
               <FileType>1</FileType>
               <FilePath>.\lib\utils\ustdlib.c</FilePath>
             </File>
+            <File>
+              <FileName>sonar.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\sonar.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
