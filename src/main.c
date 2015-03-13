@@ -74,7 +74,7 @@ int main(void) {
 
 #if ACRO_MODE
     // 0.0200.0.1000.0.0000
-    pidRoll.Kp = 0.016f;
+    pidRoll.Kp = 0.015f;
     pidRoll.Ki = 0.050f;
     pidRoll.Kd = 0.0f;
 #else
