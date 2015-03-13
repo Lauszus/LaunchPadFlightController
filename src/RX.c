@@ -27,7 +27,6 @@
 #include "driverlib/interrupt.h"
 #include "driverlib/pin_map.h"
 #include "driverlib/sysctl.h"
-#include "driverlib/systick.h"
 #include "driverlib/timer.h"
 //#include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 
@@ -101,15 +100,15 @@ void initRX(void) {
     TimerControlEvent(WTIMER1_BASE, TIMER_A, TIMER_EVENT_BOTH_EDGES); // Interrupt on both edges
     TimerIntRegister(WTIMER1_BASE, TIMER_A, CaptureHandler); // Register interrupt handler
     TimerIntEnable(WTIMER1_BASE, TIMER_CAPA_EVENT); // Enable timer capture A event interrupt
-    IntPrioritySet(INT_WTIMER1A, 0); // Configure Timer 1A interrupt priority as 0
-    IntEnable(INT_WTIMER1A); // Enable wide Timer 1A interrupt
+    IntPrioritySet(INT_WTIMER1A, 0); // Configure Wide Timer 1A interrupt priority as 0
+    IntEnable(INT_WTIMER1A); // Enable Wide Timer 1A interrupt
 
     // Configure WTimer1B
     TimerLoadSet(WTIMER1_BASE, TIMER_B, SysCtlClockGet() / 10 - 1); // Set to interrupt every 100ms
     TimerIntRegister(WTIMER1_BASE, TIMER_B, TimeoutHandler); // Register interrupt handler
     TimerIntEnable(WTIMER1_BASE, TIMER_TIMB_TIMEOUT); // Enable timer timeout interrupt
-    IntPrioritySet(INT_WTIMER1B, 0); // Configure Timer0A interrupt priority as 0
-    IntEnable(INT_WTIMER1B); // Enable wide Timer 1B interrupt
+    IntPrioritySet(INT_WTIMER1B, 0); // Configure Wide Timer 1B interrupt priority as 0
+    IntEnable(INT_WTIMER1B); // Enable Wide Timer 1B interrupt
 
     TimerEnable(WTIMER1_BASE, TIMER_BOTH); // Enable both timers
 

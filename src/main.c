@@ -207,3 +207,8 @@ int main(void) {
     // Use SPI instead of I2C
     // Set Kd as well
     // Controls should be setPoint for PID controller
+    // Scope PWM output and check that it is in sync with control loop
+    // Add sonar pins to Readme.md
+    // Define all pins in a pins.h
+    // Rename sonar.h to Sonar.h and time.h to Time.h
+    // Update year in copyright header
