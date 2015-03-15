@@ -127,11 +127,12 @@ int main(void) {
             armed = true;
 
         GPIOPinWrite(GPIO_PORTF_BASE, GPIO_RED_LED | GPIO_GREEN_LED, !validRXData || rxChannel[RX_AUX1_CHAN] < 1000 ? GPIO_GREEN_LED : GPIO_RED_LED); // Turn on red led if there is valid data and AUX channel is in armed position otherwise turn on green LED
-
+        
+        uint32_t now = micros();
         if (dataReadyMPU6500()) {
-            float dt = (float)(micros() - imuTimer) / 1000000.0f;
-            //UARTprintf("%d\n", micros() - imuTimer);
-            imuTimer = micros();
+            float dt = (float)(now - imuTimer) / 1000000.0f;
+            //UARTprintf("%d\n", now - imuTimer);
+            imuTimer = now;
 
 #if ACRO_MODE
             getMPU6500Gyro(gyroData);
@@ -146,10 +147,11 @@ int main(void) {
 #endif
         }
 
-        float dt = (float)(micros() - pidTimer);
+        now = micros();
+        float dt = (float)(now - pidTimer);
         if (armed && dt > 2500) { // Limit to 2.5ms (400 Hz)
-            //UARTprintf("%d\n", micros() - pidTimer);
-            pidTimer = micros();
+            //UARTprintf("%d\n", now - pidTimer);
+            pidTimer = now;
             dt /= 1000000.0f; // Convert to seconds
 
             float aileron = map(rxChannel[RX_AILERON_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
