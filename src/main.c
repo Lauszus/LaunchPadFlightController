@@ -73,8 +73,7 @@ int main(void) {
 #endif
 
 #if ACRO_MODE
-    // 0.0200.0.1000.0.0000
-    pidRoll.Kp = 0.015f;
+    pidRoll.Kp = 0.012f;
     pidRoll.Ki = 0.050f;
     pidRoll.Kd = 0.0f;
 #else
@@ -89,8 +88,8 @@ int main(void) {
 
     // x2 the values work pretty well - TODO: Fine-tune these
     pidYaw = pidRoll;
-    pidYaw.Kp *= 2.0f;
-    pidYaw.Ki *= 2.8f; // I increased this in order for it to stop yawing slowly
+    pidYaw.Kp *= 3.0f;
+    pidYaw.Ki *= 3.5f; // I increased this in order for it to stop yawing slowly
     pidYaw.Kd *= 2.0f;
 
     printPIDValues();
