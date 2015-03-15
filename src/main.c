@@ -93,6 +93,8 @@ int main(void) {
     pidYaw.Kd *= 2.0f;
 
     printPIDValues();
+    
+    static float stickScalingRollPitch = 15.0f, stickScalingYaw = 30.0f;
 
 #if ACRO_MODE
     static int16_t gyroData[3];
@@ -125,7 +127,8 @@ int main(void) {
         } else
             armed = true;
 
-        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_RED_LED | GPIO_GREEN_LED, !validRXData || rxChannel[RX_AUX1_CHAN] < 1000 ? GPIO_GREEN_LED : GPIO_RED_LED); // Turn on red led if there is valid data and AUX channel is in armed position otherwise turn on green LED
+        // Turn on red led if there is valid data and AUX channel is in armed position otherwise turn on green LED
+        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_RED_LED | GPIO_GREEN_LED, !validRXData || rxChannel[RX_AUX1_CHAN] < 1000 ? GPIO_GREEN_LED : GPIO_RED_LED);
         
         uint32_t now = micros();
         if (dataReadyMPU6500()) {
@@ -156,15 +159,16 @@ int main(void) {
             float aileron = map(rxChannel[RX_AILERON_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
             float elevator = map(rxChannel[RX_ELEVATOR_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
             float rudder = map(rxChannel[RX_RUDDER_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+            //UARTprintf("%d\t%d\t%d\n", (int16_t)aileron, (int16_t)elevator, (int16_t)rudder);
 
 #if ACRO_MODE
-            float rollOut = updatePID(&pidRoll, aileron * 15.0f, gyroData[1], dt);
-            float pitchOut = updatePID(&pidPitch, elevator * 15.0f, gyroData[0], dt);
+            float rollOut = updatePID(&pidRoll, aileron * stickScalingRollPitch, gyroData[1], dt);
+            float pitchOut = updatePID(&pidPitch, elevator * stickScalingRollPitch, gyroData[0], dt);
 #else
             float rollOut = updatePID(&pidRoll, restAngleRoll, roll, dt);
             float pitchOut = updatePID(&pidPitch, restAnglePitch, pitch, dt);
 #endif
-            float yawOut = updatePID(&pidYaw, rudder * 30.0f, gyroData[2], dt);
+            float yawOut = updatePID(&pidYaw, rudder * stickScalingYaw, gyroData[2], dt);
 
             float throttle = map(rxChannel[RX_THROTTLE_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
             for (uint8_t i = 0; i < 4; i++)
