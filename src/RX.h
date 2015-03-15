@@ -32,8 +32,9 @@ enum {
     RX_NUM_CHANNELS,
 };
 
-#define RX_MIN_INPUT 665
-#define RX_MAX_INPUT 1730
+#define RX_MIN_INPUT (665)
+#define RX_MAX_INPUT (1730)
+#define RX_MID_INPUT ((RX_MAX_INPUT + RX_MIN_INPUT) / 2)
 
 extern volatile uint16_t rxChannel[RX_NUM_CHANNELS];
 extern volatile bool validRXData;

@@ -108,7 +108,7 @@ int main(void) {
 
     static bool armed = false;
 
-    while (!validRXData || rxChannel[RX_AUX1_CHAN] > 1000) {
+    while (!validRXData || rxChannel[RX_AUX2_CHAN] > RX_MID_INPUT) {
         // Wait until we have valid data and we are unarmed
     }
 
@@ -118,7 +118,7 @@ int main(void) {
         // Make sure there is valid data, AUX channel is armed and that throttle is applied
         // The throttle check can be removed if one prefer the motors to spin once it is armed
         // TODO: Arm using throttle low and yaw right
-        if (!validRXData || rxChannel[RX_AUX1_CHAN] < 1000 || rxChannel[RX_THROTTLE_CHAN] < RX_MIN_INPUT + 25) {
+        if (!validRXData || rxChannel[RX_AUX2_CHAN] < RX_MID_INPUT || rxChannel[RX_THROTTLE_CHAN] < RX_MIN_INPUT + 25) {
             writePPMAllOff();
             pidRoll.integratedError = pidRoll.lastError = 0.0f;
             pidPitch.integratedError = pidPitch.lastError = 0.0f;
@@ -128,7 +128,7 @@ int main(void) {
             armed = true;
 
         // Turn on red led if there is valid data and AUX channel is in armed position otherwise turn on green LED
-        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_RED_LED | GPIO_GREEN_LED, !validRXData || rxChannel[RX_AUX1_CHAN] < 1000 ? GPIO_GREEN_LED : GPIO_RED_LED);
+        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_RED_LED | GPIO_GREEN_LED, !validRXData || rxChannel[RX_AUX2_CHAN] < RX_MID_INPUT ? GPIO_GREEN_LED : GPIO_RED_LED);
         
         uint32_t now = micros();
         if (dataReadyMPU6500()) {
