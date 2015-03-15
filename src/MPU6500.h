@@ -22,22 +22,21 @@
 extern "C" {
 #endif
 
-bool dataReadyMPU6500(void);
-void getMPU6500Angles(float *roll, float *pitch, float dt);
-void getMPU6500Gyro(int16_t *gyroData);
-
 void initMPU6500_i2c(void);
-void updateMPU6500(int16_t *accData, int16_t *gyroData);
+    
+bool dataReadyMPU6500(void);
+void getMPU6500Data(int16_t *accData, int16_t *gyroData);
+void getMPU6500Angles(int16_t *accData, int16_t *gyroData, float *roll, float *pitch, float dt);
 
 void i2cWrite(uint8_t addr, uint8_t data);
 void i2cWriteData(uint8_t addr, uint8_t *date, uint8_t length);
 uint8_t i2cRead(uint8_t addr);
 void i2cReadData(uint8_t addr, uint8_t *data, uint8_t length);
-
+#if 0
 void initMPU6500(void);
 void spiReadData(uint32_t addr, uint32_t *buffer);
 void spiWriteData(uint32_t addr, uint32_t buffer);
-
+#endif
 #ifdef __cplusplus
 }
 #endif

@@ -34,12 +34,10 @@
 #include "driverlib/sysctl.h"
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 
-// Only acro mode is actually working for now
-#define ACRO_MODE 1
-
 #define SYSCTL_PERIPH_LED SYSCTL_PERIPH_GPIOF
 #define GPIO_LED_BASE     GPIO_PORTF_BASE
 #define GPIO_RED_LED      GPIO_PIN_1
+#define GPIO_BLUE_LED     GPIO_PIN_2
 #define GPIO_GREEN_LED    GPIO_PIN_3
 
 int main(void) {
@@ -59,7 +57,7 @@ int main(void) {
 
     SysCtlPeripheralEnable(SYSCTL_PERIPH_LED); // Enable GPIOF peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
-    GPIOPinTypeGPIOOutput(GPIO_LED_BASE, GPIO_RED_LED | GPIO_GREEN_LED); // Set red and blue LEDs as outputs
+    GPIOPinTypeGPIOOutput(GPIO_LED_BASE, GPIO_RED_LED | GPIO_BLUE_LED | GPIO_GREEN_LED); // Set red, blue and green LEDs as outputs
 
     IntMasterEnable();
 
@@ -68,19 +66,10 @@ int main(void) {
     UARTprintf("CLK %d\n", SysCtlClockGet());
     UARTprintf("min: %d, max: %d, period: %d\n", PPM_MIN, PPM_MAX, getPeriod());
 
-#if !ACRO_MODE
-    const float restAngleRoll = 1.67f, restAnglePitch = -2.55f; // TODO: Make a calibration routine for these values
-#endif
-
-#if ACRO_MODE
     pidRoll.Kp = 0.012f;
     pidRoll.Ki = 0.050f;
     pidRoll.Kd = 0.0f;
-#else
-    pidRoll.Kp = 1.75f;
-    pidRoll.Ki = 1.0f;//2.3f;
-    pidRoll.Kd = 0.0f;
-#endif
+
     pidRoll.integratedError = 0.0f;
     pidRoll.lastError = 0.0f;
 
@@ -94,13 +83,14 @@ int main(void) {
 
     printPIDValues();
     
-    static float stickScalingRollPitch = 15.0f, stickScalingYaw = 30.0f;
+    static const float angleKp = 60.0f;
+    static const uint8_t stickScalingRollPitch = 30, stickScalingYaw = 30;
+    static const float restAngleRoll = 3.62f, restAnglePitch = 0.20f;
+    static const uint8_t maxAngleInclination = 50.0f; // Max angle in self level mode
 
-#if ACRO_MODE
-    static int16_t gyroData[3];
-#else
+    static int16_t accData[3], gyroData[3];
     float roll, pitch;
-#endif
+
     static uint32_t imuTimer = 0, pidTimer = 0;
 
     // Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
@@ -128,7 +118,7 @@ int main(void) {
             armed = true;
 
         // Turn on red led if there is valid data and AUX channel is in armed position otherwise turn on green LED
-        GPIOPinWrite(GPIO_PORTF_BASE, GPIO_RED_LED | GPIO_GREEN_LED, !validRXData || rxChannel[RX_AUX2_CHAN] < RX_MID_INPUT ? GPIO_GREEN_LED : GPIO_RED_LED);
+        GPIOPinWrite(GPIO_LED_BASE, GPIO_RED_LED | GPIO_GREEN_LED, !validRXData || rxChannel[RX_AUX2_CHAN] < RX_MID_INPUT ? GPIO_GREEN_LED : GPIO_RED_LED);
         
         uint32_t now = micros();
         if (dataReadyMPU6500()) {
@@ -136,17 +126,25 @@ int main(void) {
             //UARTprintf("%d\n", now - imuTimer);
             imuTimer = now;
 
-#if ACRO_MODE
-            getMPU6500Gyro(gyroData);
+            getMPU6500Data(accData, gyroData); // Get accelerometer and gyroscope values
+            getMPU6500Angles(accData, gyroData, &roll, &pitch, dt); // Calculate pitch and roll
+
+            roll -= restAngleRoll; // Apply angle trim
+            pitch -= restAnglePitch;
 
             /*UARTprintf("%d\t%d\t%d\n", gyroData[0], gyroData[1], gyroData[2]);
             UARTFlushTx(false);*/
-#else
-            getMPU6500Angles(&roll, &pitch, dt);
-
             /*UARTprintf("%d.%02d\t%d.%02d\n", (int16_t)roll, (int16_t)abs(roll * 100.0f) % 100, (int16_t)pitch, (int16_t)abs(pitch * 100.0f) % 100);
             UARTFlushTx(false);*/
-#endif
+        }
+        
+        bool angleMode;
+        if (rxChannel[RX_AUX1_CHAN] > RX_MID_INPUT) {
+            angleMode = true;
+            GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED if in angle mode
+        } else {
+            angleMode = false;
+            GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED if in acro mode
         }
 
         now = micros();
@@ -161,13 +159,23 @@ int main(void) {
             float rudder = mapf(rxChannel[RX_RUDDER_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
             //UARTprintf("%d\t%d\t%d\n", (int16_t)aileron, (int16_t)elevator, (int16_t)rudder);
 
-#if ACRO_MODE
-            float rollOut = updatePID(&pidRoll, aileron * stickScalingRollPitch, gyroData[1], dt);
-            float pitchOut = updatePID(&pidPitch, elevator * stickScalingRollPitch, gyroData[0], dt);
-#else
-            float rollOut = updatePID(&pidRoll, restAngleRoll, roll, dt);
-            float pitchOut = updatePID(&pidPitch, restAnglePitch, pitch, dt);
-#endif
+            float setPoint[2];
+            if (angleMode) { // Angle mode
+                setPoint[0] = constrain(aileron, -maxAngleInclination, maxAngleInclination) - roll;
+                setPoint[1] = constrain(elevator, -maxAngleInclination, maxAngleInclination) - pitch;
+                setPoint[0] *= angleKp;
+                setPoint[1] *= angleKp;
+            } else { // Acro mode
+                setPoint[0] = aileron * stickScalingRollPitch;
+                setPoint[1] = elevator * stickScalingRollPitch;
+            }
+            
+            UARTprintf("%d\t%d\n", (int16_t)setPoint[0], (int16_t)setPoint[1]);
+            UARTFlushTx(false);
+
+            float rollOut = updatePID(&pidRoll, setPoint[0], gyroData[1], dt);
+            float pitchOut = updatePID(&pidPitch, setPoint[1], gyroData[0], dt);
+
             float yawOut = updatePID(&pidYaw, rudder * stickScalingYaw, gyroData[2], dt);
 
             float throttle = mapf(rxChannel[RX_THROTTLE_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
@@ -210,12 +218,14 @@ int main(void) {
     // Only enable peripheral clock once
     // Tune yaw PID values separately
     // Make limit of integrated error adjustable
-    // Get self-level working - enable DLPF for accelerometer
     // Use SPI instead of I2C
     // Set Kd as well
-    // Controls should be setPoint for PID controller
     // Scope PWM output and check that it is in sync with control loop
     // Define all pins in a pins.h
     // Rename sonar.h to Sonar.h and time.h to Time.h
     // Update year in copyright header
-    // Use sonar distance for something usefull
+    // Use sonar distance for something usefull - see: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/altitudehold.c
+        // https://github.com/cleanflight/cleanflight/blob/master/src/main/sensors/sonar.c#L90-L99
+    // Limit other motors if one reaches maximum: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/mixer.c#L677-L684
+    // Make acc calibration routine
+    // Retune PID again and tune stickscaling

@@ -46,22 +46,7 @@ bool dataReadyMPU6500(void) {
     return GPIOPinRead(GPIO_MPU_INT_BASE, GPIO_MPU_INT_PIN);
 }
 
-void getMPU6500Gyro(int16_t *gyroData) {
-    uint8_t buf[6];
-
-    i2cReadData(0x43, buf, 6);
-    gyroData[0] = (buf[0] << 8) | buf[1]; // X
-    gyroData[1] = (buf[2] << 8) | buf[3]; // Y
-    gyroData[2] = (buf[4] << 8) | buf[5]; // Z
-
-    for (uint8_t axis = 0; axis < 3; axis++)
-        gyroData[axis] -= gyroZero[axis];
-}
-
-void getMPU6500Angles(float *roll, float *pitch, float dt) {
-    int16_t accData[3], gyroData[3];
-    updateMPU6500(accData, gyroData);
-
+void getMPU6500Angles(int16_t *accData, int16_t *gyroData, float *roll, float *pitch, float dt) {
     // Source: https://github.com/cleanflight/cleanflight
     const float accz_lpf_cutoff = 5.0f;
     const float fc_acc = 0.5f / (PI * accz_lpf_cutoff); // Calculate RC time constant used in the accZ lpf
@@ -134,7 +119,7 @@ void initMPU6500_i2c(void) {
 
     delay(100);
 
-    uint8_t i2cBuffer[4]; // Buffer for I2C data
+    uint8_t i2cBuffer[5]; // Buffer for I2C data
 
     i2cBuffer[0] = i2cRead(0x75);
     if (i2cBuffer[0] == 0x70) // Read "WHO_AM_I" register
@@ -156,9 +141,8 @@ void initMPU6500_i2c(void) {
     i2cBuffer[1] = 0x03; // Disable FSYNC and set 41 Hz Gyro filtering, 1 KHz sampling
     i2cBuffer[2] = 3 << 3; // Set Gyro Full Scale Range to +-2000deg/s
     i2cBuffer[3] = 2 << 3; // Set Accelerometer Full Scale Range to +-8g
-    // TODO: Enable DLPF for accelerometer as well:
-    //i2cBuffer[4] = 0x03; // 41 Hz Acc filtering
-    i2cWriteData(0x19, i2cBuffer, 4); // Write to all four registers at once
+    i2cBuffer[4] = 0x03; // 41 Hz Acc filtering
+    i2cWriteData(0x19, i2cBuffer, 5); // Write to all four registers at once
 
     /* Enable Data Ready Interrupt on INT pin */
     i2cBuffer[0] = (1 << 5) | (1 << 4); // Enable LATCH_INT_EN and INT_RD_CLEAR
@@ -181,9 +165,12 @@ void initMPU6500_i2c(void) {
     }
 
     // TOOD: Read gyro values multiple times and check if it's moved while doing so
-
-    int16_t accData[3]; // This is just tossed away
-    updateMPU6500(accData, gyroZero); // Get gyro zero values
+    // Get gyro zero values
+    uint8_t buf[6];
+    i2cReadData(0x43, buf, 6);
+    gyroZero[0] = (buf[0] << 8) | buf[1]; // X
+    gyroZero[1] = (buf[2] << 8) | buf[3]; // Y
+    gyroZero[2] = (buf[4] << 8) | buf[5]; // Z
 
     KalmanXInit();
     KalmanYInit();
@@ -192,7 +179,7 @@ void initMPU6500_i2c(void) {
     setAngleY(0.0f);
 }
 
-void updateMPU6500(int16_t *accData, int16_t *gyroData) {
+void getMPU6500Data(int16_t *accData, int16_t *gyroData) {
     uint8_t buf[14];
 
     i2cReadData(0x3B, buf, 14);
@@ -204,6 +191,9 @@ void updateMPU6500(int16_t *accData, int16_t *gyroData) {
     gyroData[0] = (buf[8] << 8) | buf[9]; // X
     gyroData[1] = (buf[10] << 8) | buf[11]; // Y
     gyroData[2] = (buf[12] << 8) | buf[13]; // Z
+    
+    for (uint8_t axis = 0; axis < 3; axis++)
+        gyroData[axis] -= gyroZero[axis];
 }
 
 void i2cWrite(uint8_t addr, uint8_t data) {
@@ -266,6 +256,7 @@ void i2cReadData(uint8_t addr, uint8_t *data, uint8_t length) {
     data[length - 1] = I2CMasterDataGet(I2C1_BASE); // Place data into data register
 }
 
+#if 0
 void spiSelect(bool enable) {
     GPIOPinWrite(GPIO_PORTA_BASE, GPIO_PIN_3, enable ? 0 : GPIO_PIN_3); // The SS pin is active low
 }
@@ -347,3 +338,4 @@ void spiWriteData(uint32_t addr, uint32_t buffer) {
     while (SSIBusy(SSI0_BASE));
     spiSelect(false);
 }
+#endif
