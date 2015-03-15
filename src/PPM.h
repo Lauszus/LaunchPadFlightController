@@ -33,7 +33,7 @@ void writePPMUs(uint8_t motor, uint16_t us);
 void writePPMWidth(uint8_t motor, uint16_t width);
 uint16_t getPeriod(void);
 
-float map(float x, float in_min, float in_max, float out_min, float out_max);
+float mapf(float x, float in_min, float in_max, float out_min, float out_max);
 
 #ifdef __cplusplus
 }

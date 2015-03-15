@@ -73,7 +73,7 @@ void writePPMAllOff(void) {
         writePPMUs(i, PPM_MIN);
 }
 
-float map(float x, float in_min, float in_max, float out_min, float out_max) {
+float mapf(float x, float in_min, float in_max, float out_min, float out_max) {
     float value = (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min; // From Arduino source code: https://github.com/arduino/Arduino/blob/ide-1.5.x/hardware/arduino/avr/cores/arduino/WMath.cpp
     if (value > out_max)
         value = out_max;
@@ -89,7 +89,7 @@ void updateMotor(uint8_t motor, float value) {
     else if (value < -100.0f)
         value = -100.0f;
 
-    uint16_t motorOutput = map(value, -100.0f, 100.0f, PPM_MIN, PPM_MAX);
+    uint16_t motorOutput = mapf(value, -100.0f, 100.0f, PPM_MIN, PPM_MAX);
     writePPMUs(motor, motorOutput);
 }
 
