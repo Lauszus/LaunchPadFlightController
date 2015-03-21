@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "PPM.h"
 #include "RX.h"
 #include "time.h"
 
@@ -79,6 +80,7 @@ void CaptureHandler(void) {
 
 void TimeoutHandler(void) {
     TimerIntClear(WTIMER1_BASE, TIMER_TIMB_TIMEOUT); // Clear interrupt
+    writePPMAllOff(); // Turn all motors off
     validRXData = false; // Indicate that connection was lost
 }
 
