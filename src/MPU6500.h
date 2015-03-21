@@ -23,10 +23,10 @@ extern "C" {
 #endif
 
 void initMPU6500_i2c(void);
-    
+
 bool dataReadyMPU6500(void);
 void getMPU6500Data(int16_t *accData, int16_t *gyroData);
-void getMPU6500Angles(int16_t *accData, int16_t *gyroData, float *roll, float *pitch, float dt);
+void getMPU6500Angles(int16_t *accData, float *gyroRate, float *roll, float *pitch, float dt);
 
 void i2cWrite(uint8_t addr, uint8_t data);
 void i2cWriteData(uint8_t addr, uint8_t *date, uint8_t length);

@@ -42,20 +42,37 @@
 
 static int16_t gyroZero[3];
 
+// Returns true when data is ready to be read
 bool dataReadyMPU6500(void) {
     return GPIOPinRead(GPIO_MPU_INT_BASE, GPIO_MPU_INT_PIN);
 }
 
-void getMPU6500Angles(int16_t *accData, int16_t *gyroData, float *roll, float *pitch, float dt) {
-    // Source: https://github.com/cleanflight/cleanflight
-    const float accz_lpf_cutoff = 5.0f;
+// Returns raw accelerometer data and gyro data with zero values subtracted
+void getMPU6500Data(int16_t *accData, int16_t *gyroData) {
+    uint8_t buf[14];
+
+    i2cReadData(0x3B, buf, 14);
+
+    accData[0] = (buf[0] << 8) | buf[1]; // X
+    accData[1] = (buf[2] << 8) | buf[3]; // Y
+    accData[2] = (buf[4] << 8) | buf[5]; // Z
+
+    gyroData[0] = (buf[8] << 8) | buf[9]; // X
+    gyroData[1] = (buf[10] << 8) | buf[11]; // Y
+    gyroData[2] = (buf[12] << 8) | buf[13]; // Z
+
+    for (uint8_t axis = 0; axis < 3; axis++)
+        gyroData[axis] -= gyroZero[axis]; // Subtract gyro zero values
+
+    // TODO: Subtract accelerometer zero values as well
+}
+
+// Accelerometer readings can be in any scale, but gyro date needs to be in deg/s
+void getMPU6500Angles(int16_t *accData, float *gyroRate, float *roll, float *pitch, float dt) {
+    const float accz_lpf_cutoff = 5.0f; // Source: https://github.com/cleanflight/cleanflight
     const float fc_acc = 0.5f / (PI * accz_lpf_cutoff); // Calculate RC time constant used in the accZ lpf
     static float accz_smooth = 0;
-    accz_smooth = accz_smooth + (dt / (fc_acc + dt)) * (accData[2] - accz_smooth); // Low pass filter
-
-    float gyroRate[3];
-    for (uint8_t axis = 0; axis < 3; axis++)
-        gyroRate[axis] = (float)(gyroData[axis] - gyroZero[axis]) / 16.4f;
+    accz_smooth += (dt / (fc_acc + dt)) * (accData[2] - accz_smooth); // Low pass filter
 
     // Pitch should increase when pitching quadcopter downward
     // and roll should increase when tilting quadcopter clockwise
@@ -64,6 +81,9 @@ void getMPU6500Angles(int16_t *accData, int16_t *gyroData, float *roll, float *p
     for (uint8_t axis = 0; axis < 3; axis++)
         gyroAngle[axis] += gyroRate[axis] * dt; // Gyro angle is only used for debugging*/
 
+    // Source: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf
+    // atan2 outputs the value of -π to π (radians) - see http://en.wikipedia.org/wiki/Atan2
+    // It is then converted from radians to degrees
     float rollAcc = atanf(accData[0] / sqrtf(accData[1] * accData[1] + accz_smooth * accz_smooth)) * RAD_TO_DEG;
     float pitchAcc  = atan2f(-accData[1], -accz_smooth) * RAD_TO_DEG;
 
@@ -82,7 +102,8 @@ void getMPU6500Angles(int16_t *accData, int16_t *gyroData, float *roll, float *p
 */
 }
 
-/*void printMPU6050Debug(void) {
+/*
+void printMPU6050Debug(void) {
     while (1) {
 #if 0
         UARTprintf("%d\t%d\t\t", (int16_t)KalmanX, (int16_t)KalmanY);
@@ -108,7 +129,7 @@ void initMPU6500_i2c(void) {
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA); // Enable GPIOA peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 
-    // Use altenate function
+    // Use alternate function
     GPIOPinConfigure(GPIO_PA6_I2C1SCL);
     GPIOPinConfigure(GPIO_PA7_I2C1SDA);
 
@@ -142,13 +163,13 @@ void initMPU6500_i2c(void) {
     i2cBuffer[2] = 3 << 3; // Set Gyro Full Scale Range to +-2000deg/s
     i2cBuffer[3] = 2 << 3; // Set Accelerometer Full Scale Range to +-8g
     i2cBuffer[4] = 0x03; // 41 Hz Acc filtering
-    i2cWriteData(0x19, i2cBuffer, 5); // Write to all four registers at once
+    i2cWriteData(0x19, i2cBuffer, 5); // Write to all five registers at once
 
-    /* Enable Data Ready Interrupt on INT pin */
-    i2cBuffer[0] = (1 << 5) | (1 << 4); // Enable LATCH_INT_EN and INT_RD_CLEAR
+    /* Enable Raw Data Ready Interrupt on INT pin */
+    i2cBuffer[0] = (1 << 5) | (1 << 4); // Enable LATCH_INT_EN and INT_ANYRD_2CLEAR
                                         // When this bit is equal to 1, the INT pin is held high until the interrupt is cleared
-                                        // When this bit is equal to 1, interrupt status bits are cleared on any read operation
-    i2cBuffer[1] = (1 << 0); // Enable DATA_RDY_EN - When set to 1, this bit enables the Data Ready interrupt, which occurs each time a write operation to all of the sensor registers has been completed
+                                        // When this bit is equal to 1, interrupt status is cleared if any read operation is performed
+    i2cBuffer[1] = (1 << 0); // Enable RAW_RDY_EN - When set to 1, Enable Raw Sensor Data Ready interrupt to propagate to interrupt pin
     i2cWriteData(0x37, i2cBuffer, 2); // Write to both registers at once
 
     // Set INT input pin
@@ -177,23 +198,6 @@ void initMPU6500_i2c(void) {
 
     setAngleX(0.0f); // Set starting angle
     setAngleY(0.0f);
-}
-
-void getMPU6500Data(int16_t *accData, int16_t *gyroData) {
-    uint8_t buf[14];
-
-    i2cReadData(0x3B, buf, 14);
-
-    accData[0] = (buf[0] << 8) | buf[1]; // X
-    accData[1] = (buf[2] << 8) | buf[3]; // Y
-    accData[2] = (buf[4] << 8) | buf[5]; // Z
-
-    gyroData[0] = (buf[8] << 8) | buf[9]; // X
-    gyroData[1] = (buf[10] << 8) | buf[11]; // Y
-    gyroData[2] = (buf[12] << 8) | buf[13]; // Z
-    
-    for (uint8_t axis = 0; axis < 3; axis++)
-        gyroData[axis] -= gyroZero[axis];
 }
 
 void i2cWrite(uint8_t addr, uint8_t data) {
