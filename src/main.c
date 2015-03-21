@@ -40,32 +40,19 @@
 #define GPIO_BLUE_LED     GPIO_PIN_2
 #define GPIO_GREEN_LED    GPIO_PIN_3
 
-int main(void) {
-    // Set the clocking to run directly from the external crystal/oscillator.
-    SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ); // Set clock to 80MHz (400MHz(PLL) / 2 / 2.5 = 80 MHz)
+static const float angleKp = 4.0f;
+static const float stickScalingRollPitch = 2.0f, stickScalingYaw = 2.0f;
+static const float restAngleRoll = 3.62f, restAnglePitch = 0.20f;
+static const uint8_t maxAngleInclination = 50.0f; // Max angle in self level mode
 
-    initPPM();
-    initUART();
-    delay(100);
-    UARTprintf("Started\n");
-    initTime();
-    initRX();
-    initSonar();
+static float gyroRate[3], roll, pitch; // Gyro rate in deg/s and roll and pitch calculated using Kalman filter
+static uint32_t imuTimer = 0, pidTimer = 0; // Used to keep track of the time
 
-    //initMPU6500();
-    initMPU6500_i2c();
+// Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
+static float motors[4] = { -100.0f, -100.0f, -100.0f, -100.0f };
+static bool armed = false;
 
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_LED); // Enable GPIOF peripheral
-    SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
-    GPIOPinTypeGPIOOutput(GPIO_LED_BASE, GPIO_RED_LED | GPIO_BLUE_LED | GPIO_GREEN_LED); // Set red, blue and green LEDs as outputs
-
-    IntMasterEnable();
-
-    delay(100); // Wait a little for everything to initialize
-
-    UARTprintf("CLK %d\n", SysCtlClockGet());
-    UARTprintf("min: %d, max: %d, period: %d\n", PPM_MIN, PPM_MAX, getPeriod());
-
+void initPIDValues(void) {
     pidRoll.Kp = 0.012f;
     pidRoll.Ki = 0.050f;
     pidRoll.Kd = 0.0f;
@@ -80,22 +67,35 @@ int main(void) {
     pidYaw.Kp *= 3.0f;
     pidYaw.Ki *= 3.5f; // I increased this in order for it to stop yawing slowly
     pidYaw.Kd *= 2.0f;
+}
 
+int main(void) {
+    // Set the clocking to run directly from the external crystal/oscillator.
+    SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ); // Set clock to 80MHz (400MHz(PLL) / 2 / 2.5 = 80 MHz)
+
+    initPPM();
+    initUART();
+    delay(100); // It needs a little delay after UART has been enabled
+    UARTprintf("Started\n");
+    initTime();
+    initRX();
+    initSonar();
+
+    initMPU6500_i2c();
+
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_LED); // Enable GPIOF peripheral
+    SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
+    GPIOPinTypeGPIOOutput(GPIO_LED_BASE, GPIO_RED_LED | GPIO_BLUE_LED | GPIO_GREEN_LED); // Set red, blue and green LEDs as outputs
+
+    IntMasterEnable();
+
+    delay(100); // Wait a little for everything to initialize
+
+    UARTprintf("CLK %d\n", SysCtlClockGet());
+    UARTprintf("min: %d, max: %d, period: %d\n", PPM_MIN, PPM_MAX, getPeriod());
+
+    initPIDValues();
     printPIDValues();
-
-    static const float angleKp = 4.0f;
-    static const float stickScalingRollPitch = 2.0f, stickScalingYaw = 2.0f;
-    static const float restAngleRoll = 3.62f, restAnglePitch = 0.20f;
-    static const uint8_t maxAngleInclination = 50.0f; // Max angle in self level mode
-
-    static float roll, pitch, gyroRate[3];
-
-    static uint32_t imuTimer = 0, pidTimer = 0;
-
-    // Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
-    static float motors[4] = { -100.0f, -100.0f, -100.0f, -100.0f };
-
-    static bool armed = false;
 
     while (!validRXData || rxChannel[RX_AUX2_CHAN] > RX_MID_INPUT) {
         // Wait until we have valid data and we are unarmed
@@ -237,3 +237,4 @@ int main(void) {
     // TOOD: Read gyro values multiple times and check if it's moved while doing so
     // Only have one Kalman.c file. Use struct as argument instead
     // Takes average of three readings in DTerm: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/pid.c#L721-L732
+    // Move I2C code into seperate .h and .c files
