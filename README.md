@@ -1,5 +1,5 @@
 # LaunchPad Flight Controller
-#### Developed by Kristian Lauszus, 2014
+#### Developed by Kristian Lauszus, 2015
 
 The code is released under the GNU General Public License.
 _________
