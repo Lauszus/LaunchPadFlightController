@@ -137,7 +137,7 @@ int main(void) {
             /*UARTprintf("%d.%02d\t%d.%02d\n", (int16_t)roll, (int16_t)abs(roll * 100.0f) % 100, (int16_t)pitch, (int16_t)abs(pitch * 100.0f) % 100);
             UARTFlushTx(false);*/
         }
-        
+
         bool angleMode;
         if (rxChannel[RX_AUX1_CHAN] > RX_MID_INPUT) {
             angleMode = true;
@@ -154,9 +154,9 @@ int main(void) {
             pidTimer = now;
             dt /= 1000000.0f; // Convert to seconds
 
-            float aileron = mapf(rxChannel[RX_AILERON_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
-            float elevator = mapf(rxChannel[RX_ELEVATOR_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
-            float rudder = mapf(rxChannel[RX_RUDDER_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+            float aileron = getRXChannel(RX_AILERON_CHAN);
+            float elevator = getRXChannel(RX_ELEVATOR_CHAN);
+            float rudder = getRXChannel(RX_RUDDER_CHAN);
             //UARTprintf("%d\t%d\t%d\n", (int16_t)aileron, (int16_t)elevator, (int16_t)rudder);
 
             float setPoint[2];
@@ -178,7 +178,7 @@ int main(void) {
 
             float yawOut = updatePID(&pidYaw, rudder * stickScalingYaw, gyroData[2], dt);
 
-            float throttle = mapf(rxChannel[RX_THROTTLE_CHAN], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+            float throttle = getRXChannel(RX_THROTTLE_CHAN);
             for (uint8_t i = 0; i < 4; i++)
                 motors[i] = throttle;
 
@@ -227,5 +227,9 @@ int main(void) {
     // Use sonar distance for something usefull - see: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/altitudehold.c
         // https://github.com/cleanflight/cleanflight/blob/master/src/main/sensors/sonar.c#L90-L99
     // Limit other motors if one reaches maximum: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/mixer.c#L677-L684
-    // Make acc calibration routine
+    // Make acc calibration routine - apply zero values before Kalman routine
+    // Take average of several gyro readings for calibration routine
     // Retune PID again and tune stickscaling
+    // TOOD: Read gyro values multiple times and check if it's moved while doing so
+    // Only have one Kalman.c file. Use struct as argument instead
+    // Takes average of three readings in DTerm: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/pid.c#L721-L732

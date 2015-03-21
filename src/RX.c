@@ -116,3 +116,8 @@ void initRX(void) {
 
     validRXData = false;
 }
+
+// Returns the specific channel in the range [-100:100]
+float getRXChannel(rxChannel_e channel) {
+    return mapf(rxChannel[channel], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
+}
