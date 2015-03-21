@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "time.h"
+#include "Time.h"
 
 #include "driverlib/sysctl.h"
 #include "driverlib/systick.h"

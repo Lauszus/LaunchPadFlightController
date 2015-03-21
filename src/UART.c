@@ -21,7 +21,7 @@
 #include <string.h>
 
 #include "PID.h"
-#include "time.h"
+#include "Time.h"
 #include "UART.h"
 
 #include "inc/hw_memmap.h"

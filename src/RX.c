@@ -20,7 +20,7 @@
 
 #include "PPM.h"
 #include "RX.h"
-#include "time.h"
+#include "Time.h"
 
 #include "inc/hw_memmap.h"
 #include "inc/hw_ints.h"

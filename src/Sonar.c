@@ -18,8 +18,8 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "sonar.h"
-#include "time.h"
+#include "Sonar.h"
+#include "Time.h"
 
 #include "inc/hw_memmap.h"
 #include "inc/hw_ints.h"

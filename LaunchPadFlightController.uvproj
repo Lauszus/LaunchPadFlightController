@@ -423,9 +423,9 @@
               <FilePath>.\src\UART.c</FilePath>
             </File>
             <File>
-              <FileName>time.c</FileName>
+              <FileName>Time.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\time.c</FilePath>
+              <FilePath>.\src\Time.c</FilePath>
             </File>
             <File>
               <FileName>PPM.c</FileName>
@@ -458,9 +458,9 @@
               <FilePath>.\lib\utils\ustdlib.c</FilePath>
             </File>
             <File>
-              <FileName>sonar.c</FileName>
+              <FileName>Sonar.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\sonar.c</FilePath>
+              <FilePath>.\src\Sonar.c</FilePath>
             </File>
           </Files>
         </Group>

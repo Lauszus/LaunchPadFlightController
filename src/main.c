@@ -22,11 +22,11 @@
 #include "I2C.h"
 #include "RX.h"
 #include "UART.h"
-#include "time.h"
+#include "Time.h"
 #include "PPM.h"
 #include "PID.h"
 #include "MPU6500.h"
-#include "sonar.h"
+#include "Sonar.h"
 
 #include "inc/hw_memmap.h"
 #include "inc/tm4c123gh6pm.h"
@@ -230,7 +230,6 @@ int main(void) {
     // Set Kd as well
     // Scope PWM output and check that it is in sync with control loop
     // Define all pins in a pins.h
-    // Rename sonar.h to Sonar.h and time.h to Time.h
     // Use sonar distance for something usefull - see: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/altitudehold.c
         // https://github.com/cleanflight/cleanflight/blob/master/src/main/sensors/sonar.c#L90-L99
     // Limit other motors if one reaches maximum: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/mixer.c#L677-L684
@@ -240,3 +239,4 @@ int main(void) {
     // TOOD: Read gyro values multiple times and check if it's moved while doing so
     // Only have one Kalman.c file. Use struct as argument instead
     // Takes average of three readings in DTerm: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/pid.c#L721-L732
+    // Create Android App
