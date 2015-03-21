@@ -121,6 +121,47 @@ void printMPU6050Debug(void) {
     }
 }*/
 
+bool checkMinMax(int16_t *array, uint8_t length, int16_t maxDifference) { // Used to check that the flight controller is not moved while calibrating
+    int16_t min = array[0], max = array[0];
+    for (uint8_t i = 1; i < length; i++) {
+        if (array[i] < min)
+            min = array[i];
+        else if (array[i] > max)
+            max = array[i];
+    }
+    return max - min < maxDifference;
+}
+
+bool calibrateGyro() {
+    uint8_t buf[6];
+    int16_t gyroBuffer[3][25];
+
+    for (uint8_t i = 0; i < 25; i++) {
+        while (!dataReadyMPU6500()) {
+            // Wait until new date is ready
+        }
+        i2cReadData(MPU6500_ADDRESS, 0x43, buf, 6);
+        gyroBuffer[0][i] = (buf[0] << 8) | buf[1]; // X
+        gyroBuffer[1][i] = (buf[2] << 8) | buf[3]; // Y
+        gyroBuffer[2][i] = (buf[4] << 8) | buf[5]; // Z
+        delay(10);
+    }
+
+    for (uint8_t axis = 0; axis < 3; axis++) {
+        if (!checkMinMax(gyroBuffer[axis], 25, 100)) // 100 / 16.4 = 6.10 deg/s
+            return 1; // Return error
+    }
+
+    for (uint8_t axis = 0; axis < 3; axis++) {
+        gyroZero[axis] = 0; // Make sure zero values are actually zero to begin with
+        for (uint8_t i = 0; i < 25; i++)
+            gyroZero[axis] += gyroBuffer[axis][i]; // Sum up all readings
+        gyroZero[axis] /= 25; // Get average
+    }
+
+    return 0; // No error
+}
+
 void initMPU6500(void) {
     uint8_t i2cBuffer[5]; // Buffer for I2C data
 
@@ -163,17 +204,10 @@ void initMPU6500(void) {
 
     //printMPU6050Debug();
 
-    while (!dataReadyMPU6500()) {
-        // Wait until date is ready
+    while (calibrateGyro()) { // Get gyro zero values
+        UARTprintf("Gyro calibration error\n");
+        // TODO: Turn on buzzer
     }
-
-    // TOOD: Read gyro values multiple times and check if it's moved while doing so
-    // Get gyro zero values
-    uint8_t buf[6];
-    i2cReadData(MPU6500_ADDRESS, 0x43, buf, 6);
-    gyroZero[0] = (buf[0] << 8) | buf[1]; // X
-    gyroZero[1] = (buf[2] << 8) | buf[3]; // Y
-    gyroZero[2] = (buf[4] << 8) | buf[5]; // Z
 
     KalmanXInit();
     KalmanYInit();

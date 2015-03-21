@@ -234,9 +234,8 @@ int main(void) {
         // https://github.com/cleanflight/cleanflight/blob/master/src/main/sensors/sonar.c#L90-L99
     // Limit other motors if one reaches maximum: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/mixer.c#L677-L684
     // Make acc calibration routine - apply zero values before Kalman routine
-    // Take average of several gyro readings for calibration routine
     // Retune PID again and tune stickscaling
-    // TOOD: Read gyro values multiple times and check if it's moved while doing so
     // Only have one Kalman.c file. Use struct as argument instead
     // Takes average of three readings in DTerm: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/pid.c#L721-L732
     // Create Android App
+    // Add buzzer. Beep on startup, turn on at gyro calibration error, connection loss etc.
