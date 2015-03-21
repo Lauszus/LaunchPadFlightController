@@ -28,6 +28,7 @@ extern "C" {
 typedef struct {
     float Kp, Ki, Kd; // PID variables
     float lastError, integratedError;
+    float integrationLimit;
 } __attribute__((packed)) pid_t;
 
 extern pid_t pidRoll, pidPitch, pidYaw;

@@ -61,6 +61,8 @@ void initPIDValues(void) {
     pidRoll.integratedError = 0.0f;
     pidRoll.lastError = 0.0f;
 
+    pidRoll.integrationLimit = 0.6f; // Prevent windup
+
     pidPitch = pidRoll; // Use same PID values for both pitch and roll
 
     // x2 the values work pretty well - TODO: Fine-tune these
@@ -224,7 +226,6 @@ int main(void) {
     // Adjust PID values using pots on transmitter
     // Only enable peripheral clock once
     // Tune yaw PID values separately
-    // Make limit of integrated error adjustable
     // Use SPI instead of I2C for MPU-6500
     // Set Kd as well
     // Scope PWM output and check that it is in sync with control loop
