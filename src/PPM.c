@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "PID.h"
 #include "PPM.h"
 
 #include "inc/hw_memmap.h"
@@ -83,13 +84,8 @@ float mapf(float x, float in_min, float in_max, float out_min, float out_max) {
 }
 
 void updateMotor(uint8_t motor, float value) {
-    // Motors are in the range from -100 to 100
-    if (value > 100.0f)
-        value = 100.0f;
-    else if (value < -100.0f)
-        value = -100.0f;
-
-    uint16_t motorOutput = mapf(value, -100.0f, 100.0f, PPM_MIN, PPM_MAX);
+    value = constrain(value, -100, 100); // Motors are in the range [-100:100]
+    uint16_t motorOutput = mapf(value, -100.0f, 100.0f, PPM_MIN, PPM_MAX); // Map to PPM min and max value
     writePPMUs(motor, motorOutput);
 }
 
