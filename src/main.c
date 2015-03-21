@@ -19,6 +19,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include "I2C.h"
 #include "RX.h"
 #include "UART.h"
 #include "time.h"
@@ -81,7 +82,9 @@ int main(void) {
     initRX();
     initSonar();
 
-    initMPU6500_i2c();
+    initI2C();
+    delay(100); // Wait a little bit for I2C to stabilize
+    initMPU6500();
 
     SysCtlPeripheralEnable(SYSCTL_PERIPH_LED); // Enable GPIOF peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
@@ -222,7 +225,7 @@ int main(void) {
     // Only enable peripheral clock once
     // Tune yaw PID values separately
     // Make limit of integrated error adjustable
-    // Use SPI instead of I2C
+    // Use SPI instead of I2C for MPU-6500
     // Set Kd as well
     // Scope PWM output and check that it is in sync with control loop
     // Define all pins in a pins.h
@@ -237,4 +240,3 @@ int main(void) {
     // TOOD: Read gyro values multiple times and check if it's moved while doing so
     // Only have one Kalman.c file. Use struct as argument instead
     // Takes average of three readings in DTerm: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/pid.c#L721-L732
-    // Move I2C code into seperate .h and .c files
