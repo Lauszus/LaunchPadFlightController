@@ -54,8 +54,8 @@ static float motors[4] = { -100.0f, -100.0f, -100.0f, -100.0f };
 static bool armed = false;
 
 void initPIDValues(void) {
-    pidRoll.Kp = 0.012f;
-    pidRoll.Ki = 0.050f;
+    pidRoll.Kp = 0.2f;
+    pidRoll.Ki = 0.8f;
     pidRoll.Kd = 0.0f;
 
     pidRoll.integratedError = 0.0f;
