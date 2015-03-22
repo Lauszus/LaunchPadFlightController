@@ -148,75 +148,86 @@ int main(void) {
         }
 
         bool angleMode;
-        if (rxChannel[RX_AUX1_CHAN] > RX_MID_INPUT) {
+        if (getRXChannel(RX_AUX1_CHAN) > -10) {
             angleMode = true;
             GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED if in angle mode
         } else {
             angleMode = false;
             GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED if in acro mode
         }
+        
+        // Don't spin motors if the throttle is low
+        bool runMotors = false;
+        if (armed && getRXChannel(RX_THROTTLE_CHAN) > -95)
+            runMotors = true;
+        else {
+            writePPMAllOff();
+            pidResetError();
+        }
 
-        now = micros();
-        float dt = (float)(now - pidTimer);
-        if (armed && dt > 2500) { // Limit to 2.5ms (400 Hz)
-            //UARTprintf("%d\n", now - pidTimer);
-            pidTimer = now;
-            dt /= 1000000.0f; // Convert to seconds
+        if (runMotors) {
+            now = micros();
+            float dt = (float)(now - pidTimer);
+            if (runMotors && dt > 2500) { // Limit to 2.5ms (400 Hz)
+                //UARTprintf("%d\n", now - pidTimer);
+                pidTimer = now;
+                dt /= 1000000.0f; // Convert to seconds
 
-            float aileron = getRXChannel(RX_AILERON_CHAN);
-            float elevator = getRXChannel(RX_ELEVATOR_CHAN);
-            float rudder = getRXChannel(RX_RUDDER_CHAN);
-            //UARTprintf("%d\t%d\t%d\n", (int16_t)aileron, (int16_t)elevator, (int16_t)rudder);
+                float aileron = getRXChannel(RX_AILERON_CHAN);
+                float elevator = getRXChannel(RX_ELEVATOR_CHAN);
+                float rudder = getRXChannel(RX_RUDDER_CHAN);
+                //UARTprintf("%d\t%d\t%d\n", (int16_t)aileron, (int16_t)elevator, (int16_t)rudder);
 
-            float setPoint[2];
-            if (angleMode) { // Angle mode
-                setPoint[0] = constrain(aileron, -maxAngleInclination, maxAngleInclination) - roll;
-                setPoint[1] = constrain(elevator, -maxAngleInclination, maxAngleInclination) - pitch;
-                setPoint[0] *= angleKp;
-                setPoint[1] *= angleKp;
-            } else { // Acro mode
-                setPoint[0] = aileron * stickScalingRollPitch;
-                setPoint[1] = elevator * stickScalingRollPitch;
-            }
+                float setPoint[2];
+                if (angleMode) { // Angle mode
+                    setPoint[0] = constrain(aileron, -maxAngleInclination, maxAngleInclination) - roll;
+                    setPoint[1] = constrain(elevator, -maxAngleInclination, maxAngleInclination) - pitch;
+                    setPoint[0] *= angleKp;
+                    setPoint[1] *= angleKp;
+                } else { // Acro mode
+                    setPoint[0] = aileron * stickScalingRollPitch;
+                    setPoint[1] = elevator * stickScalingRollPitch;
+                }
 
-            /*UARTprintf("%d\t%d\n", (int16_t)setPoint[0], (int16_t)setPoint[1]);
-            UARTFlushTx(false);*/
+                /*UARTprintf("%d\t%d\n", (int16_t)setPoint[0], (int16_t)setPoint[1]);
+                UARTFlushTx(false);*/
 
-            // Roll and pitch control can both be gyro or accelerometer based
-            float rollOut = updatePID(&pidRoll, setPoint[0], gyroRate[1], dt);
-            float pitchOut = updatePID(&pidPitch, setPoint[1], gyroRate[0], dt);
+                // Roll and pitch control can both be gyro or accelerometer based
+                float rollOut = updatePID(&pidRoll, setPoint[0], gyroRate[1], dt);
+                float pitchOut = updatePID(&pidPitch, setPoint[1], gyroRate[0], dt);
 
-            // Yaw is always gyro controlled
-            float yawOut = updatePID(&pidYaw, rudder * stickScalingYaw, gyroRate[2], dt);
+                // Yaw is always gyro controlled
+                float yawOut = updatePID(&pidYaw, rudder * stickScalingYaw, gyroRate[2], dt);
 
-            float throttle = getRXChannel(RX_THROTTLE_CHAN);
-            for (uint8_t i = 0; i < 4; i++)
-                motors[i] = throttle;
+                float throttle = getRXChannel(RX_THROTTLE_CHAN);
+                for (uint8_t i = 0; i < 4; i++)
+                    motors[i] = throttle;
 
-            motors[0] -= rollOut;
-            motors[1] -= rollOut;
-            motors[2] += rollOut;
-            motors[3] += rollOut;
+                motors[0] -= rollOut;
+                motors[1] -= rollOut;
+                motors[2] += rollOut;
+                motors[3] += rollOut;
 
-            motors[0] += pitchOut;
-            motors[1] -= pitchOut;
-            motors[2] += pitchOut;
-            motors[3] -= pitchOut;
+                motors[0] += pitchOut;
+                motors[1] -= pitchOut;
+                motors[2] += pitchOut;
+                motors[3] -= pitchOut;
 
-            motors[0] -= yawOut;
-            motors[1] += yawOut;
-            motors[2] += yawOut;
-            motors[3] -= yawOut;
+                motors[0] -= yawOut;
+                motors[1] += yawOut;
+                motors[2] += yawOut;
+                motors[3] -= yawOut;
 
-            updateMotorsAll(motors);
+                updateMotorsAll(motors);
 
-            //UARTprintf("%d\t%d\n", (int16_t)elevator, (int16_t)aileron);
+                //UARTprintf("%d\t%d\n", (int16_t)elevator, (int16_t)aileron);
 #if 0
-            UARTprintf("%d\t%d\t\t", (int16_t)roll, (int16_t)pitch);
-            UARTprintf("%d\t%d\t\t", (int16_t)rollOut, (int16_t)pitchOut);
-            UARTprintf("%d\t%d\t%d\t%d\n", (int16_t)motors[0], (int16_t)motors[1], (int16_t)motors[2], (int16_t)motors[3]);
-            UARTFlushTx(false);
+                UARTprintf("%d\t%d\t\t", (int16_t)roll, (int16_t)pitch);
+                UARTprintf("%d\t%d\t\t", (int16_t)rollOut, (int16_t)pitchOut);
+                UARTprintf("%d\t%d\t%d\t%d\n", (int16_t)motors[0], (int16_t)motors[1], (int16_t)motors[2], (int16_t)motors[3]);
+                UARTFlushTx(false);
 #endif
+            }
         }
 
         triggerSonar(); // Trigger sonar
