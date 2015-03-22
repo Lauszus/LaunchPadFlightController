@@ -53,13 +53,16 @@ static uint32_t imuTimer = 0, pidTimer = 0; // Used to keep track of the time
 static float motors[4] = { -100.0f, -100.0f, -100.0f, -100.0f };
 static bool armed = false;
 
+void pidResetError(void) {
+    pidRoll.integratedError = pidRoll.lastError = 0.0f;
+    pidPitch.integratedError = pidPitch.lastError = 0.0f;
+    pidYaw.integratedError = pidYaw.lastError = 0.0f;
+}
+
 void initPIDValues(void) {
     pidRoll.Kp = 0.2f;
     pidRoll.Ki = 0.8f;
     pidRoll.Kd = 0.0f;
-
-    pidRoll.integratedError = 0.0f;
-    pidRoll.lastError = 0.0f;
 
     pidRoll.integrationLimit = 0.6f; // Prevent windup
 
@@ -70,6 +73,8 @@ void initPIDValues(void) {
     pidYaw.Kp *= 3.0f;
     pidYaw.Ki *= 3.5f; // I increased this in order for it to stop yawing slowly
     pidYaw.Kd *= 2.0f;
+
+    pidResetError();
 }
 
 int main(void) {
@@ -102,27 +107,24 @@ int main(void) {
     initPIDValues();
     printPIDValues();
 
-    while (!validRXData || rxChannel[RX_AUX2_CHAN] > RX_MID_INPUT) {
-        // Wait until we have valid data and we are unarmed
+    while (!validRXData || getRXChannel(RX_AUX2_CHAN) > 0) {
+        // Wait until we have valid data and safety aux channel is in safe position
     }
 
     while (1) {
         checkUARTData();
 
-        // Make sure there is valid data, AUX channel is armed and that throttle is applied
-        // The throttle check can be removed if one prefer the motors to spin once it is armed
-        // TODO: Arm using throttle low and yaw right
-        if (!validRXData || rxChannel[RX_AUX2_CHAN] < RX_MID_INPUT || rxChannel[RX_THROTTLE_CHAN] < RX_MIN_INPUT + 25) {
-            writePPMAllOff();
-            pidRoll.integratedError = pidRoll.lastError = 0.0f;
-            pidPitch.integratedError = pidPitch.lastError = 0.0f;
-            pidYaw.integratedError = pidYaw.lastError = 0.0f;
-            armed = false;
+        // Make sure there is valid data and safety channel is in armed position
+        if (validRXData && getRXChannel(RX_AUX2_CHAN) > 0) {
+            if (!armed && getRXChannel(RX_THROTTLE_CHAN) < -95 && getRXChannel(RX_RUDDER_CHAN) > 95) // Arm using throttle low and yaw right
+                armed = true;
+            else if (armed && getRXChannel(RX_THROTTLE_CHAN) < -95 && getRXChannel(RX_RUDDER_CHAN) < -95) // Disarm using throttle low and yaw left
+                armed = false;
         } else
-            armed = true;
+            armed = false;
 
-        // Turn on red led if there is valid data and AUX channel is in armed position otherwise turn on green LED
-        GPIOPinWrite(GPIO_LED_BASE, GPIO_RED_LED | GPIO_GREEN_LED, !validRXData || rxChannel[RX_AUX2_CHAN] < RX_MID_INPUT ? GPIO_GREEN_LED : GPIO_RED_LED);
+        // Turn on red led if armed otherwise turn on green LED
+        GPIOPinWrite(GPIO_LED_BASE, GPIO_RED_LED | GPIO_GREEN_LED, !armed ? GPIO_GREEN_LED : GPIO_RED_LED);
 
         uint32_t now = micros();
         if (dataReadyMPU6500()) {
@@ -239,3 +241,5 @@ int main(void) {
     // Takes average of three readings in DTerm: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/pid.c#L721-L732
     // Create Android App
     // Add buzzer. Beep on startup, turn on at gyro calibration error, connection loss etc.
+    // Add disarm timer
+    // Remove safety AUX channel once 100% stable
