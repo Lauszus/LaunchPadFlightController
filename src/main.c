@@ -95,7 +95,7 @@ int main(void) {
             armed = false;
 
         // Turn on red led if armed otherwise turn on green LED
-        GPIOPinWrite(GPIO_LED_BASE, GPIO_RED_LED | GPIO_GREEN_LED, !armed ? GPIO_GREEN_LED : GPIO_RED_LED);
+        GPIOPinWrite(GPIO_LED_BASE, GPIO_RED_LED | GPIO_GREEN_LED, armed ? GPIO_RED_LED : GPIO_GREEN_LED);
 
         uint32_t now = micros();
         if (dataReadyMPU6500()) {
@@ -115,15 +115,15 @@ int main(void) {
             UARTFlushTx(false);*/
         }
 
-        bool angleMode;
-        if (getRXChannel(RX_AUX1_CHAN) > -10) {
+        static bool angleMode = false;
+        if (!angleMode && getRXChannel(RX_AUX1_CHAN) > -10) {
             angleMode = true;
             GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED if in angle mode
-        } else {
+        } else if (angleMode) {
             angleMode = false;
             GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED if in acro mode
         }
-        
+
         // Don't spin motors if the throttle is low
         bool runMotors = false;
         if (armed && getRXChannel(RX_THROTTLE_CHAN) > -95)
