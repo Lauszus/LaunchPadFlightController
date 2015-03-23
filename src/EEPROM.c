@@ -24,10 +24,10 @@
 #include "driverlib/sysctl.h"
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 
-const uint32_t configVersion = 1;
-
-config_t cfg;
 #define CONFIG_SIZE roundUpMultiple4(sizeof(config_t)) // Size must to be a multiple of 4
+
+const uint32_t configVersion = 2; // Must be bumped every time config_t is changed
+config_t cfg;
 
 uint32_t roundUpMultiple4(uint32_t number) {
     uint32_t remainder = number % 4;
@@ -37,15 +37,22 @@ uint32_t roundUpMultiple4(uint32_t number) {
 }
 
 void setDefaultConfig(void) {
+    setDefaultPIDValues();
+
     for (uint8_t axis = 0; axis < 3; axis++)
         cfg.accZero[axis] = 0;
+
+    cfg.angleKp = 4.0f;
+    cfg.stickScalingRollPitch = 2.0f;
+    cfg.stickScalingYaw = 2.0f;
+    cfg.maxAngleInclination = 50.0f; // Max angle in self level mode
 
     uint32_t rcode = EEPROMProgram((uint32_t*)&configVersion, 0, sizeof(configVersion)); // Write version number to EEPROM
     if (rcode) {
         UARTprintf("Error writing version number to EEPROM: %u\n", rcode);
         // TODO: Turn buzzer on
     } else
-        updateConfig();
+        updateConfig(); // Write values to EEPROM
 }
 
 void initEEPROM(void) {

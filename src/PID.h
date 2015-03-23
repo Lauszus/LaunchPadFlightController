@@ -31,9 +31,9 @@ typedef struct {
     float integrationLimit;
 } __attribute__((packed)) pid_t;
 
-extern pid_t pidRoll, pidPitch, pidYaw;
-
 float updatePID(pid_t *pid, float setPoint, float input, float dt);
+void resetPIDError(void);
+void setDefaultPIDValues(void);
 
 #ifdef __cplusplus
 }

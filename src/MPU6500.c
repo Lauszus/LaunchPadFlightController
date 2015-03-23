@@ -181,7 +181,7 @@ bool calibrateAcc(void) {
 
     if (!rcode) {
         UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", cfg.accZero[0], cfg.accZero[1], cfg.accZero[2]);
-        updateConfig();
+        updateConfig(); // Write new values to EEPROM
     } else
         UARTprintf("Accelerometer calibration error\n");
         // TODO: Turn on buzzer

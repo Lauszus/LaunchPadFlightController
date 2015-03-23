@@ -20,7 +20,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "PID.h"
+#include "EEPROM.h"
 #include "Time.h"
 #include "UART.h"
 
@@ -52,9 +52,9 @@ void initUART(void) {
 
 void printPIDValues(void) {
     UARTprintf("PID: %d.%04d\t%d.%04d\t%d.%04d\n",
-                                            (int16_t)pidRoll.Kp, (int16_t)abs(pidRoll.Kp * 10000.0f) % 10000,
-                                            (int16_t)pidRoll.Ki, (int16_t)abs(pidRoll.Ki * 10000.0f) % 10000,
-                                            (int16_t)pidRoll.Kd, (int16_t)abs(pidRoll.Kd * 10000.0f) % 10000);
+                                            (int16_t)cfg.pidRoll.Kp, (int16_t)abs(cfg.pidRoll.Kp * 10000.0f) % 10000,
+                                            (int16_t)cfg.pidRoll.Ki, (int16_t)abs(cfg.pidRoll.Ki * 10000.0f) % 10000,
+                                            (int16_t)cfg.pidRoll.Kd, (int16_t)abs(cfg.pidRoll.Kd * 10000.0f) % 10000);
     UARTFlushTx(false);
 }
 
@@ -64,22 +64,23 @@ void setValues(char *input) {
     else if (input[0] == 'S' && input[2] == ',') { // Set different values
         float value = ustrtof(input + 3, NULL); // Skip first three letters
         if (input[1] == 'P')
-            pidRoll.Kp = value;
+            cfg.pidRoll.Kp = value;
         else if (input[1] == 'I')
-            pidRoll.Ki = value;
+            cfg.pidRoll.Ki = value;
         else if (input[1] == 'D')
-            pidRoll.Kd = value;
+            cfg.pidRoll.Kd = value;
 
         // Use same PID values for both pitch and roll
-        pidPitch.Kp = pidRoll.Kp;
-        pidPitch.Ki = pidRoll.Ki;
-        pidPitch.Kd = pidRoll.Kd;
+        cfg.pidPitch.Kp = cfg.pidRoll.Kp;
+        cfg.pidPitch.Ki = cfg.pidRoll.Ki;
+        cfg.pidPitch.Kd = cfg.pidRoll.Kd;
 
-        pidYaw.Kp = pidRoll.Kp * 3.0f; // TODO: Tune these separately
-        pidYaw.Ki = pidRoll.Ki * 3.5f; // I increased this in order for it to stop yawing slowly
-        pidYaw.Kd = pidRoll.Kd * 2.0f;
+        cfg.pidYaw.Kp = cfg.pidRoll.Kp * 3.0f; // TODO: Tune these separately
+        cfg.pidYaw.Ki = cfg.pidRoll.Ki * 3.5f; // I increased this in order for it to stop yawing slowly
+        cfg.pidYaw.Kd = cfg.pidRoll.Kd * 2.0f;
 
         printPIDValues(); // Print new PID Values
+        updateConfig(); // Write new values to EEPROM
     }
 }
 

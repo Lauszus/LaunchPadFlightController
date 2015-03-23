@@ -18,12 +18,18 @@
 #ifndef __eeprom_h__
 #define __eeprom_h__
 
+#include "PID.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef struct {
-    int16_t accZero[3];
+    pid_t pidRoll, pidPitch, pidYaw; // PID values
+    int16_t accZero[3]; // Accelerometer calibration values
+    float angleKp; // Self level mode Kp value
+    float stickScalingRollPitch, stickScalingYaw; // Stick scaling values
+    uint8_t maxAngleInclination; // Max angle in self level mode
 } config_t;
 
 extern config_t cfg;

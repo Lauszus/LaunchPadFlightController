@@ -40,41 +40,12 @@
 #define GPIO_BLUE_LED     GPIO_PIN_2
 #define GPIO_GREEN_LED    GPIO_PIN_3
 
-static const float angleKp = 4.0f;
-static const float stickScalingRollPitch = 2.0f, stickScalingYaw = 2.0f;
-static const float restAngleRoll = 3.62f, restAnglePitch = 0.20f;
-static const uint8_t maxAngleInclination = 50.0f; // Max angle in self level mode
-
 static float gyroRate[3], roll, pitch; // Gyro rate in deg/s and roll and pitch calculated using Kalman filter
 static uint32_t imuTimer = 0, pidTimer = 0; // Used to keep track of the time
 
 // Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
 static float motors[4] = { -100.0f, -100.0f, -100.0f, -100.0f };
 static bool armed = false;
-
-void pidResetError(void) {
-    pidRoll.integratedError = pidRoll.lastError = 0.0f;
-    pidPitch.integratedError = pidPitch.lastError = 0.0f;
-    pidYaw.integratedError = pidYaw.lastError = 0.0f;
-}
-
-void initPIDValues(void) {
-    pidRoll.Kp = 0.2f;
-    pidRoll.Ki = 0.8f;
-    pidRoll.Kd = 0.0f;
-
-    pidRoll.integrationLimit = 0.6f; // Prevent windup
-
-    pidPitch = pidRoll; // Use same PID values for both pitch and roll
-
-    // x2 the values work pretty well - TODO: Fine-tune these
-    pidYaw = pidRoll;
-    pidYaw.Kp *= 3.0f;
-    pidYaw.Ki *= 3.5f; // I increased this in order for it to stop yawing slowly
-    pidYaw.Kd *= 2.0f;
-
-    pidResetError();
-}
 
 int main(void) {
     // Set the clocking to run directly from the external crystal/oscillator.
@@ -104,7 +75,7 @@ int main(void) {
     UARTprintf("CLK %d\n", SysCtlClockGet());
     UARTprintf("min: %d, max: %d, period: %d\n", PPM_MIN, PPM_MAX, getPeriod());
 
-    initPIDValues();
+    setDefaultPIDValues();
     printPIDValues();
 
     while (!validRXData || getRXChannel(RX_AUX2_CHAN) > 0) {
@@ -138,9 +109,6 @@ int main(void) {
                 gyroRate[axis] = ((float)gyroData[axis]) / 16.4f; // Convert to deg/s
             getMPU6500Angles(accData, gyroRate, &roll, &pitch, dt); // Calculate pitch and roll
 
-            roll -= restAngleRoll; // Apply angle trim
-            pitch -= restAnglePitch;
-
             /*UARTprintf("%d\t%d\t%d\n", gyroData[0], gyroData[1], gyroData[2]);
             UARTFlushTx(false);*/
             /*UARTprintf("%d.%02d\t%d.%02d\n", (int16_t)roll, (int16_t)abs(roll * 100.0f) % 100, (int16_t)pitch, (int16_t)abs(pitch * 100.0f) % 100);
@@ -162,7 +130,7 @@ int main(void) {
             runMotors = true;
         else {
             writePPMAllOff();
-            pidResetError();
+            resetPIDError();
         }
 
         if (runMotors) {
@@ -180,29 +148,30 @@ int main(void) {
 
                 float setPoint[2];
                 if (angleMode) { // Angle mode
-                    setPoint[0] = constrain(aileron, -maxAngleInclination, maxAngleInclination) - roll;
-                    setPoint[1] = constrain(elevator, -maxAngleInclination, maxAngleInclination) - pitch;
-                    setPoint[0] *= angleKp;
-                    setPoint[1] *= angleKp;
+                    setPoint[0] = constrain(aileron, -cfg.maxAngleInclination, cfg.maxAngleInclination) - roll;
+                    setPoint[1] = constrain(elevator, -cfg.maxAngleInclination, cfg.maxAngleInclination) - pitch;
+                    setPoint[0] *= cfg.angleKp;
+                    setPoint[1] *= cfg.angleKp;
                 } else { // Acro mode
-                    setPoint[0] = aileron * stickScalingRollPitch;
-                    setPoint[1] = elevator * stickScalingRollPitch;
+                    setPoint[0] = aileron * cfg.stickScalingRollPitch;
+                    setPoint[1] = elevator * cfg.stickScalingRollPitch;
                 }
 
                 /*UARTprintf("%d\t%d\n", (int16_t)setPoint[0], (int16_t)setPoint[1]);
                 UARTFlushTx(false);*/
 
                 // Roll and pitch control can both be gyro or accelerometer based
-                float rollOut = updatePID(&pidRoll, setPoint[0], gyroRate[1], dt);
-                float pitchOut = updatePID(&pidPitch, setPoint[1], gyroRate[0], dt);
+                float rollOut = updatePID(&cfg.pidRoll, setPoint[0], gyroRate[1], dt);
+                float pitchOut = updatePID(&cfg.pidPitch, setPoint[1], gyroRate[0], dt);
 
                 // Yaw is always gyro controlled
-                float yawOut = updatePID(&pidYaw, rudder * stickScalingYaw, gyroRate[2], dt);
+                float yawOut = updatePID(&cfg.pidYaw, rudder * cfg.stickScalingYaw, gyroRate[2], dt);
 
                 float throttle = getRXChannel(RX_THROTTLE_CHAN);
                 for (uint8_t i = 0; i < 4; i++)
                     motors[i] = throttle;
 
+                // Apply mix for quadcopter in x-configuration
                 motors[0] -= rollOut;
                 motors[1] -= rollOut;
                 motors[2] += rollOut;
@@ -235,7 +204,6 @@ int main(void) {
 }
 
 // TODO:
-    // Save PID values in EEPROM
     // Adjust PID values using pots on transmitter
     // Only enable peripheral clock once
     // Tune yaw PID values separately
