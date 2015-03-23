@@ -72,6 +72,20 @@ int main(void) {
         // Wait until we have valid data and safety aux channel is in safe position
     }
 
+#if 0 // Set to one in order to run the acceleromter calibration routine
+    while (calibrateAcc()) { // Get accelerometer zero values
+        // Loop until calibration values are found
+    }
+#else
+    UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", cfg.accZero[0], cfg.accZero[1], cfg.accZero[2]);
+#endif
+
+#if 0 // Set to one in order to run the ESC calibration routine at next power cycle
+    // WARNING: Do this with propellers off!!
+    calibrateESCs(true); // ESCs will be calibrated on next power cycle
+    UARTprintf("Calibrating ESCs on next power cycle\n");
+#endif
+
     while (1) {
         checkUARTData(); // Poll UART for incoming data
 

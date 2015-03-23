@@ -23,7 +23,7 @@ Some video demonstrations of the flight controller can be seen at my [YouTube ch
 * Motors: Sunnysky X2204 2300kv
 * ESC's: Blue Series 12A RapidESC (SimonK v2013-05-15)
 * Props: Gemfan 5x3
-* Frame: 250 FPV Quadcopter (Bought on eBay)
+* Frame: ZMR250 FPV Quadcopter (Bought on eBay)
 * LiPo: Turnigy nano-tech 1500 mAh
 * RX: OrangeRX R615X
 * TX: Turnigy 9XR
@@ -47,5 +47,9 @@ Some video demonstrations of the flight controller can be seen at my [YouTube ch
 Note that the motor layout follow the Naze32 in x-configuration i.e. motor 1 is bottom right, motor 2 is top right, motor 3 is bottom left and motor 4 is top left when looking from the back.
 
 Also make sure that pitch increase when pitching quadcopter downward and roll should increase when tilting quadcopter clockwise.
+
+It is a good idea to run the accelerometer and ESCs calibration routines before flying the aircraft.
+
+__WARNING:__ Take propellers OFF when testing and calibrating ESCs!!
 
 For more information send me an email at <kristianl@tkjelectronics.dk>.
