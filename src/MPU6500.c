@@ -38,14 +38,14 @@
 #define GPIO_MPU_INT_BASE       GPIO_PORTE_BASE
 #define GPIO_MPU_INT_PIN        GPIO_PIN_3
 
-static int16_t gyroZero[3];
+static int16_t gyroZero[3], accZero[3];
 
 // Returns true when data is ready to be read
 bool dataReadyMPU6500(void) {
     return GPIOPinRead(GPIO_MPU_INT_BASE, GPIO_MPU_INT_PIN);
 }
 
-// Returns raw accelerometer data and gyro data with zero values subtracted
+// Returns accelerometer and gyro data with zero values subtracted
 void getMPU6500Data(int16_t *accData, int16_t *gyroData) {
     uint8_t buf[14];
 
@@ -59,10 +59,10 @@ void getMPU6500Data(int16_t *accData, int16_t *gyroData) {
     gyroData[1] = (buf[10] << 8) | buf[11]; // Y
     gyroData[2] = (buf[12] << 8) | buf[13]; // Z
 
-    for (uint8_t axis = 0; axis < 3; axis++)
+    for (uint8_t axis = 0; axis < 3; axis++) {
+        accData[axis] -= accZero[axis]; // Subtract accelerometer zero values
         gyroData[axis] -= gyroZero[axis]; // Subtract gyro zero values
-
-    // TODO: Subtract accelerometer zero values as well
+    }
 }
 
 // Accelerometer readings can be in any scale, but gyro date needs to be in deg/s
@@ -121,8 +121,8 @@ void printMPU6050Debug(void) {
     }
 }*/
 
-bool checkMinMax(int16_t *array, uint8_t length, int16_t maxDifference) { // Used to check that the flight controller is not moved while calibrating
-    int16_t min = array[0], max = array[0];
+bool checkMinMax(int32_t *array, uint8_t length, int16_t maxDifference) { // Used to check that the flight controller is not moved while calibrating
+    int32_t min = array[0], max = array[0];
     for (uint8_t i = 1; i < length; i++) {
         if (array[i] < min)
             min = array[i];
@@ -132,34 +132,59 @@ bool checkMinMax(int16_t *array, uint8_t length, int16_t maxDifference) { // Use
     return max - min < maxDifference;
 }
 
-bool calibrateGyro() {
+bool calibrateSensor(int16_t *zeroValues, uint8_t regAddr, int16_t maxDifference) {
+    const uint8_t bufLength = 25;
+    int32_t sensorBuffer[3][bufLength];
     uint8_t buf[6];
-    int16_t gyroBuffer[3][25];
 
-    for (uint8_t i = 0; i < 25; i++) {
+    for (uint8_t i = 0; i < bufLength; i++) {
         while (!dataReadyMPU6500()) {
             // Wait until new date is ready
         }
-        i2cReadData(MPU6500_ADDRESS, 0x43, buf, 6);
-        gyroBuffer[0][i] = (buf[0] << 8) | buf[1]; // X
-        gyroBuffer[1][i] = (buf[2] << 8) | buf[3]; // Y
-        gyroBuffer[2][i] = (buf[4] << 8) | buf[5]; // Z
+        i2cReadData(MPU6500_ADDRESS, regAddr, buf, 6);
+        sensorBuffer[0][i] = (buf[0] << 8) | buf[1]; // X
+        sensorBuffer[1][i] = (buf[2] << 8) | buf[3]; // Y
+        sensorBuffer[2][i] = (buf[4] << 8) | buf[5]; // Z
         delay(10);
     }
 
     for (uint8_t axis = 0; axis < 3; axis++) {
-        if (!checkMinMax(gyroBuffer[axis], 25, 100)) // 100 / 16.4 = 6.10 deg/s
+        if (!checkMinMax(sensorBuffer[axis], bufLength, maxDifference)) 
             return 1; // Return error
     }
 
     for (uint8_t axis = 0; axis < 3; axis++) {
-        gyroZero[axis] = 0; // Make sure zero values are actually zero to begin with
-        for (uint8_t i = 0; i < 25; i++)
-            gyroZero[axis] += gyroBuffer[axis][i]; // Sum up all readings
-        gyroZero[axis] /= 25; // Get average
+        for (uint8_t i = 1; i < bufLength; i++)
+            sensorBuffer[axis][0] += sensorBuffer[axis][i]; // Sum up all readings
+        zeroValues[axis] = sensorBuffer[axis][0] / bufLength; // Get average
     }
 
     return 0; // No error
+}
+
+bool calibrateGyro(void) {
+    bool rcode = calibrateSensor(gyroZero, 0x43, 100); // 100 / 16.4 ~= 6.10 deg/s
+
+    if (!rcode)
+        UARTprintf("Gyro zero values: %d\t%d\t%d\n", gyroZero[0], gyroZero[1], gyroZero[2]);
+    else
+        UARTprintf("Gyro calibration error\n");
+        // TODO: Turn on buzzer
+
+    return rcode;
+}
+
+bool calibrateAcc(void) {
+    bool rcode = calibrateSensor(accZero, 0x3B, 100); // 100 / 4096 ~= 0.02g
+    accZero[2] += 4096; // Z-axis is reading -1g when horizontal, so we add 1g to the value found
+
+    if (!rcode)
+        UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", accZero[0], accZero[1], accZero[2]);
+    else
+        UARTprintf("Accelerometer calibration error\n");
+        // TODO: Turn on buzzer
+
+    return rcode; // No error
 }
 
 void initMPU6500(void) {
@@ -205,8 +230,7 @@ void initMPU6500(void) {
     //printMPU6050Debug();
 
     while (calibrateGyro()) { // Get gyro zero values
-        UARTprintf("Gyro calibration error\n");
-        // TODO: Turn on buzzer
+        // Loop until calibration is succesful
     }
 
     KalmanXInit();

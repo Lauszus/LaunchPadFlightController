@@ -27,6 +27,7 @@ void initMPU6500(void);
 bool dataReadyMPU6500(void);
 void getMPU6500Data(int16_t *accData, int16_t *gyroData);
 void getMPU6500Angles(int16_t *accData, float *gyroRate, float *roll, float *pitch, float dt);
+bool calibrateAcc(void);
 
 #ifdef __cplusplus
 }

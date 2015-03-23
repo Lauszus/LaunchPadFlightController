@@ -246,11 +246,10 @@ int main(void) {
     // Use sonar distance for something usefull - see: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/altitudehold.c
         // https://github.com/cleanflight/cleanflight/blob/master/src/main/sensors/sonar.c#L90-L99
     // Limit other motors if one reaches maximum: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/mixer.c#L677-L684
-    // Make acc calibration routine - apply zero values before Kalman routine
     // Retune PID again and tune stickscaling
     // Only have one Kalman.c file. Use struct as argument instead
     // Takes average of three readings in DTerm: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/pid.c#L721-L732
     // Create Android App
-    // Add buzzer. Beep on startup, turn on at gyro calibration error, connection loss etc.
+    // Add buzzer. Beep on startup, arm changed, turn on at gyro/acc calibration error, connection loss etc.
     // Add disarm timer
     // Remove safety AUX channel once 100% stable
