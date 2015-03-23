@@ -438,16 +438,6 @@
               <FilePath>.\src\MPU6500.c</FilePath>
             </File>
             <File>
-              <FileName>KalmanX.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\KalmanX.c</FilePath>
-            </File>
-            <File>
-              <FileName>KalmanY.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\KalmanY.c</FilePath>
-            </File>
-            <File>
               <FileName>PID.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\PID.c</FilePath>
@@ -471,6 +461,11 @@
               <FileName>EEPROM.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\EEPROM.c</FilePath>
+            </File>
+            <File>
+              <FileName>Kalman.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\Kalman.c</FilePath>
             </File>
           </Files>
         </Group>
