@@ -26,7 +26,7 @@
 
 #define CONFIG_SIZE roundUpMultiple4(sizeof(config_t)) // Size must to be a multiple of 4
 
-const uint32_t configVersion = 2; // Must be bumped every time config_t is changed
+const uint32_t configVersion = 3; // Must be bumped every time config_t is changed
 config_t cfg;
 
 uint32_t roundUpMultiple4(uint32_t number) {
@@ -46,6 +46,8 @@ void setDefaultConfig(void) {
     cfg.stickScalingRollPitch = 2.0f;
     cfg.stickScalingYaw = 2.0f;
     cfg.maxAngleInclination = 50.0f; // Max angle in self level mode
+
+    cfg.calibrateESCs = false;
 
     uint32_t rcode = EEPROMProgram((uint32_t*)&configVersion, 0, sizeof(configVersion)); // Write version number to EEPROM
     if (rcode) {

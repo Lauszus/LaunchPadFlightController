@@ -48,6 +48,10 @@ void initUART(void) {
 
     UARTStdioConfig(0, 115200, SysCtlClockGet()); // Mode is set to 8N1 on UART0
     UARTEchoSet(false);
+
+    SysCtlDelay(2); // Insert a few cycles after enabling the UART to allow the clock to be fully activated
+
+    UARTprintf("Started\n");
 }
 
 void printPIDValues(void) {

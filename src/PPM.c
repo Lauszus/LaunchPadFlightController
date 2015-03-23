@@ -18,8 +18,10 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "EEPROM.h"
 #include "PID.h"
 #include "PPM.h"
+#include "Time.h"
 
 #include "inc/hw_memmap.h"
 #include "driverlib/gpio.h"
@@ -28,6 +30,13 @@
 #include "driverlib/sysctl.h"
 
 static uint16_t period;
+
+// Sets calibrating flag in EEPROM
+// Calibration routine will be run next time power is applied if flag is true
+void calibrateESCs(bool flag) {
+    cfg.calibrateESCs = flag; // Set flag
+    updateConfig(); // Write new value to EEPROM
+}
 
 void initPPM(void) {
     SysCtlPWMClockSet(SYSCTL_PWMDIV_4); // Set divider to 4
@@ -61,7 +70,17 @@ void initPPM(void) {
     // Enable the outputs
     PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT | PWM_OUT_1_BIT | PWM_OUT_2_BIT | PWM_OUT_3_BIT, true);
 
-    writePPMAllOff();
+    if (cfg.calibrateESCs) {
+        // ESCs are calibrated by sending out the maximum pulse when power is applied and then sending lowest pulse afterwards
+        for (uint8_t i = 0; i < 4; i++)
+            writePPMUs(i, PPM_MAX);
+        delay(1000); // Wait 1s
+        for (uint8_t i = 0; i < 4; i++)
+            writePPMUs(i, PPM_MIN);
+
+        calibrateESCs(false); // Set back to false
+    } else
+        writePPMAllOff();
 }
 
 uint16_t getPeriod(void) {

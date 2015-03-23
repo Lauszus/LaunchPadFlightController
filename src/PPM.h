@@ -32,6 +32,7 @@ void updateMotorsAll(float *values);
 void writePPMUs(uint8_t motor, uint16_t us);
 void writePPMWidth(uint8_t motor, uint16_t width);
 uint16_t getPeriod(void);
+void calibrateESCs(bool flag);
 
 float mapf(float x, float in_min, float in_max, float out_min, float out_max);
 

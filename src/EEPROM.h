@@ -30,6 +30,7 @@ typedef struct {
     float angleKp; // Self level mode Kp value
     float stickScalingRollPitch, stickScalingYaw; // Stick scaling values
     uint8_t maxAngleInclination; // Max angle in self level mode
+    bool calibrateESCs;
 } config_t;
 
 extern config_t cfg;

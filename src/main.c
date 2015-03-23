@@ -48,32 +48,22 @@ static float motors[4] = { -100.0f, -100.0f, -100.0f, -100.0f };
 static bool armed = false;
 
 int main(void) {
-    // Set the clocking to run directly from the external crystal/oscillator.
-    SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ); // Set clock to 80MHz (400MHz(PLL) / 2 / 2.5 = 80 MHz)
+    // Set the clocking to run directly from the external crystal/oscillator and use PLL to run at 80 MHz
+    SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ); // Set clock to 80 MHz (400 MHz(PLL) / 2 / 2.5 = 80 MHz)
 
-    initPPM();
     initUART();
-    delay(100); // It needs a little delay after UART has been enabled
-    UARTprintf("Started\n");
     initEEPROM();
     initTime();
+    initPPM();
     initRX();
     initSonar();
-
     initI2C();
-    delay(100); // Wait a little bit for I2C to stabilize
     initMPU6500();
+    IntMasterEnable(); // Enable all interrupts
 
     SysCtlPeripheralEnable(SYSCTL_PERIPH_LED); // Enable GPIOF peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
     GPIOPinTypeGPIOOutput(GPIO_LED_BASE, GPIO_RED_LED | GPIO_BLUE_LED | GPIO_GREEN_LED); // Set red, blue and green LEDs as outputs
-
-    IntMasterEnable();
-
-    delay(100); // Wait a little for everything to initialize
-
-    UARTprintf("CLK %d\n", SysCtlClockGet());
-    UARTprintf("min: %d, max: %d, period: %d\n", PPM_MIN, PPM_MAX, getPeriod());
 
     setDefaultPIDValues();
     printPIDValues();
@@ -83,7 +73,7 @@ int main(void) {
     }
 
     while (1) {
-        checkUARTData();
+        checkUARTData(); // Poll UART for incoming data
 
         // Make sure there is valid data and safety channel is in armed position
         if (validRXData && getRXChannel(RX_AUX2_CHAN) > 0) {
@@ -220,5 +210,4 @@ int main(void) {
     // Add buzzer. Beep on startup, arm changed, turn on at gyro/acc calibration error, connection loss etc.
     // Add disarm timer
     // Remove safety AUX channel once 100% stable
-    // Calibrate ESC's routine
     // Measure loop time - print value or toggle I/O pin

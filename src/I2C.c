@@ -40,6 +40,8 @@ void initI2C(void) {
     GPIOPinTypeI2C(GPIO_PORTA_BASE, GPIO_PIN_7); // Use pin with I2C peripheral
 
     I2CMasterInitExpClk(I2C1_BASE, SysCtlClockGet(), true); // Enable and set frequency to 400 kHz
+
+    SysCtlDelay(2); // Insert a few cycles after enabling the I2C to allow the clock to be fully activated
 }
 
 void i2cWrite(uint8_t addr, uint8_t regAddr, uint8_t data) {
