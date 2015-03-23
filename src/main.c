@@ -82,6 +82,7 @@ int main(void) {
 
 #if 0 // Set to one in order to run the ESC calibration routine at next power cycle
     // WARNING: Do this with propellers off!!
+    // Also set CALIBRATE_ESC_ACTIVATED to 1 inside PPM.c
     calibrateESCs(true); // ESCs will be calibrated on next power cycle
     UARTprintf("Calibrating ESCs on next power cycle\n");
 #endif

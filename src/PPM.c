@@ -29,6 +29,8 @@
 #include "driverlib/pwm.h"
 #include "driverlib/sysctl.h"
 
+#define CALIBRATE_ESC_ACTIVATED 0
+
 static uint16_t period;
 
 // Sets calibrating flag in EEPROM
@@ -71,13 +73,17 @@ void initPPM(void) {
     PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT | PWM_OUT_1_BIT | PWM_OUT_2_BIT | PWM_OUT_3_BIT, true);
 
     if (cfg.calibrateESCs) {
+#if CALIBRATE_ESC_ACTIVATED
+        #warning "Take propellers off and then only apply power from the battery once and then unplug the battery after calibration procedure is done!"
         // ESCs are calibrated by sending out the maximum pulse when power is applied and then sending lowest pulse afterwards
         for (uint8_t i = 0; i < 4; i++)
             writePPMUs(i, PPM_MAX);
         delay(1000); // Wait 1s
         for (uint8_t i = 0; i < 4; i++)
             writePPMUs(i, PPM_MIN);
-
+#else
+        writePPMAllOff();
+#endif
         calibrateESCs(false); // Set back to false
     } else
         writePPMAllOff();
