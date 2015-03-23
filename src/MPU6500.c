@@ -19,6 +19,7 @@
 #include <stdbool.h>
 #include <math.h>
 
+#include "EEPROM.h"
 #include "I2C.h"
 #include "MPU6500.h"
 #include "Time.h"
@@ -38,7 +39,7 @@
 #define GPIO_MPU_INT_BASE       GPIO_PORTE_BASE
 #define GPIO_MPU_INT_PIN        GPIO_PIN_3
 
-static int16_t gyroZero[3], accZero[3];
+static int16_t gyroZero[3];
 
 // Returns true when data is ready to be read
 bool dataReadyMPU6500(void) {
@@ -60,7 +61,7 @@ void getMPU6500Data(int16_t *accData, int16_t *gyroData) {
     gyroData[2] = (buf[12] << 8) | buf[13]; // Z
 
     for (uint8_t axis = 0; axis < 3; axis++) {
-        accData[axis] -= accZero[axis]; // Subtract accelerometer zero values
+        accData[axis] -= cfg.accZero[axis]; // Subtract accelerometer zero values
         gyroData[axis] -= gyroZero[axis]; // Subtract gyro zero values
     }
 }
@@ -175,12 +176,13 @@ bool calibrateGyro(void) {
 }
 
 bool calibrateAcc(void) {
-    bool rcode = calibrateSensor(accZero, 0x3B, 100); // 100 / 4096 ~= 0.02g
-    accZero[2] += 4096; // Z-axis is reading -1g when horizontal, so we add 1g to the value found
+    bool rcode = calibrateSensor(cfg.accZero, 0x3B, 100); // 100 / 4096 ~= 0.02g
+    cfg.accZero[2] += 4096; // Z-axis is reading -1g when horizontal, so we add 1g to the value found
 
-    if (!rcode)
-        UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", accZero[0], accZero[1], accZero[2]);
-    else
+    if (!rcode) {
+        UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", cfg.accZero[0], cfg.accZero[1], cfg.accZero[2]);
+        updateConfig();
+    } else
         UARTprintf("Accelerometer calibration error\n");
         // TODO: Turn on buzzer
 

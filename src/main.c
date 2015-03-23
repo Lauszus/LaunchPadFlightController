@@ -19,17 +19,19 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
+#include "EEPROM.h"
 #include "I2C.h"
-#include "RX.h"
-#include "UART.h"
-#include "Time.h"
+#include "MPU6500.h"
 #include "PPM.h"
 #include "PID.h"
-#include "MPU6500.h"
+#include "RX.h"
 #include "Sonar.h"
+#include "Time.h"
+#include "UART.h"
 
 #include "inc/hw_memmap.h"
 #include "inc/tm4c123gh6pm.h"
+#include "driverlib/eeprom.h"
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/sysctl.h"
@@ -85,6 +87,7 @@ int main(void) {
     initUART();
     delay(100); // It needs a little delay after UART has been enabled
     UARTprintf("Started\n");
+    initEEPROM();
     initTime();
     initRX();
     initSonar();
