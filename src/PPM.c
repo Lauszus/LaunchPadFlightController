@@ -44,21 +44,21 @@ void initPPM(void) {
     GPIOPinConfigure(GPIO_PB5_M0PWM3);
     GPIOPinTypePWM(GPIO_PORTB_BASE, GPIO_PIN_6 | GPIO_PIN_7 | GPIO_PIN_4 | GPIO_PIN_5); // Use pin with PWM peripheral
 
-    // Configure the PWM generator for count down mode with immediate updates to the parameters.
+    // Configure the PWM generator for count down mode with immediate updates to the parameters
     PWMGenConfigure(PWM0_BASE, PWM_GEN_0, PWM_GEN_MODE_DOWN | PWM_GEN_MODE_NO_SYNC);
     PWMGenConfigure(PWM0_BASE, PWM_GEN_1, PWM_GEN_MODE_DOWN | PWM_GEN_MODE_NO_SYNC);
 
     // The value is given by (SysClk * period) / divider
     // The period is set to 2.5ms (400 Hz)
-    period = (SysCtlClockGet() / 10000 * 25) / 4; // 50000
-    PWMGenPeriodSet(PWM0_BASE, PWM_GEN_0, period); // Set the period.
-    PWMGenPeriodSet(PWM0_BASE, PWM_GEN_1, period); // Set the period.
+    period = (SysCtlClockGet() / 10000 * 25) / 4; // = 50000
+    PWMGenPeriodSet(PWM0_BASE, PWM_GEN_0, period); // Set the period
+    PWMGenPeriodSet(PWM0_BASE, PWM_GEN_1, period); // Set the period
 
-    // Start the timers in generator 0.
+    // Start the timers in generator 0 and 1
     PWMGenEnable(PWM0_BASE, PWM_GEN_0);
     PWMGenEnable(PWM0_BASE, PWM_GEN_1);
 
-    // Enable the outputs.
+    // Enable the outputs
     PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT | PWM_OUT_1_BIT | PWM_OUT_2_BIT | PWM_OUT_3_BIT, true);
 
     writePPMAllOff();
@@ -68,19 +68,15 @@ uint16_t getPeriod(void) {
     return period;
 }
 
+// Turn off all motors
 void writePPMAllOff(void) {
-    // Turn of all motors
     for (uint8_t i = 0; i < 4; i++)
         writePPMUs(i, PPM_MIN);
 }
 
 float mapf(float x, float in_min, float in_max, float out_min, float out_max) {
     float value = (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min; // From Arduino source code: https://github.com/arduino/Arduino/blob/ide-1.5.x/hardware/arduino/avr/cores/arduino/WMath.cpp
-    if (value > out_max)
-        value = out_max;
-    else if (value < out_min)
-        value = out_min;
-    return value;
+    return constrain(value, out_min, out_max); // Limit output
 }
 
 void updateMotor(uint8_t motor, float value) {
