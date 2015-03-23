@@ -150,7 +150,7 @@ bool calibrateSensor(int16_t *zeroValues, uint8_t regAddr, int16_t maxDifference
     }
 
     for (uint8_t axis = 0; axis < 3; axis++) {
-        if (!checkMinMax(sensorBuffer[axis], bufLength, maxDifference)) 
+        if (!checkMinMax(sensorBuffer[axis], bufLength, maxDifference))
             return 1; // Return error
     }
 
