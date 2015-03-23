@@ -23,8 +23,7 @@
 #include "I2C.h"
 #include "MPU6500.h"
 #include "Time.h"
-#include "KalmanX.h"
-#include "KalmanY.h"
+#include "Kalman.h"
 
 #include "inc/hw_memmap.h"
 #include "driverlib/gpio.h"
@@ -39,7 +38,8 @@
 #define GPIO_MPU_INT_BASE       GPIO_PORTE_BASE
 #define GPIO_MPU_INT_PIN        GPIO_PIN_3
 
-static int16_t gyroZero[3];
+static int16_t gyroZero[3]; // Gyroscope zero values are found at every power on
+static kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch
 
 // Returns true when data is ready to be read
 bool dataReadyMPU6500(void) {
@@ -86,8 +86,8 @@ void getMPU6500Angles(int16_t *accData, float *gyroRate, float *roll, float *pit
     float rollAcc = atanf(accData[0] / sqrtf(accData[1] * accData[1] + accz_smooth * accz_smooth)) * RAD_TO_DEG;
     float pitchAcc  = atan2f(-accData[1], -accz_smooth) * RAD_TO_DEG;
 
-    *roll = getAngleX(rollAcc, gyroRate[1], dt);
-    *pitch = getAngleY(pitchAcc, gyroRate[0], dt);
+    *roll = getAngle(&kalmanRoll, rollAcc, gyroRate[1], dt);
+    *pitch = getAngle(&kalmanPitch, pitchAcc, gyroRate[0], dt);
 /*
     UARTprintf("%d\t%d\t%d\t\t", (int16_t)rollAcc, (int16_t)gyroAngle[1], (int16_t)*roll);
     delay(1);
@@ -235,9 +235,6 @@ void initMPU6500(void) {
         // Loop until calibration is succesful
     }
 
-    KalmanXInit();
-    KalmanYInit();
-
-    setAngleX(0.0f); // Set starting angle
-    setAngleY(0.0f);
+    KalmanInit(&kalmanRoll);
+    KalmanInit(&kalmanPitch);
 }

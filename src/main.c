@@ -215,9 +215,10 @@ int main(void) {
         // https://github.com/cleanflight/cleanflight/blob/master/src/main/sensors/sonar.c#L90-L99
     // Limit other motors if one reaches maximum: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/mixer.c#L677-L684
     // Retune PID again and tune stickscaling
-    // Only have one Kalman.c file. Use struct as argument instead
     // Takes average of three readings in DTerm: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/pid.c#L721-L732
     // Create Android App
     // Add buzzer. Beep on startup, arm changed, turn on at gyro/acc calibration error, connection loss etc.
     // Add disarm timer
     // Remove safety AUX channel once 100% stable
+    // Calibrate ESC's routine
+    // Measure loop time - print value or toggle I/O pin
