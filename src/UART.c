@@ -51,7 +51,7 @@ void initUART(void) {
 }
 
 void printPIDValues(void) {
-    UARTprintf("%d.%04d\t%d.%04d\t%d.%04d\n",
+    UARTprintf("PID: %d.%04d\t%d.%04d\t%d.%04d\n",
                                             (int16_t)pidRoll.Kp, (int16_t)abs(pidRoll.Kp * 10000.0f) % 10000,
                                             (int16_t)pidRoll.Ki, (int16_t)abs(pidRoll.Ki * 10000.0f) % 10000,
                                             (int16_t)pidRoll.Kd, (int16_t)abs(pidRoll.Kd * 10000.0f) % 10000);
@@ -75,8 +75,8 @@ void setValues(char *input) {
         pidPitch.Ki = pidRoll.Ki;
         pidPitch.Kd = pidRoll.Kd;
 
-        pidYaw.Kp = pidRoll.Kp * 2.0f; // TODO: Tune these separately
-        pidYaw.Ki = pidRoll.Ki * 2.8f; // I increased this in order for it to stop yawing slowly
+        pidYaw.Kp = pidRoll.Kp * 3.0f; // TODO: Tune these separately
+        pidYaw.Ki = pidRoll.Ki * 3.5f; // I increased this in order for it to stop yawing slowly
         pidYaw.Kd = pidRoll.Kd * 2.0f;
 
         printPIDValues(); // Print new PID Values
