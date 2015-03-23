@@ -79,8 +79,8 @@ float mapf(float x, float in_min, float in_max, float out_min, float out_max) {
     return constrain(value, out_min, out_max); // Limit output
 }
 
+// Motors are in the range [-100:100]
 void updateMotor(uint8_t motor, float value) {
-    value = constrain(value, -100, 100); // Motors are in the range [-100:100]
     uint16_t motorOutput = mapf(value, -100.0f, 100.0f, PPM_MIN, PPM_MAX); // Map to PPM min and max value
     writePPMUs(motor, motorOutput);
 }
