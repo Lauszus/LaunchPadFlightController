@@ -44,7 +44,7 @@ void CaptureHandler(void) {
     uint32_t curr = TimerValueGet(WTIMER1_BASE, TIMER_A); // Read capture value
     bool edge = GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_6); // Read the GPIO pin
 
-    if (last_edge && !edge) { // Check that we are going from a positive to falling egde
+    if (last_edge && !edge) { // Check that we are going from a positive to falling edge
         uint32_t diff = curr - prev; // Calculate diff
         uint32_t diff_us = 1000000UL / (SysCtlClockGet() / diff); // Convert to us
 #if 0

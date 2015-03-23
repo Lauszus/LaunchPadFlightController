@@ -45,7 +45,7 @@ void SonarHandler(void) {
     uint32_t curr = TimerValueGet(WTIMER0_BASE, TIMER_A); // Read capture value
     bool edge = GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_4); // Read the GPIO pin
 
-    if (last_edge && !edge) { // Check that we are going from a positive to falling egde
+    if (last_edge && !edge) { // Check that we are going from a positive to falling edge
         uint32_t diff = curr - prev; // Calculate diff
         sonarDistanceUs = 1000000UL / (SysCtlClockGet() / diff); // Convert to us
         //UARTprintf("%u %u\n", sonarDistanceUs, sonarDistanceUs / US_ROUNDTRIP_CM);
@@ -77,7 +77,7 @@ int16_t getSonarDistance(void) {
     return distance;
 }
 
-// WTimer0A is used to measure the width of the sonar ehco pulse
+// WTimer0A is used to measure the width of the sonar echo pulse
 void initSonar(void) {
     SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER0); // Enable Wide Timer0 peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
