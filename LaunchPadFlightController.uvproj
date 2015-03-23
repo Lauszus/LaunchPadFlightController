@@ -467,6 +467,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\I2C.c</FilePath>
             </File>
+            <File>
+              <FileName>EEPROM.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\EEPROM.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
