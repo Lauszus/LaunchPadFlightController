@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Kristian Lauszus, TKJ Electronics. All rights reserved.
+/* Copyright (C) 2015 Kristian Lauszus, TKJ Electronics. All rights reserved.
 
  This software may be distributed and modified under the terms of the GNU
  General Public License version 2 (GPL2) as published by the Free Software
@@ -18,8 +18,9 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "PPM.h"
 #include "RX.h"
-#include "time.h"
+#include "Time.h"
 
 #include "inc/hw_memmap.h"
 #include "inc/hw_ints.h"
@@ -27,7 +28,6 @@
 #include "driverlib/interrupt.h"
 #include "driverlib/pin_map.h"
 #include "driverlib/sysctl.h"
-#include "driverlib/systick.h"
 #include "driverlib/timer.h"
 //#include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 
@@ -44,7 +44,7 @@ void CaptureHandler(void) {
     uint32_t curr = TimerValueGet(WTIMER1_BASE, TIMER_A); // Read capture value
     bool edge = GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_6); // Read the GPIO pin
 
-    if (last_edge && !edge) { // Check that we are going from a positive to falling egde
+    if (last_edge && !edge) { // Check that we are going from a positive to falling edge
         uint32_t diff = curr - prev; // Calculate diff
         uint32_t diff_us = 1000000UL / (SysCtlClockGet() / diff); // Convert to us
 #if 0
@@ -80,6 +80,7 @@ void CaptureHandler(void) {
 
 void TimeoutHandler(void) {
     TimerIntClear(WTIMER1_BASE, TIMER_TIMB_TIMEOUT); // Clear interrupt
+    writePPMAllOff(); // Turn all motors off
     validRXData = false; // Indicate that connection was lost
 }
 
@@ -101,17 +102,22 @@ void initRX(void) {
     TimerControlEvent(WTIMER1_BASE, TIMER_A, TIMER_EVENT_BOTH_EDGES); // Interrupt on both edges
     TimerIntRegister(WTIMER1_BASE, TIMER_A, CaptureHandler); // Register interrupt handler
     TimerIntEnable(WTIMER1_BASE, TIMER_CAPA_EVENT); // Enable timer capture A event interrupt
-    IntPrioritySet(INT_WTIMER1A, 0); // Configure Timer 1A interrupt priority as 0
-    IntEnable(INT_WTIMER1A); // Enable wide Timer 1A interrupt
+    IntPrioritySet(INT_WTIMER1A, 0); // Configure Wide Timer 1A interrupt priority as 0
+    IntEnable(INT_WTIMER1A); // Enable Wide Timer 1A interrupt
 
     // Configure WTimer1B
     TimerLoadSet(WTIMER1_BASE, TIMER_B, SysCtlClockGet() / 10 - 1); // Set to interrupt every 100ms
     TimerIntRegister(WTIMER1_BASE, TIMER_B, TimeoutHandler); // Register interrupt handler
     TimerIntEnable(WTIMER1_BASE, TIMER_TIMB_TIMEOUT); // Enable timer timeout interrupt
-    IntPrioritySet(INT_WTIMER1B, 0); // Configure Timer0A interrupt priority as 0
-    IntEnable(INT_WTIMER1B); // Enable wide Timer 1B interrupt
+    IntPrioritySet(INT_WTIMER1B, 0); // Configure Wide Timer 1B interrupt priority as 0
+    IntEnable(INT_WTIMER1B); // Enable Wide Timer 1B interrupt
 
     TimerEnable(WTIMER1_BASE, TIMER_BOTH); // Enable both timers
 
     validRXData = false;
+}
+
+// Returns the specific channel in the range [-100:100]
+float getRXChannel(rxChannel_e channel) {
+    return mapf(rxChannel[channel], RX_MIN_INPUT, RX_MAX_INPUT, -100.0f, 100.0f);
 }

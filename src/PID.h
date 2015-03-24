@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Kristian Lauszus, TKJ Electronics. All rights reserved.
+/* Copyright (C) 2015 Kristian Lauszus, TKJ Electronics. All rights reserved.
 
  This software may be distributed and modified under the terms of the GNU
  General Public License version 2 (GPL2) as published by the Free Software
@@ -28,11 +28,12 @@ extern "C" {
 typedef struct {
     float Kp, Ki, Kd; // PID variables
     float lastError, integratedError;
+    float integrationLimit;
 } __attribute__((packed)) pid_t;
 
-extern pid_t pidRoll, pidPitch, pidYaw;
-
 float updatePID(pid_t *pid, float setPoint, float input, float dt);
+void resetPIDError(void);
+void setDefaultPIDValues(void);
 
 #ifdef __cplusplus
 }

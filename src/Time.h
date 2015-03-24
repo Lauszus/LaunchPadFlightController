@@ -1,4 +1,4 @@
-/* Copyright (C) 2012 Kristian Lauszus, TKJ Electronics. All rights reserved.
+/* Copyright (C) 2015 Kristian Lauszus, TKJ Electronics. All rights reserved.
 
  This software may be distributed and modified under the terms of the GNU
  General Public License version 2 (GPL2) as published by the Free Software
@@ -13,26 +13,20 @@
  Kristian Lauszus, TKJ Electronics
  Web      :  http://www.tkjelectronics.com
  e-mail   :  kristianl@tkjelectronics.com
- */
+*/
 
-#ifndef __kalmany_h__
-#define __kalmany_h__
+#ifndef __time_h__
+#define __time_h__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void KalmanYInit(void);
-float getAngleY(float newAngle, float newRate, float dt);
-void setAngleY(float newAngle);
-float getRateY(void);
-void setQangleY(float newQ_angle);
-void setQbiasY(float newQ_bias);
-void setRmeasureY(float newR_measure);
-
-float getQangleY(void);
-float getQbiasY(void);
-float getRmeasureY(void);
+void initTime(void);
+void delay(uint32_t ms);
+void delayMicroseconds(uint32_t us);
+uint32_t millis(void);
+uint32_t micros(void);
 
 #ifdef __cplusplus
 }

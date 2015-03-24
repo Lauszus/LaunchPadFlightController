@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Kristian Lauszus, TKJ Electronics. All rights reserved.
+/* Copyright (C) 2015 Kristian Lauszus, TKJ Electronics. All rights reserved.
 
  This software may be distributed and modified under the terms of the GNU
  General Public License version 2 (GPL2) as published by the Free Software
@@ -18,25 +18,44 @@
 #ifndef __mpu6500_h__
 #define __mpu6500_h__
 
+#pragma anon_unions
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-bool dataReadyMPU6500(void);
-void getMPU6500Angles(float *roll, float *pitch, float dt);
-void getMPU6500Gyro(int16_t *gyroData);
+typedef union {
+	struct {
+		int16_t X, Y, Z;
+	} __attribute__((packed));
+	int16_t data[3];
+} acc_t;
 
-void initMPU6500_i2c(void);
-void updateMPU6500(int16_t *accData, int16_t *gyroData);
+typedef union {
+	struct {
+		int16_t X, Y, Z;
+	} __attribute__((packed));
+	int16_t data[3];
+} gyro_t;
 
-void i2cWrite(uint8_t addr, uint8_t data);
-void i2cWriteData(uint8_t addr, uint8_t *date, uint8_t length);
-uint8_t i2cRead(uint8_t addr);
-void i2cReadData(uint8_t addr, uint8_t *data, uint8_t length);
+typedef union {
+    struct {
+        float X, Y, Z;
+    } __attribute__((packed));
+    float data[3];
+} gyroRate_t;
+
+typedef struct {
+    acc_t acc; // Raw accelerometer readings
+    gyro_t gyro; // Raw gyroscope readings
+    gyroRate_t gyroRate; // Gyroscope readings in deg/s
+} mpu6500_t;
 
 void initMPU6500(void);
-void spiReadData(uint32_t addr, uint32_t *buffer);
-void spiWriteData(uint32_t addr, uint32_t buffer);
+bool dataReadyMPU6500(void);
+void getMPU6500Data(mpu6500_t *mpu6500);
+void getMPU6500Angles(mpu6500_t *mpu6500, float *roll, float *pitch, float dt);
+bool calibrateAcc(void);
 
 #ifdef __cplusplus
 }

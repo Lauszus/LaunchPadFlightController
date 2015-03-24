@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Kristian Lauszus, TKJ Electronics. All rights reserved.
+/* Copyright (C) 2015 Kristian Lauszus, TKJ Electronics. All rights reserved.
 
  This software may be distributed and modified under the terms of the GNU
  General Public License version 2 (GPL2) as published by the Free Software
@@ -32,8 +32,9 @@ void updateMotorsAll(float *values);
 void writePPMUs(uint8_t motor, uint16_t us);
 void writePPMWidth(uint8_t motor, uint16_t width);
 uint16_t getPeriod(void);
+void calibrateESCs(bool flag);
 
-float map(float x, float in_min, float in_max, float out_min, float out_max);
+float mapf(float x, float in_min, float in_max, float out_min, float out_max);
 
 #ifdef __cplusplus
 }

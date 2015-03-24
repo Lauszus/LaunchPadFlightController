@@ -1,4 +1,4 @@
-/* Copyright (C) 2014 Kristian Lauszus, TKJ Electronics. All rights reserved.
+/* Copyright (C) 2015 Kristian Lauszus, TKJ Electronics. All rights reserved.
 
  This software may be distributed and modified under the terms of the GNU
  General Public License version 2 (GPL2) as published by the Free Software
@@ -18,7 +18,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include "time.h"
+#include "Time.h"
 
 #include "driverlib/sysctl.h"
 #include "driverlib/systick.h"
