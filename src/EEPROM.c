@@ -24,17 +24,8 @@
 #include "driverlib/sysctl.h"
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 
-#define CONFIG_SIZE roundUpMultiple4(sizeof(config_t)) // Size must to be a multiple of 4
-
 const uint32_t configVersion = 3; // Must be bumped every time config_t is changed
 config_t cfg;
-
-uint32_t roundUpMultiple4(uint32_t number) {
-    uint32_t remainder = number % 4;
-    if (remainder == 0)
-        return number;
-    return number + 4 - remainder;
-}
 
 void setDefaultConfig(void) {
     setDefaultPIDValues();
@@ -61,9 +52,17 @@ void initEEPROM(void) {
     SysCtlPeripheralEnable(SYSCTL_PERIPH_EEPROM0); // Enable EEPROM peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 
+    // Make sure config_t is a multiple of 4 - the compiler should pack struct to 4 bytes, but I added this check to be 100% sure
+    if (sizeof(config_t) % 4 != 0) {
+        UARTprintf("Config size error: %u\n", sizeof(config_t));
+        // TODO: Turn on buzzer
+        while (1);
+    }
+
     uint32_t rcode = EEPROMInit();
     if (rcode) {
         UARTprintf("EEPROMInit error: %u\n", rcode);
+        // TODO: Turn on buzzer
         while (1);
     }
 
@@ -72,10 +71,10 @@ void initEEPROM(void) {
     if (version != configVersion)
         setDefaultConfig();
     else
-        EEPROMRead((uint32_t*)&cfg, sizeof(configVersion), CONFIG_SIZE); // Read config from EEPROM
+        EEPROMRead((uint32_t*)&cfg, sizeof(configVersion), sizeof(config_t)); // Read config from EEPROM
 }
 void updateConfig(void) {
-    uint32_t rcode = EEPROMProgram((uint32_t*)&cfg, sizeof(configVersion), CONFIG_SIZE); // Write config to EEPROM
+    uint32_t rcode = EEPROMProgram((uint32_t*)&cfg, sizeof(configVersion), sizeof(config_t)); // Write config to EEPROM
     if (rcode) {
         UARTprintf("Error writing config to EEPROM: %u\n", rcode);
         // TODO: Turn buzzer on
