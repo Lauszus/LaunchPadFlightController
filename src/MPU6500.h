@@ -18,15 +18,43 @@
 #ifndef __mpu6500_h__
 #define __mpu6500_h__
 
+#pragma anon_unions
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void initMPU6500(void);
+typedef union {
+	struct {
+		int16_t X, Y, Z;
+	} __attribute__((packed));
+	int16_t data[3];
+} acc_t;
 
+typedef union {
+	struct {
+		int16_t X, Y, Z;
+	} __attribute__((packed));
+	int16_t data[3];
+} gyro_t;
+
+typedef union {
+    struct {
+        float X, Y, Z;
+    } __attribute__((packed));
+    float data[3];
+} gyroRate_t;
+
+typedef struct {
+    acc_t acc; // Raw accelerometer readings
+    gyro_t gyro; // Raw gyroscope readings
+    gyroRate_t gyroRate; // Gyroscope readings in deg/s
+} mpu6500_t;
+
+void initMPU6500(void);
 bool dataReadyMPU6500(void);
-void getMPU6500Data(int16_t *accData, int16_t *gyroData);
-void getMPU6500Angles(int16_t *accData, float *gyroRate, float *roll, float *pitch, float dt);
+void getMPU6500Data(mpu6500_t *mpu6500);
+void getMPU6500Angles(mpu6500_t *mpu6500, float *roll, float *pitch, float dt);
 bool calibrateAcc(void);
 
 #ifdef __cplusplus

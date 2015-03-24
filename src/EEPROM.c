@@ -40,7 +40,7 @@ void setDefaultConfig(void) {
     setDefaultPIDValues();
 
     for (uint8_t axis = 0; axis < 3; axis++)
-        cfg.accZero[axis] = 0;
+        cfg.accZero.data[axis] = 0;
 
     cfg.angleKp = 4.0f;
     cfg.stickScalingRollPitch = 2.0f;

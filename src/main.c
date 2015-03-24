@@ -40,7 +40,8 @@
 #define GPIO_BLUE_LED     GPIO_PIN_2
 #define GPIO_GREEN_LED    GPIO_PIN_3
 
-static float gyroRate[3], roll, pitch; // Gyro rate in deg/s and roll and pitch calculated using Kalman filter
+static mpu6500_t mpu6500; // Gyro and accelerometer readings
+static float roll, pitch; // Roll and pitch calculated using Kalman filter
 static uint32_t imuTimer = 0, pidTimer = 0; // Used to keep track of the time
 
 // Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
@@ -77,7 +78,7 @@ int main(void) {
         // Loop until calibration values are found
     }
 #else
-    UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", cfg.accZero[0], cfg.accZero[1], cfg.accZero[2]);
+    UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", cfg.accZero.X, cfg.accZero.Y, cfg.accZero.Z);
 #endif
 
 #if 0 // Set to one in order to run the ESC calibration routine at next power cycle
@@ -108,13 +109,10 @@ int main(void) {
             //UARTprintf("%d\n", now - imuTimer);
             imuTimer = now;
 
-            int16_t accData[3], gyroData[3];
-            getMPU6500Data(accData, gyroData); // Get accelerometer and gyroscope values
-            for (uint8_t axis = 0; axis < 3; axis++)
-                gyroRate[axis] = ((float)gyroData[axis]) / 16.4f; // Convert to deg/s
-            getMPU6500Angles(accData, gyroRate, &roll, &pitch, dt); // Calculate pitch and roll
+            getMPU6500Data(&mpu6500); // Get accelerometer and gyroscope values
+            getMPU6500Angles(&mpu6500, &roll, &pitch, dt); // Calculate pitch and roll
 
-            /*UARTprintf("%d\t%d\t%d\n", gyroData[0], gyroData[1], gyroData[2]);
+            /*UARTprintf("%d\t%d\t%d\n", mpu6500.gyro.X, mpu6500.gyro.Y, mpu6500.gyro.Z);
             UARTFlushTx(false);*/
             /*UARTprintf("%d.%02d\t%d.%02d\n", (int16_t)roll, (int16_t)abs(roll * 100.0f) % 100, (int16_t)pitch, (int16_t)abs(pitch * 100.0f) % 100);
             UARTFlushTx(false);*/
@@ -151,26 +149,24 @@ int main(void) {
                 float rudder = getRXChannel(RX_RUDDER_CHAN);
                 //UARTprintf("%d\t%d\t%d\n", (int16_t)aileron, (int16_t)elevator, (int16_t)rudder);
 
-                float setPoint[2];
+                float setPointRoll, setPointPitch; // Roll and pitch control can both be gyro or accelerometer based
+                const float setPointYaw = rudder * cfg.stickScalingYaw; // Yaw is always gyro controlled
                 if (angleMode) { // Angle mode
-                    setPoint[0] = constrain(aileron, -cfg.maxAngleInclination, cfg.maxAngleInclination) - roll;
-                    setPoint[1] = constrain(elevator, -cfg.maxAngleInclination, cfg.maxAngleInclination) - pitch;
-                    setPoint[0] *= cfg.angleKp;
-                    setPoint[1] *= cfg.angleKp;
+                    setPointRoll = constrain(aileron, -cfg.maxAngleInclination, cfg.maxAngleInclination) - roll;
+                    setPointPitch = constrain(elevator, -cfg.maxAngleInclination, cfg.maxAngleInclination) - pitch;
+                    setPointRoll *= cfg.angleKp;
+                    setPointPitch *= cfg.angleKp;
                 } else { // Acro mode
-                    setPoint[0] = aileron * cfg.stickScalingRollPitch;
-                    setPoint[1] = elevator * cfg.stickScalingRollPitch;
+                    setPointRoll = aileron * cfg.stickScalingRollPitch;
+                    setPointPitch = elevator * cfg.stickScalingRollPitch;
                 }
 
-                /*UARTprintf("%d\t%d\n", (int16_t)setPoint[0], (int16_t)setPoint[1]);
+                /*UARTprintf("%d\t%d\n", (int16_t)setPointRoll, (int16_t)setPointPitch);
                 UARTFlushTx(false);*/
 
-                // Roll and pitch control can both be gyro or accelerometer based
-                float rollOut = updatePID(&cfg.pidRoll, setPoint[0], gyroRate[1], dt);
-                float pitchOut = updatePID(&cfg.pidPitch, setPoint[1], gyroRate[0], dt);
-
-                // Yaw is always gyro controlled
-                float yawOut = updatePID(&cfg.pidYaw, rudder * cfg.stickScalingYaw, gyroRate[2], dt);
+                float rollOut = updatePID(&cfg.pidRoll, setPointRoll, mpu6500.gyroRate.Y, dt);
+                float pitchOut = updatePID(&cfg.pidPitch, setPointPitch, mpu6500.gyroRate.X, dt);
+                float yawOut = updatePID(&cfg.pidYaw, setPointYaw, mpu6500.gyroRate.Z, dt);
 
                 float throttle = getRXChannel(RX_THROTTLE_CHAN);
                 for (uint8_t i = 0; i < 4; i++)

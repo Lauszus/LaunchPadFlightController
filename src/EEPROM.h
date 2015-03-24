@@ -18,6 +18,7 @@
 #ifndef __eeprom_h__
 #define __eeprom_h__
 
+#include "MPU6500.h"
 #include "PID.h"
 
 #ifdef __cplusplus
@@ -26,11 +27,11 @@ extern "C" {
 
 typedef struct {
     pid_t pidRoll, pidPitch, pidYaw; // PID values
-    int16_t accZero[3]; // Accelerometer calibration values
+    acc_t accZero; // Accelerometer calibration values
     float angleKp; // Self level mode Kp value
     float stickScalingRollPitch, stickScalingYaw; // Stick scaling values
     uint8_t maxAngleInclination; // Max angle in self level mode
-    bool calibrateESCs;
+    bool calibrateESCs; // Flag used to tell if it should calibrate ESCs at next power cycle
 } config_t;
 
 extern config_t cfg;
