@@ -223,3 +223,4 @@ int main(void) {
     // Add disarm timer
     // Remove safety AUX channel once 100% stable
     // Measure loop time - print value or toggle I/O pin
+    // Check that both buttons are held in while calibrating

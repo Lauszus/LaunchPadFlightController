@@ -78,7 +78,7 @@ void initPPM(void) {
         // ESCs are calibrated by sending out the maximum pulse when power is applied and then sending lowest pulse afterwards
         for (uint8_t i = 0; i < 4; i++)
             writePPMUs(i, PPM_MAX);
-        delay(1000); // Wait 1s
+        delay(1000); // Wait 1s - TODO: Make sure both buttons are held in
         for (uint8_t i = 0; i < 4; i++)
             writePPMUs(i, PPM_MIN);
 #else
