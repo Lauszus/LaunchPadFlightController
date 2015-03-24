@@ -89,8 +89,6 @@ int main(void) {
 #endif
 
     while (1) {
-        checkUARTData(); // Poll UART for incoming data
-
         // Make sure there is valid data and safety channel is in armed position
         if (validRXData && getRXChannel(RX_AUX2_CHAN) > 0) {
             if (!armed && getRXChannel(RX_THROTTLE_CHAN) < -95 && getRXChannel(RX_RUDDER_CHAN) > 95) // Arm using throttle low and yaw right
@@ -99,6 +97,9 @@ int main(void) {
                 armed = false;
         } else
             armed = false;
+
+        if (!armed)
+            checkUARTData(); // Poll UART for incoming data if unarmed
 
         // Turn on red led if armed otherwise turn on green LED
         GPIOPinWrite(GPIO_LED_BASE, GPIO_RED_LED | GPIO_GREEN_LED, armed ? GPIO_RED_LED : GPIO_GREEN_LED);
