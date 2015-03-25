@@ -62,7 +62,7 @@ void getMPU6500Data(mpu6500_t *mpu6500) {
     for (uint8_t axis = 0; axis < 3; axis++) {
         mpu6500->acc.data[axis] -= cfg.accZero.data[axis]; // Subtract accelerometer zero values
         mpu6500->gyro.data[axis] -= gyroZero.data[axis]; // Subtract gyro zero values
-        mpu6500->gyroRate.data[axis] = ((float)mpu6500->gyro.data[axis]) / 16.4f; // Convert to deg/s
+        mpu6500->gyroRate.data[axis] = ((float)mpu6500->gyro.data[axis]) / 16.4f; // Convert to deg/s - please see datasheet: http://www.invensense.com/mems/gyro/documents/PS-MPU-6500A-01.pdf at page 9
     }
 }
 
