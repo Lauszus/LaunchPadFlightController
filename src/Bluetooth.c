@@ -440,8 +440,7 @@ static void sendData(uint8_t *data, uint8_t length) {
     UARTwrite1((const char*)&msg, sizeof(msg));
     UARTwrite1((const char*)data, length);
     UARTwrite1(&checksum, sizeof(checksum)); // The checksum is calculated from the length, command and the data
-    // TODO: Is it really needed to send carriage return and line feed?
-    UARTwrite1("\r\n", 2); // Print carriage return and line feed as well, so it is easy to figure out the line ending in Java
+    UARTwrite1("\r\n", 2); // Print carriage return and line feed as well, this is needed for the Android application
     UARTFlushTx1(false); // Flush TX buffer
 }
 
