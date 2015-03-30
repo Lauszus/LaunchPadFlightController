@@ -113,7 +113,7 @@ int main(void) {
 
             /*UARTprintf("%d\t%d\t%d\n", mpu6500.gyro.X, mpu6500.gyro.Y, mpu6500.gyro.Z);
             UARTFlushTx(false);*/
-            /*UARTprintf("%d.%02d\t%d.%02d\n", (int16_t)roll, (int16_t)abs(roll * 100.0f) % 100, (int16_t)pitch, (int16_t)abs(pitch * 100.0f) % 100);
+            /*UARTprintf("%d.%02u\t%d.%02u\n", (int16_t)roll, (uint16_t)(abs(roll * 100.0f) % 100), (int16_t)pitch, (uint16_t)(abs(pitch * 100.0f) % 100));
             UARTFlushTx(false);*/
         }
 

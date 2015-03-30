@@ -49,7 +49,7 @@ void initUART(void) {
     UARTStdioConfig(0, 115200, SysCtlClockGet()); // Mode is set to 8N1 on UART0
     UARTEchoSet(false);
 
-    while(UARTBusy(UART0_BASE)) {
+    while (UARTBusy(UART0_BASE)) {
         // Wait until UART is ready
     }
 
@@ -57,10 +57,11 @@ void initUART(void) {
 }
 
 void printPIDValues(void) {
-    UARTprintf("PID: %d.%04d\t%d.%04d\t%d.%04d\n",
-                                            (int16_t)cfg.pidRoll.Kp, (int16_t)abs(cfg.pidRoll.Kp * 10000.0f) % 10000,
-                                            (int16_t)cfg.pidRoll.Ki, (int16_t)abs(cfg.pidRoll.Ki * 10000.0f) % 10000,
-                                            (int16_t)cfg.pidRoll.Kd, (int16_t)abs(cfg.pidRoll.Kd * 10000.0f) % 10000);
+    UARTprintf("PID: %d.%04u\t%d.%04u\t%d.%04u\t%d.%04u\n",
+                                            (int16_t)cfg.pidRoll.Kp, (uint16_t)(abs(cfg.pidRoll.Kp * 10000.0f) % 10000),
+                                            (int16_t)cfg.pidRoll.Ki, (uint16_t)(abs(cfg.pidRoll.Ki * 10000.0f) % 10000),
+                                            (int16_t)cfg.pidRoll.Kd, (uint16_t)(abs(cfg.pidRoll.Kd * 10000.0f) % 10000),
+                                            (int16_t)cfg.pidRoll.integrationLimit, (uint16_t)(abs(cfg.pidRoll.integrationLimit * 10000.0f) % 10000));
     UARTFlushTx(false);
 }
 
