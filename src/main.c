@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "Bluetooth.h"
 #include "EEPROM.h"
 #include "I2C.h"
 #include "MPU6500.h"
@@ -60,6 +61,7 @@ int main(void) {
     initSonar();
     initI2C();
     initMPU6500();
+    initBluetooth();
     IntMasterEnable(); // Enable all interrupts
 
     SysCtlPeripheralEnable(SYSCTL_PERIPH_LED); // Enable GPIOF peripheral
@@ -98,9 +100,6 @@ int main(void) {
         } else
             armed = false;
 
-        if (!armed)
-            checkUARTData(); // Poll UART for incoming data if unarmed
-
         // Turn on red led if armed otherwise turn on green LED
         GPIOPinWrite(GPIO_LED_BASE, GPIO_RED_LED | GPIO_GREEN_LED, armed ? GPIO_RED_LED : GPIO_GREEN_LED);
 
@@ -136,6 +135,12 @@ int main(void) {
             writePPMAllOff();
             resetPIDError();
         }
+        
+        if (!armed)
+            checkUARTData(); // Poll UART for incoming data if unarmed
+
+        if (!runMotors)
+            readBluetooth(); // Read Bluetooth data if motors are not spinning
 
         if (runMotors) {
             now = micros();

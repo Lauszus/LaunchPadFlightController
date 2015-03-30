@@ -79,8 +79,7 @@ __heap_limit
 ;
 ;******************************************************************************
 		EXTERN UARTStdioIntHandler
-        ;EXTERN SycTickHandler
-		;EXTERN Timer1Handler
+        EXTERN UARTStdioIntHandler1
 
 ;******************************************************************************
 ;
@@ -111,7 +110,7 @@ __Vectors
         DCD     IntDefaultHandler           ; GPIO Port D
         DCD     IntDefaultHandler           ; GPIO Port E
         DCD     UARTStdioIntHandler         ; UART0 Rx and Tx
-        DCD     IntDefaultHandler           ; UART1 Rx and Tx
+        DCD     UARTStdioIntHandler1        ; UART1 Rx and Tx
         DCD     IntDefaultHandler           ; SSI0 Rx and Tx
         DCD     IntDefaultHandler           ; I2C0 Master and Slave
         DCD     IntDefaultHandler           ; PWM Fault
