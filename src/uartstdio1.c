@@ -453,6 +453,7 @@ UARTwrite1(const char *pcBuf, uint32_t ui32Len)
         // If the character to the UART is \n, then add a \r before it so that
         // \n is translated to \n\r in the output.
         //
+#if 0
         if(pcBuf[uIdx] == '\n')
         {
             if(!TX_BUFFER_FULL)
@@ -468,6 +469,7 @@ UARTwrite1(const char *pcBuf, uint32_t ui32Len)
                 break;
             }
         }
+#endif
 
         //
         // Send the character to the UART output.
@@ -518,11 +520,12 @@ UARTwrite1(const char *pcBuf, uint32_t ui32Len)
         // If the character to the UART is \n, then add a \r before it so that
         // \n is translated to \n\r in the output.
         //
+#if 0
         if(pcBuf[uIdx] == '\n')
         {
             MAP_UARTCharPut(g_ui32Base, '\r');
         }
-
+#endif
         //
         // Send the character to the UART output.
         //
