@@ -28,12 +28,12 @@
 #include "driverlib/gpio.h"
 #include "driverlib/pin_map.h"
 #include "driverlib/sysctl.h"
+#include "driverlib/uart.h"
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #include "utils/ustdlib.h"
 
 void initUART(void) {
-    // Enable the GPIO port containing the pins that will be used.
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA);
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA); // Enable the GPIO port containing the pins that will be used.
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 
     // Configure the GPIO pin muxing for the UART function.
@@ -49,7 +49,9 @@ void initUART(void) {
     UARTStdioConfig(0, 115200, SysCtlClockGet()); // Mode is set to 8N1 on UART0
     UARTEchoSet(false);
 
-    SysCtlDelay(2); // Insert a few cycles after enabling the UART to allow the clock to be fully activated
+    while(UARTBusy(UART0_BASE)) {
+        // Wait until UART is ready
+    }
 
     UARTprintf("Started\n");
 }
