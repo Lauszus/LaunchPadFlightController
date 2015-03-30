@@ -42,7 +42,7 @@
 #define GPIO_GREEN_LED    GPIO_PIN_3
 
 static mpu6500_t mpu6500; // Gyro and accelerometer readings
-static float roll, pitch; // Roll and pitch calculated using Kalman filter
+float roll, pitch; // Roll and pitch calculated using Kalman filter
 static uint32_t imuTimer = 0, pidTimer = 0; // Used to keep track of the time
 
 // Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
@@ -134,12 +134,12 @@ int main(void) {
             writePPMAllOff();
             resetPIDError();
         }
-        
+
         if (!armed)
             checkUARTData(); // Poll UART for incoming data if unarmed
 
         if (!runMotors)
-            readBluetooth(); // Read Bluetooth data if motors are not spinning
+            readBluetoothData(); // Read Bluetooth data if motors are not spinning
 
         if (runMotors) {
             now = micros();
@@ -227,3 +227,4 @@ int main(void) {
     // Remove safety AUX channel once 100% stable
     // Measure loop time - print value or toggle I/O pin
     // Check that both buttons are held in while calibrating ESCs
+    // Self level angle trim

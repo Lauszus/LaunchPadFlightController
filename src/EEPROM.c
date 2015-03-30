@@ -24,7 +24,7 @@
 #include "driverlib/sysctl.h"
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 
-const uint32_t configVersion = 3; // Must be bumped every time config_t is changed
+const uint32_t configVersion = 4; // Must be bumped every time config_t is changed
 config_t cfg;
 
 void setDefaultConfig(void) {

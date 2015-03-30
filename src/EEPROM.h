@@ -26,12 +26,15 @@ extern "C" {
 #endif
 
 typedef struct {
+	// Can be set by the user
     pid_t pidRoll, pidPitch, pidYaw; // PID values
-    acc_t accZero; // Accelerometer calibration values
     float angleKp; // Self level mode Kp value
     float stickScalingRollPitch, stickScalingYaw; // Stick scaling values
     uint8_t maxAngleInclination; // Max angle in self level mode
+
+    // Will be set by the microcontroller
     bool calibrateESCs; // Flag used to tell if it should calibrate ESCs at next power cycle
+    acc_t accZero; // Accelerometer calibration values
 } config_t;
 
 extern config_t cfg;
