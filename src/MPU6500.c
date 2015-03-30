@@ -111,7 +111,7 @@ void getMPU6500Angles(mpu6500_t *mpu6500, float *roll, float *pitch, float dt) {
 #endif
 }
 
-bool checkMinMax(int32_t *array, uint8_t length, int16_t maxDifference) { // Used to check that the flight controller is not moved while calibrating
+static bool checkMinMax(int32_t *array, uint8_t length, int16_t maxDifference) { // Used to check that the flight controller is not moved while calibrating
     int32_t min = array[0], max = array[0];
     for (uint8_t i = 1; i < length; i++) {
         if (array[i] < min)
@@ -122,7 +122,7 @@ bool checkMinMax(int32_t *array, uint8_t length, int16_t maxDifference) { // Use
     return max - min < maxDifference;
 }
 
-bool calibrateSensor(int16_t *zeroValues, uint8_t regAddr, int16_t maxDifference) {
+static bool calibrateSensor(int16_t *zeroValues, uint8_t regAddr, int16_t maxDifference) {
     const uint8_t bufLength = 25;
     static int32_t sensorBuffer[3][bufLength];
     uint8_t buf[6];
@@ -152,7 +152,7 @@ bool calibrateSensor(int16_t *zeroValues, uint8_t regAddr, int16_t maxDifference
     return 0; // No error
 }
 
-bool calibrateGyro(void) {
+static bool calibrateGyro(void) {
     bool rcode = calibrateSensor(gyroZero.data, MPU6500_GYRO_XOUT_H, 100); // 100 / 16.4 ~= 6.10 deg/s
 
     if (!rcode)
