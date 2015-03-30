@@ -12,6 +12,10 @@ In order to built this project you need to download Keil µVision IDE 4. Then op
 
 More information can be found at the following blog post: <http://blog.tkjelectronics.dk/2015/01/launchpad-flight-controller/>.
 
+# Android application
+
+Android application is available at the following repository: <https://github.com/Lauszus/LaunchPadFlightController>.
+
 # Video demonstrations
 
 Some video demonstrations of the flight controller can be seen at my [YouTube channel](https://www.youtube.com/user/kslauszus).
