@@ -208,19 +208,19 @@ int main(void) {
 // TODO:
     // Adjust PID values using pots on transmitter
     // Only enable peripheral clock once
-    // Tune yaw PID values separately
     // Use SPI instead of I2C for MPU-6500
-    // Set Kd as well
     // Scope PWM output and check that it is in sync with control loop
     // Define all pins in a pins.h
     // Use sonar distance for something usefull - see: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/altitudehold.c
         // https://github.com/cleanflight/cleanflight/blob/master/src/main/sensors/sonar.c#L90-L99
     // Limit other motors if one reaches maximum: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/mixer.c#L677-L684
-    // Retune PID again and tune stickscaling
-    // Takes average of three readings in DTerm: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/pid.c#L721-L732
     // Create Android App
+        // Tune yaw PID values separately
+        // Set Kd as well
+        // Retune PID again and tune stickscaling
+    // Takes average of three readings in DTerm: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/pid.c#L721-L732
     // Add buzzer. Beep on startup, arm changed, turn on at gyro/acc calibration error, connection loss etc.
     // Add disarm timer
     // Remove safety AUX channel once 100% stable
     // Measure loop time - print value or toggle I/O pin
-    // Check that both buttons are held in while calibrating
+    // Check that both buttons are held in while calibrating ESCs

@@ -30,13 +30,24 @@
 #include "driverlib/sysctl.h"
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 
-#define MPU6500_ADDRESS         0x68
-#define PI                      3.1415926535897932384626433832795f
-#define RAD_TO_DEG              57.295779513082320876798154814105f
+#define MPU6500_SMPLRT_DIV          0x19
+#define MPU6500_INT_PIN_CFG         0x37
+#define MPU6500_ACCEL_XOUT_H        0x3B
+#define MPU6500_GYRO_XOUT_H         0x43
+#define MPU6500_PWR_MGMT_1          0x6B
+#define MPU6500_WHO_AM_I            0x75
 
-#define GPIO_MPU_INT_PERIPH     SYSCTL_PERIPH_GPIOE
-#define GPIO_MPU_INT_BASE       GPIO_PORTE_BASE
-#define GPIO_MPU_INT_PIN        GPIO_PIN_3
+#define MPU6500_ADDRESS             0x68
+#define MPU6500_WHO_AM_I_ID         0x70
+
+#define MPU6500_GYRO_SCALE_FACTOR   16.4f // Scale factor for +-2000deg/s - see datasheet: http://www.invensense.com/mems/gyro/documents/PS-MPU-6500A-01.pdf at page 9
+
+#define PI                          3.1415926535897932384626433832795f
+#define RAD_TO_DEG                  57.295779513082320876798154814105f
+
+#define GPIO_MPU_INT_PERIPH         SYSCTL_PERIPH_GPIOE
+#define GPIO_MPU_INT_BASE           GPIO_PORTE_BASE
+#define GPIO_MPU_INT_PIN            GPIO_PIN_3
 
 static gyro_t gyroZero; // Gyroscope zero values are found at every power on
 static kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch
@@ -49,7 +60,7 @@ bool dataReadyMPU6500(void) {
 // Returns accelerometer and gyro data with zero values subtracted
 void getMPU6500Data(mpu6500_t *mpu6500) {
     uint8_t buf[14];
-    i2cReadData(MPU6500_ADDRESS, 0x3B, buf, 14); // Note that we can't write directly into mpu6500_t, because of endian conflict. So it has to be done manually
+    i2cReadData(MPU6500_ADDRESS, MPU6500_ACCEL_XOUT_H, buf, 14); // Note that we can't write directly into mpu6500_t, because of endian conflict. So it has to be done manually
 
     mpu6500->acc.X = (buf[0] << 8) | buf[1];
     mpu6500->acc.Y = (buf[2] << 8) | buf[3];
@@ -62,7 +73,7 @@ void getMPU6500Data(mpu6500_t *mpu6500) {
     for (uint8_t axis = 0; axis < 3; axis++) {
         mpu6500->acc.data[axis] -= cfg.accZero.data[axis]; // Subtract accelerometer zero values
         mpu6500->gyro.data[axis] -= gyroZero.data[axis]; // Subtract gyro zero values
-        mpu6500->gyroRate.data[axis] = ((float)mpu6500->gyro.data[axis]) / 16.4f; // Convert to deg/s - please see datasheet: http://www.invensense.com/mems/gyro/documents/PS-MPU-6500A-01.pdf at page 9
+        mpu6500->gyroRate.data[axis] = ((float)mpu6500->gyro.data[axis]) / MPU6500_GYRO_SCALE_FACTOR; // Convert to deg/s
     }
 }
 
@@ -142,7 +153,7 @@ bool calibrateSensor(int16_t *zeroValues, uint8_t regAddr, int16_t maxDifference
 }
 
 bool calibrateGyro(void) {
-    bool rcode = calibrateSensor(gyroZero.data, 0x43, 100); // 100 / 16.4 ~= 6.10 deg/s
+    bool rcode = calibrateSensor(gyroZero.data, MPU6500_GYRO_XOUT_H, 100); // 100 / 16.4 ~= 6.10 deg/s
 
     if (!rcode)
         UARTprintf("Gyro zero values: %d\t%d\t%d\n", gyroZero.X, gyroZero.Y, gyroZero.Z);
@@ -154,7 +165,7 @@ bool calibrateGyro(void) {
 }
 
 bool calibrateAcc(void) {
-    bool rcode = calibrateSensor(cfg.accZero.data, 0x3B, 100); // 100 / 4096 ~= 0.02g
+    bool rcode = calibrateSensor(cfg.accZero.data, MPU6500_ACCEL_XOUT_H, 100); // 100 / 4096 ~= 0.02g
     cfg.accZero.Z += 4096; // Z-axis is reading -1g when horizontal, so we add 1g to the value found
 
     if (!rcode) {
@@ -170,35 +181,35 @@ bool calibrateAcc(void) {
 void initMPU6500(void) {
     uint8_t i2cBuffer[5]; // Buffer for I2C data
 
-    i2cBuffer[0] = i2cRead(MPU6500_ADDRESS, 0x75);
-    if (i2cBuffer[0] == 0x70) // Read "WHO_AM_I" register
+    i2cBuffer[0] = i2cRead(MPU6500_ADDRESS, MPU6500_WHO_AM_I);
+    if (i2cBuffer[0] == MPU6500_WHO_AM_I_ID) // Read "WHO_AM_I" register
         UARTprintf("MPU-6500 found\n");
     else {
         UARTprintf("Could not find MPU-6500: %2X\n", i2cBuffer[0]);
         while (1);
     }
 
-    i2cWrite(MPU6500_ADDRESS, 0x6B, (1 << 7)); // Reset device, this resets all internal registers to their default values
+    i2cWrite(MPU6500_ADDRESS, MPU6500_PWR_MGMT_1, (1 << 7)); // Reset device, this resets all internal registers to their default values
     delay(100);
-    while (i2cRead(MPU6500_ADDRESS, 0x6B) & (1 << 7)) {
+    while (i2cRead(MPU6500_ADDRESS, MPU6500_PWR_MGMT_1) & (1 << 7)) {
         // Wait for the bit to clear
     };
     delay(100);
-    i2cWrite(MPU6500_ADDRESS, 0x6B, (1 << 3) | (1 << 0)); // Disable sleep mode, disable temperature sensor and use PLL as clock reference
+    i2cWrite(MPU6500_ADDRESS, MPU6500_PWR_MGMT_1, (1 << 3) | (1 << 0)); // Disable sleep mode, disable temperature sensor and use PLL as clock reference
 
     i2cBuffer[0] = 0; // Set the sample rate to 1kHz - 1kHz/(1+0) = 1kHz
     i2cBuffer[1] = 0x03; // Disable FSYNC and set 41 Hz Gyro filtering, 1 KHz sampling
     i2cBuffer[2] = 3 << 3; // Set Gyro Full Scale Range to +-2000deg/s
     i2cBuffer[3] = 2 << 3; // Set Accelerometer Full Scale Range to +-8g
     i2cBuffer[4] = 0x03; // 41 Hz Acc filtering
-    i2cWriteData(MPU6500_ADDRESS, 0x19, i2cBuffer, 5); // Write to all five registers at once
+    i2cWriteData(MPU6500_ADDRESS, MPU6500_SMPLRT_DIV, i2cBuffer, 5); // Write to all five registers at once
 
     /* Enable Raw Data Ready Interrupt on INT pin */
     i2cBuffer[0] = (1 << 5) | (1 << 4); // Enable LATCH_INT_EN and INT_ANYRD_2CLEAR
                                         // When this bit is equal to 1, the INT pin is held high until the interrupt is cleared
                                         // When this bit is equal to 1, interrupt status is cleared if any read operation is performed
-    i2cBuffer[1] = (1 << 0); // Enable RAW_RDY_EN - When set to 1, Enable Raw Sensor Data Ready interrupt to propagate to interrupt pin
-    i2cWriteData(MPU6500_ADDRESS, 0x37, i2cBuffer, 2); // Write to both registers at once
+    i2cBuffer[1] = (1 << 0);            // Enable RAW_RDY_EN - When set to 1, Enable Raw Sensor Data Ready interrupt to propagate to interrupt pin
+    i2cWriteData(MPU6500_ADDRESS, MPU6500_INT_PIN_CFG, i2cBuffer, 2); // Write to both registers at once
 
     // Set INT input pin
     SysCtlPeripheralEnable(GPIO_MPU_INT_PERIPH); // Enable GPIO peripheral
