@@ -68,7 +68,6 @@ int main(void) {
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
     GPIOPinTypeGPIOOutput(GPIO_LED_BASE, GPIO_RED_LED | GPIO_BLUE_LED | GPIO_GREEN_LED); // Set red, blue and green LEDs as outputs
 
-    setDefaultPIDValues();
     printPIDValues();
 
     while (!validRXData || getRXChannel(RX_AUX2_CHAN) > 0) {
