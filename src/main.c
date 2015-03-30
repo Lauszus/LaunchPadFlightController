@@ -210,7 +210,6 @@ int main(void) {
 }
 
 // TODO:
-    // Adjust PID values using pots on transmitter
     // Only enable peripheral clock once
     // Use SPI instead of I2C for MPU-6500
     // Scope PWM output and check that it is in sync with control loop
