@@ -65,25 +65,26 @@ uint16_t angleKp; // Value multiplied by 100
 stickScalingBluetooth_t stickScaling; // Stick scaling values
 uint8_t maxAngleInclination; // Inclination angle in degrees
 
-#define SET_PID_ROLL_PITCH     0
-#define GET_PID_ROLL_PITCH     1
-#define SET_PID_YAW            2
-#define GET_PID_YAW            3
-#define SET_ANGLE_KP           4
-#define GET_ANGLE_KP           5
-#define SET_STICK_SCALING      6
-#define GET_STICK_SCALING      7
-#define SET_ANGLE_MAX_INC      8
-#define GET_ANGLE_MAX_INC      9
-#define SET_KALMAN             10
-#define GET_KALMAN             11
+enum {
+    SET_PID_ROLL_PITCH = 0,
+    GET_PID_ROLL_PITCH,
+    SET_PID_YAW,
+    GET_PID_YAW,
+    SET_ANGLE_KP,
+    GET_ANGLE_KP,
+    SET_STICK_SCALING,
+    GET_STICK_SCALING,
+    SET_ANGLE_MAX_INC,
+    GET_ANGLE_MAX_INC,
+    SET_KALMAN,
+    GET_KALMAN,
+    START_IMU,
+    STOP_IMU,
+};
 
 struct imu_t {
     int16_t acc, gyro, kalman;
 } __attribute__((packed)) imu;
-
-#define START_IMU              12
-#define STOP_IMU               13
 
 /*
 struct target_t {
