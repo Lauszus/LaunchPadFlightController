@@ -29,11 +29,24 @@
 
 extern kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch in main.c
 
-const uint32_t configVersion = 5; // Must be bumped every time config_t is changed
+static const uint32_t configVersion = 5; // Must be bumped every time config_t is changed
 config_t cfg;
 
-void setDefaultConfig(void) {
-    setDefaultPIDValues();
+static void setDefaultConfig(void) {
+    cfg.pidRoll.Kp = 0.2f;
+    cfg.pidRoll.Ki = 0.8f;
+    cfg.pidRoll.Kd = 0.0f;
+    cfg.pidRoll.integrationLimit = 0.6f; // Prevent windup
+
+    cfg.pidPitch = cfg.pidRoll; // Use same PID values for both pitch and roll
+
+    // x2 the values work pretty well - TODO: Fine-tune these
+    cfg.pidYaw = cfg.pidRoll;
+    cfg.pidYaw.Kp *= 3.0f;
+    cfg.pidYaw.Ki *= 3.5f; // I increased this in order for it to stop yawing slowly
+    cfg.pidYaw.Kd *= 2.0f;
+
+    resetPIDError();
 
     cfg.angleKp = 4.0f;
     cfg.stickScalingRollPitch = 2.0f;
@@ -93,6 +106,7 @@ void initEEPROM(void) {
         kalmanRoll.R_measure = kalmanPitch.Q_angle = cfg.R_measure;
     }
 }
+
 void updateConfig(void) {
     uint32_t rcode = EEPROMProgram((uint32_t*)&cfg, sizeof(configVersion), sizeof(config_t)); // Write config to EEPROM
     if (rcode) {

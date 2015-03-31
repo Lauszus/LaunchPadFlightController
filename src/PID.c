@@ -37,21 +37,3 @@ void resetPIDError(void) {
     cfg.pidPitch.integratedError = cfg.pidPitch.lastError = 0.0f;
     cfg.pidYaw.integratedError = cfg.pidYaw.lastError = 0.0f;
 }
-
-void setDefaultPIDValues(void) {
-    cfg.pidRoll.Kp = 0.2f;
-    cfg.pidRoll.Ki = 0.8f;
-    cfg.pidRoll.Kd = 0.0f;
-
-    cfg.pidRoll.integrationLimit = 0.6f; // Prevent windup
-
-    cfg.pidPitch = cfg.pidRoll; // Use same PID values for both pitch and roll
-
-    // x2 the values work pretty well - TODO: Fine-tune these
-    cfg.pidYaw = cfg.pidRoll;
-    cfg.pidYaw.Kp *= 3.0f;
-    cfg.pidYaw.Ki *= 3.5f; // I increased this in order for it to stop yawing slowly
-    cfg.pidYaw.Kd *= 2.0f;
-
-    resetPIDError();
-}

@@ -36,7 +36,7 @@
 volatile uint16_t rxChannel[RX_NUM_CHANNELS];
 volatile bool validRXData;
 
-void CaptureHandler(void) {
+static void CaptureHandler(void) {
     static uint8_t channelIndex = 0;
     static uint32_t prev = 0;
     static bool last_edge = false;
@@ -80,7 +80,7 @@ void CaptureHandler(void) {
     //prev_micros = micros();
 }
 
-void TimeoutHandler(void) {
+static void TimeoutHandler(void) {
     TimerIntClear(WTIMER1_BASE, TIMER_TIMB_TIMEOUT); // Clear interrupt
     writePPMAllOff(); // Turn all motors off
     validRXData = false; // Indicate that connection was lost

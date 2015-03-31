@@ -39,7 +39,7 @@
 
 static volatile int16_t sonarDistanceUs;
 
-void SonarHandler(void) {
+static void SonarHandler(void) {
     static uint32_t prev = 0;
     static bool last_edge = false;
 
