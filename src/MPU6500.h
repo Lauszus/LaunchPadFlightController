@@ -20,6 +20,8 @@
 
 #pragma anon_unions
 
+#include "Kalman.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -54,7 +56,7 @@ typedef struct {
 void initMPU6500(void);
 bool dataReadyMPU6500(void);
 void getMPU6500Data(mpu6500_t *mpu6500);
-void getMPU6500Angles(mpu6500_t *mpu6500, float *roll, float *pitch, float dt);
+void getMPU6500Angles(mpu6500_t *mpu6500, kalman_t *kalmanRoll, kalman_t *kalmanPitch, float dt);
 bool calibrateAcc(void);
 
 #ifdef __cplusplus

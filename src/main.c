@@ -41,8 +41,8 @@
 #define GPIO_BLUE_LED     GPIO_PIN_2
 #define GPIO_GREEN_LED    GPIO_PIN_3
 
+kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch
 static mpu6500_t mpu6500; // Gyro and accelerometer readings
-float roll, pitch; // Roll and pitch calculated using Kalman filter
 static uint32_t imuTimer = 0, pidTimer = 0; // Used to keep track of the time
 
 // Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
@@ -63,6 +63,9 @@ int main(void) {
     initMPU6500();
     initBluetooth();
     IntMasterEnable(); // Enable all interrupts
+
+    KalmanInit(&kalmanRoll); // Init Kalman filter
+    KalmanInit(&kalmanPitch);
 
     SysCtlPeripheralEnable(SYSCTL_PERIPH_LED); // Enable GPIOF peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
@@ -109,7 +112,7 @@ int main(void) {
             imuTimer = now;
 
             getMPU6500Data(&mpu6500); // Get accelerometer and gyroscope values
-            getMPU6500Angles(&mpu6500, &roll, &pitch, dt); // Calculate pitch and roll
+            getMPU6500Angles(&mpu6500, &kalmanRoll, &kalmanPitch, dt); // Calculate pitch and roll
 
             /*UARTprintf("%d\t%d\t%d\n", mpu6500.gyro.X, mpu6500.gyro.Y, mpu6500.gyro.Z);
             UARTFlushTx(false);*/
@@ -157,8 +160,8 @@ int main(void) {
                 float setPointRoll, setPointPitch; // Roll and pitch control can both be gyro or accelerometer based
                 const float setPointYaw = rudder * cfg.stickScalingYaw; // Yaw is always gyro controlled
                 if (angleMode) { // Angle mode
-                    setPointRoll = constrain(aileron, -cfg.maxAngleInclination, cfg.maxAngleInclination) - roll;
-                    setPointPitch = constrain(elevator, -cfg.maxAngleInclination, cfg.maxAngleInclination) - pitch;
+                    setPointRoll = constrain(aileron, -cfg.maxAngleInclination, cfg.maxAngleInclination) - kalmanRoll.angle;
+                    setPointPitch = constrain(elevator, -cfg.maxAngleInclination, cfg.maxAngleInclination) - kalmanPitch.angle;
                     setPointRoll *= cfg.angleKp;
                     setPointPitch *= cfg.angleKp;
                 } else { // Acro mode

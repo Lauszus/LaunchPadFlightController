@@ -50,7 +50,6 @@
 #define GPIO_MPU_INT_PIN            GPIO_PIN_3
 
 static gyro_t gyroZero; // Gyroscope zero values are found at every power on
-kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch
 
 // Returns true when data is ready to be read
 bool dataReadyMPU6500(void) {
@@ -78,7 +77,7 @@ void getMPU6500Data(mpu6500_t *mpu6500) {
 }
 
 // Accelerometer readings can be in any scale, but gyro rate needs to be in deg/s
-void getMPU6500Angles(mpu6500_t *mpu6500, float *roll, float *pitch, float dt) {
+void getMPU6500Angles(mpu6500_t *mpu6500, kalman_t *kalmanRoll, kalman_t *kalmanPitch, float dt) {
     const float accz_lpf_cutoff = 5.0f; // Source: https://github.com/cleanflight/cleanflight
     const float fc_acc = 0.5f / (PI * accz_lpf_cutoff); // Calculate RC time constant used in the accZ lpf
     static float accz_smooth = 0;
@@ -97,8 +96,8 @@ void getMPU6500Angles(mpu6500_t *mpu6500, float *roll, float *pitch, float dt) {
     float rollAcc = atanf(mpu6500->acc.X / sqrtf(mpu6500->acc.Y * mpu6500->acc.Y + accz_smooth * accz_smooth)) * RAD_TO_DEG;
     float pitchAcc  = atan2f(-mpu6500->acc.Y, -accz_smooth) * RAD_TO_DEG;
 
-    *roll = getAngle(&kalmanRoll, rollAcc, mpu6500->gyroRate.Y, dt);
-    *pitch = getAngle(&kalmanPitch, pitchAcc, mpu6500->gyroRate.X, dt);
+    getAngle(kalmanRoll, rollAcc, mpu6500->gyroRate.Y, dt);
+    getAngle(kalmanPitch, pitchAcc, mpu6500->gyroRate.X, dt);
 #if 0
     static float compAngleRoll, compAnglePitch;
     compAngleRoll = 0.93f * (compAngleRoll + mpu6500->gyroRate.Y * dt) + 0.07f * rollAcc; // Calculate the angle using a Complimentary filter
@@ -223,7 +222,4 @@ void initMPU6500(void) {
     while (calibrateGyro()) { // Get gyro zero values
         // Loop until calibration is succesful
     }
-
-    KalmanInit(&kalmanRoll);
-    KalmanInit(&kalmanPitch);
 }

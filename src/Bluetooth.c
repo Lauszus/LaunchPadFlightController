@@ -38,7 +38,7 @@
 
 #define DEBUG_BLUETOOTH_PROTOCOL 1
 
-extern float roll, pitch; // Roll and pitch calculated in main.c
+extern kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch in main.c
 
 enum {
     SET_PID_ROLL_PITCH = 0,
@@ -445,8 +445,8 @@ void readBluetoothData() {
         msg.cmd = SEND_IMU;
         msg.length = sizeof(imu);
         imu.acc = 0;
-        imu.gyro = roll * 100.0f;
-        imu.kalman = pitch * 100.0f;
+        imu.gyro = kalmanRoll.angle * 100.0f;
+        imu.kalman = kalmanPitch.angle * 100.0f;
         sendData((uint8_t*)&imu, sizeof(imu));
 
         /*UARTprintf("%d\t%d\n", imu.gyro, imu.kalman);

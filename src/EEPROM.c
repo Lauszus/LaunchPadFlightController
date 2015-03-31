@@ -25,7 +25,7 @@
 #include "driverlib/sysctl.h"
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 
-extern kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch
+extern kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch in main.c
 
 const uint32_t configVersion = 5; // Must be bumped every time config_t is changed
 config_t cfg;
