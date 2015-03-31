@@ -53,7 +53,7 @@ enum {
     GET_ANGLE_MAX_INC,
     SET_KALMAN,
     GET_KALMAN,
-    SEND_IMU,
+    SEND_ANGLES,
     SEND_INFO,
 };
 
@@ -80,11 +80,11 @@ static uint16_t angleKp; // Value multiplied by 100
 static stickScalingBluetooth_t stickScaling; // Stick scaling values multiplied by 100
 static uint8_t maxAngleInclination; // Inclination angle in degrees
 static kalmanBluetooth_t kalmanCoefficients; // Kalman coefficients are multiplied by 10000
-static uint8_t sendInfo, sendImu; // Non-zero if values should be sent
+static uint8_t sendInfo, sendAngles; // Non-zero if values should be sent
 
-struct imu_t {
-    int16_t acc, gyro, kalman;
-} __attribute__((packed)) imu;
+struct angles_t {
+    int16_t roll, pitch, yaw;
+} __attribute__((packed)) angles;
 
 /*
 struct info_t {
@@ -99,7 +99,7 @@ struct info_t {
 static const char *commandHeader = "$S>"; // Standard command header
 static const char *responseHeader = "$S<"; // Standard response header
 
-static uint32_t infoTimer, imuTimer;
+static uint32_t infoTimer, anglesTimer;
 
 static bool findString(const char* string);
 static void readBytes(uint8_t* data, uint8_t length);
@@ -374,17 +374,17 @@ void readBluetoothData() {
 #endif
                     break;
 
-                case SEND_IMU:
-                    if (msg.length == sizeof(sendImu)) { // Make sure that it has the right length
-                        if (getData((uint8_t*)&sendImu, sizeof(sendImu))) { // This will read the data and check the checksum
+                case SEND_ANGLES:
+                    if (msg.length == sizeof(sendAngles)) { // Make sure that it has the right length
+                        if (getData((uint8_t*)&sendAngles, sizeof(sendAngles))) { // This will read the data and check the checksum
 #if DEBUG_BLUETOOTH_PROTOCOL
-                            UARTprintf("sendImu: %u\n", sendImu);
+                            UARTprintf("sendAngles: %u\n", sendAngles);
 #endif
                         }
                         else {
-                            sendImu = 0; // If there was an error, we reset it back to 0, just to be sure
+                            sendAngles = 0; // If there was an error, we reset it back to 0, just to be sure
 #if DEBUG_BLUETOOTH_PROTOCOL
-                            UARTprintf("SEND_IMU checksum error\n");
+                            UARTprintf("SEND_ANGLES checksum error\n");
 #endif
                         }
                     }
@@ -440,14 +440,14 @@ void readBluetoothData() {
         info.runTime = infoTimer;
         sendData((uint8_t*)&info, sizeof(info));
 #endif
-    } else if (sendImu && millis() - imuTimer > 100) {
-        imuTimer = millis();
-        msg.cmd = SEND_IMU;
-        msg.length = sizeof(imu);
-        imu.acc = 0;
-        imu.gyro = kalmanRoll.angle * 100.0f;
-        imu.kalman = kalmanPitch.angle * 100.0f;
-        sendData((uint8_t*)&imu, sizeof(imu));
+    } else if (sendAngles && millis() - anglesTimer > 100) {
+        anglesTimer = millis();
+        msg.cmd = SEND_ANGLES;;
+        msg.length = sizeof(angles);
+        angles.roll = kalmanRoll.angle * 100.0f;
+        angles.pitch = kalmanPitch.angle * 100.0f;
+        angles.yaw = 0; // Yaw angle is just zero for now
+        sendData((uint8_t*)&angles, sizeof(angles));
 
         /*UARTprintf("%d\t%d\n", imu.gyro, imu.kalman);
         UARTFlushTx(false);*/

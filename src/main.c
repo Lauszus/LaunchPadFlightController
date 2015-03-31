@@ -231,5 +231,5 @@ int main(void) {
     // Measure loop time - print value or toggle I/O pin
     // Check that both buttons are held in while calibrating ESCs
     // Self level angle trim
-    // Sent out gyro and accelerometer angles
+    // Sent out yaw angle as well
     // Multiply PID values by 10000 as well
