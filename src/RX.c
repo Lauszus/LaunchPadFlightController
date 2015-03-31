@@ -29,7 +29,9 @@
 #include "driverlib/pin_map.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/timer.h"
+#if UART_DEBUG
 //#include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
+#endif
 
 volatile uint16_t rxChannel[RX_NUM_CHANNELS];
 volatile bool validRXData;

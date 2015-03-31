@@ -28,7 +28,9 @@
 #include "inc/hw_memmap.h"
 #include "driverlib/gpio.h"
 #include "driverlib/sysctl.h"
+#if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
+#endif
 
 #define MPU6500_SMPLRT_DIV          0x19
 #define MPU6500_INT_PIN_CFG         0x37
@@ -154,11 +156,16 @@ static bool calibrateSensor(int16_t *zeroValues, uint8_t regAddr, int16_t maxDif
 static bool calibrateGyro(void) {
     bool rcode = calibrateSensor(gyroZero.data, MPU6500_GYRO_XOUT_H, 100); // 100 / 16.4 ~= 6.10 deg/s
 
-    if (!rcode)
+    if (!rcode) {
+#if UART_DEBUG
         UARTprintf("Gyro zero values: %d\t%d\t%d\n", gyroZero.X, gyroZero.Y, gyroZero.Z);
-    else
+#endif
+    } else {
+#if UART_DEBUG
         UARTprintf("Gyro calibration error\n");
+#endif
         // TODO: Turn on buzzer
+    }
 
     return rcode;
 }
@@ -168,11 +175,16 @@ bool calibrateAcc(void) {
     cfg.accZero.Z += 4096; // Z-axis is reading -1g when horizontal, so we add 1g to the value found
 
     if (!rcode) {
+#if UART_DEBUG
         UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", cfg.accZero.X, cfg.accZero.Y, cfg.accZero.Z);
+#endif
         updateConfig(); // Write new values to EEPROM
-    } else
+    } else {
+#if UART_DEBUG
         UARTprintf("Accelerometer calibration error\n");
+#endif
         // TODO: Turn on buzzer
+    }
 
     return rcode; // No error
 }
@@ -181,10 +193,14 @@ void initMPU6500(void) {
     uint8_t i2cBuffer[5]; // Buffer for I2C data
 
     i2cBuffer[0] = i2cRead(MPU6500_ADDRESS, MPU6500_WHO_AM_I);
-    if (i2cBuffer[0] == MPU6500_WHO_AM_I_ID) // Read "WHO_AM_I" register
+    if (i2cBuffer[0] == MPU6500_WHO_AM_I_ID) { // Read "WHO_AM_I" register
+#if UART_DEBUG
         UARTprintf("MPU-6500 found\n");
-    else {
+#endif
+    } else {
+#if UART_DEBUG
         UARTprintf("Could not find MPU-6500: %2X\n", i2cBuffer[0]);
+#endif
         while (1);
     }
 

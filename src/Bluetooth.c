@@ -25,6 +25,7 @@
 #include "Kalman.h"
 #include "Time.h"
 #include "UART.h"
+#include "uartstdio1.h" // Add "UART_BUFFERED1" to preprocessor - it uses a modified version of uartstdio, so it can be used with another UART interface
 
 #include "inc/hw_memmap.h"
 #include "inc/hw_ints.h"
@@ -33,10 +34,11 @@
 #include "driverlib/pin_map.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/uart.h"
+#if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor - this is used to print to the terminal
-#include "uartstdio1.h" // Add "UART_BUFFERED1" to preprocessor - it uses a modified version of uartstdio, so it can be used with another UART interface
+#endif
 
-#define DEBUG_BLUETOOTH_PROTOCOL 1
+#define DEBUG_BLUETOOTH_PROTOCOL 1 && UART_DEBUG
 
 extern kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch in main.c
 
@@ -175,7 +177,7 @@ void readBluetoothData() {
                         UARTprintf("GET_PID_ROLL_PITCH error\n");
 #endif
                     break;
-                    
+
                 case SET_PID_YAW:
                     if (msg.length == sizeof(pidYaw)) { // Make sure that it has the right length
                         if (getData((uint8_t*)&pidYaw, sizeof(pidYaw))) { // This will read the data and check the checksum
@@ -254,7 +256,7 @@ void readBluetoothData() {
                         UARTprintf("GET_ANGLE_KP error\n");
 #endif
                     break;
-                    
+
                 case SET_STICK_SCALING:
                     if (msg.length == sizeof(stickScaling)) { // Make sure that it has the right length
                         if (getData((uint8_t*)&stickScaling, sizeof(stickScaling))) { // This will read the data and check the checksum
@@ -413,7 +415,7 @@ void readBluetoothData() {
                         UARTprintf("SEND_INFO length error: %u\n", msg.length);
 #endif
                     break;
-                    
+
 #if DEBUG_BLUETOOTH_PROTOCOL
                 default:
                     UARTprintf("Unknown command: %u\n", msg.cmd);

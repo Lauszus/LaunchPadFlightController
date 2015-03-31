@@ -15,6 +15,8 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 
+#if UART_DEBUG
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -65,7 +67,7 @@ void printPIDValues(pid_t *pid) {
     UARTFlushTx(false);
 }
 
-void setValues(char *input) {
+static void setValues(char *input) {
     if (input[0] == 'G' && input[1] == 'P') { // Send "GP;" to get the current PID Values
         printPIDValues(&cfg.pidRoll); // Print PID Values
         printPIDValues(&cfg.pidYaw);
@@ -110,3 +112,16 @@ void checkUARTData(void) {
         setValues(dataInput);
     }
 }
+
+#else
+
+#include "PID.h"
+
+void initUART(void) {
+}
+void checkUARTData(void) {
+}
+void printPIDValues(pid_t *pid) {
+}
+
+#endif

@@ -33,7 +33,9 @@
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/sysctl.h"
+#if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
+#endif
 
 #define SYSCTL_PERIPH_LED SYSCTL_PERIPH_GPIOF
 #define GPIO_LED_BASE     GPIO_PORTF_BASE
@@ -82,7 +84,9 @@ int main(void) {
         // Loop until calibration values are found
     }
 #else
+#if UART_DEBUG
     UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", cfg.accZero.X, cfg.accZero.Y, cfg.accZero.Z);
+#endif
 #endif
 
 #if 0 // Set to one in order to run the ESC calibration routine at next power cycle
@@ -221,6 +225,7 @@ int main(void) {
         // https://github.com/cleanflight/cleanflight/blob/master/src/main/sensors/sonar.c#L90-L99
     // Limit other motors if one reaches maximum: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/mixer.c#L677-L684
     // Create Android App
+        // Do not hardcode integrationLimit in Android application
         // Tune yaw PID values separately
         // Set Kd as well
         // Retune PID again and tune stickscaling

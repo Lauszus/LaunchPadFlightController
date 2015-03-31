@@ -349,7 +349,7 @@
             <uSurpInc>0</uSurpInc>
             <VariousControls>
               <MiscControls>--c99</MiscControls>
-              <Define>rvmdk PART_TM4C123GH6PM UART_BUFFERED UART_BUFFERED1</Define>
+              <Define>rvmdk PART_TM4C123GH6PM UART_DEBUG=1 UART_BUFFERED UART_BUFFERED1</Define>
               <Undefine></Undefine>
               <IncludePath>.\lib</IncludePath>
             </VariousControls>

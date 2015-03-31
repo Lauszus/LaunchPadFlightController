@@ -23,7 +23,9 @@
 
 #include "driverlib/eeprom.h"
 #include "driverlib/sysctl.h"
+#if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
+#endif
 
 extern kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch in main.c
 
@@ -49,7 +51,9 @@ void setDefaultConfig(void) {
 
     uint32_t rcode = EEPROMProgram((uint32_t*)&configVersion, 0, sizeof(configVersion)); // Write version number to EEPROM
     if (rcode) {
+#if UART_DEBUG
         UARTprintf("Error writing version number to EEPROM: %u\n", rcode);
+#endif
         // TODO: Turn buzzer on
     } else
         updateConfig(); // Write values to EEPROM
@@ -61,14 +65,18 @@ void initEEPROM(void) {
 
     // Make sure config_t is a multiple of 4 - the compiler should pack struct to 4 bytes, but I added this check to be 100% sure
     if (sizeof(config_t) % 4 != 0) {
+#if UART_DEBUG
         UARTprintf("Config size error: %u\n", sizeof(config_t));
+#endif
         // TODO: Turn on buzzer
         while (1);
     }
 
     uint32_t rcode = EEPROMInit();
     if (rcode) {
+#if UART_DEBUG
         UARTprintf("EEPROMInit error: %u\n", rcode);
+#endif
         // TODO: Turn on buzzer
         while (1);
     }
@@ -88,7 +96,9 @@ void initEEPROM(void) {
 void updateConfig(void) {
     uint32_t rcode = EEPROMProgram((uint32_t*)&cfg, sizeof(configVersion), sizeof(config_t)); // Write config to EEPROM
     if (rcode) {
+#if UART_DEBUG
         UARTprintf("Error writing config to EEPROM: %u\n", rcode);
+#endif
         // TODO: Turn buzzer on
     } else {
         kalmanRoll.Q_angle = kalmanPitch.Q_angle = cfg.Q_angle; // Set Kalman filter coefficients
