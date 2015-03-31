@@ -56,19 +56,20 @@ void initUART(void) {
     UARTprintf("Started\n");
 }
 
-void printPIDValues(void) {
+void printPIDValues(pid_t *pid) {
     UARTprintf("PID: %d.%04u\t%d.%04u\t%d.%04u\t%d.%04u\n",
-                                            (int16_t)cfg.pidRoll.Kp, (uint16_t)(abs(cfg.pidRoll.Kp * 10000.0f) % 10000),
-                                            (int16_t)cfg.pidRoll.Ki, (uint16_t)(abs(cfg.pidRoll.Ki * 10000.0f) % 10000),
-                                            (int16_t)cfg.pidRoll.Kd, (uint16_t)(abs(cfg.pidRoll.Kd * 10000.0f) % 10000),
-                                            (int16_t)cfg.pidRoll.integrationLimit, (uint16_t)(abs(cfg.pidRoll.integrationLimit * 10000.0f) % 10000));
+                                            (int16_t)pid->Kp, (uint16_t)(abs(pid->Kp * 10000.0f) % 10000),
+                                            (int16_t)pid->Ki, (uint16_t)(abs(pid->Ki * 10000.0f) % 10000),
+                                            (int16_t)pid->Kd, (uint16_t)(abs(pid->Kd * 10000.0f) % 10000),
+                                            (int16_t)pid->integrationLimit, (uint16_t)(abs(pid->integrationLimit * 10000.0f) % 10000));
     UARTFlushTx(false);
 }
 
 void setValues(char *input) {
-    if (input[0] == 'G' && input[1] == 'P') // Send "GP;" to get the current PID Values
-        printPIDValues(); // Print PID Values
-    else if (input[0] == 'S' && input[2] == ',') { // Set different values
+    if (input[0] == 'G' && input[1] == 'P') { // Send "GP;" to get the current PID Values
+        printPIDValues(&cfg.pidRoll); // Print PID Values
+        printPIDValues(&cfg.pidYaw);
+    } else if (input[0] == 'S' && input[2] == ',') { // Set different values
         float value = ustrtof(input + 3, NULL); // Skip first three letters
         if (input[1] == 'P')
             cfg.pidRoll.Kp = value;
@@ -86,7 +87,8 @@ void setValues(char *input) {
         cfg.pidYaw.Ki = cfg.pidRoll.Ki * 3.5f; // I increased this in order for it to stop yawing slowly
         cfg.pidYaw.Kd = cfg.pidRoll.Kd * 2.0f;
 
-        printPIDValues(); // Print new PID Values
+        printPIDValues(&cfg.pidRoll); // Print PID Values
+        printPIDValues(&cfg.pidYaw);
         updateConfig(); // Write new values to EEPROM
     }
 }

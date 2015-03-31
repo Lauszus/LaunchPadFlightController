@@ -24,7 +24,7 @@ extern "C" {
 
 void initUART(void);
 void checkUARTData(void);
-void printPIDValues(void);
+void printPIDValues(pid_t *pid);
 
 #ifdef __cplusplus
 }

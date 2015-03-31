@@ -68,8 +68,8 @@ int main(void) {
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
     GPIOPinTypeGPIOOutput(GPIO_LED_BASE, GPIO_RED_LED | GPIO_BLUE_LED | GPIO_GREEN_LED); // Set red, blue and green LEDs as outputs
 
-    printPIDValues();
-
+    printPIDValues(&cfg.pidRoll); // Print PID Values
+    printPIDValues(&cfg.pidYaw);
     while (!validRXData || getRXChannel(RX_AUX2_CHAN) > 0) {
         // Wait until we have valid data and safety aux channel is in safe position
     }
@@ -228,3 +228,5 @@ int main(void) {
     // Measure loop time - print value or toggle I/O pin
     // Check that both buttons are held in while calibrating ESCs
     // Self level angle trim
+    // Sent out gyro and accelerometer angles
+    // Multiply PID values by 10000 as well

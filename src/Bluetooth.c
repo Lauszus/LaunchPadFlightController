@@ -22,6 +22,7 @@
 
 #include "Bluetooth.h"
 #include "EEPROM.h"
+#include "Kalman.h"
 #include "Time.h"
 #include "UART.h"
 
@@ -39,32 +40,6 @@
 
 extern float roll, pitch; // Roll and pitch calculated in main.c
 
-/*
-pid_t pidRoll, pidPitch, pidYaw; // PID values
-float angleKp; // Self level mode Kp value
-float stickScalingRollPitch, stickScalingYaw; // Stick scaling values
-uint8_t maxAngleInclination; // Max angle in self level mode
-*/
-
-struct msg_t {
-    uint8_t cmd;
-    uint8_t length;
-} __attribute__((packed)) msg;
-
-typedef struct {
-    uint16_t Kp, Ki, Kd; // PID variables multiplied by 100
-    uint16_t integrationLimit; // Integration limit multiplied by 100
-} __attribute__((packed)) pidBluetooth_t;
-
-typedef struct {
-    uint16_t stickScalingRollPitch, stickScalingYaw; // Stick scaling variables multiplied by 100
-} __attribute__((packed)) stickScalingBluetooth_t;
-
-pidBluetooth_t pidRollPitch, pidYaw;
-uint16_t angleKp; // Value multiplied by 100
-stickScalingBluetooth_t stickScaling; // Stick scaling values
-uint8_t maxAngleInclination; // Inclination angle in degrees
-
 enum {
     SET_PID_ROLL_PITCH = 0,
     GET_PID_ROLL_PITCH,
@@ -78,25 +53,40 @@ enum {
     GET_ANGLE_MAX_INC,
     SET_KALMAN,
     GET_KALMAN,
-    START_IMU,
-    STOP_IMU,
+    SEND_IMU,
+    SEND_INFO,
 };
+
+struct msg_t {
+    uint8_t cmd;
+    uint8_t length;
+} __attribute__((packed)) msg;
+
+typedef struct {
+    uint16_t Kp, Ki, Kd; // PID values multiplied by 100
+    uint16_t integrationLimit; // Integration limit multiplied by 100
+} __attribute__((packed)) pidBluetooth_t;
+
+typedef struct {
+    uint16_t stickScalingRollPitch, stickScalingYaw; // Stick scaling values multiplied by 100
+} __attribute__((packed)) stickScalingBluetooth_t;
+
+typedef struct {
+    uint16_t Q_angle, Q_bias, R_measure; // Kalman coefficients are multiplied by 10000
+} __attribute__((packed)) kalmanBluetooth_t;
+
+static pidBluetooth_t pidRollPitch, pidYaw; // PID values multiplied by 100
+static uint16_t angleKp; // Value multiplied by 100
+static stickScalingBluetooth_t stickScaling; // Stick scaling values multiplied by 100
+static uint8_t maxAngleInclination; // Inclination angle in degrees
+static kalmanBluetooth_t kalmanCoefficients; // Kalman coefficients are multiplied by 10000
+static uint8_t sendInfo, sendImu; // Non-zero if values should be sent
 
 struct imu_t {
     int16_t acc, gyro, kalman;
 } __attribute__((packed)) imu;
 
 /*
-struct target_t {
-  int16_t targetAngle; // Note that this can be negative as well
-} __attribute__((packed)) target;
-
-struct kalman_t {
-  uint16_t Qangle;
-  uint16_t Qbias;
-  uint16_t Rmeasure;
-} __attribute__((packed)) kalman;
-
 struct info_t {
   uint16_t speed;
   int16_t current; // Note that this can be negative as well
@@ -104,20 +94,12 @@ struct info_t {
   uint16_t battery;
   uint32_t runTime;
 } __attribute__((packed)) info;
-
-#define SET_TARGET  2
-#define GET_TARGET  3
-#define SET_TURNING 4
-#define GET_TURNING 5
-#define START_INFO  8
-#define STOP_INFO   9
 */
 
-const char *commandHeader = "$S>"; // Standard command header
-const char *responseHeader = "$S<"; // Standard response header
+static const char *commandHeader = "$S>"; // Standard command header
+static const char *responseHeader = "$S<"; // Standard response header
 
-static bool /*sendSpeed, */sendImu;
-static uint32_t /*speedTimer, */imuTimer;
+static uint32_t infoTimer, imuTimer;
 
 static bool findString(const char* string);
 static void readBytes(uint8_t* data, uint8_t length);
@@ -161,7 +143,7 @@ void readBluetoothData() {
                             cfg.pidRoll.integrationLimit = cfg.pidPitch.integrationLimit = pidRollPitch.integrationLimit / 100.0f;
                             updateConfig();
 #if DEBUG_BLUETOOTH_PROTOCOL
-                            printPIDValues();
+                            printPIDValues(&cfg.pidRoll); // Print PID Values
 #endif
                         }
 #if DEBUG_BLUETOOTH_PROTOCOL
@@ -176,177 +158,262 @@ void readBluetoothData() {
                     break;
 
                 case GET_PID_ROLL_PITCH:
-                    if (msg.length == 0) {
-                        if (getData(NULL, 0)) { // This will check the checksum
+                    if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
+                        msg.cmd = GET_PID_ROLL_PITCH;
+                        msg.length = sizeof(pidRollPitch);
+                        pidRollPitch.Kp = cfg.pidPitch.Kp * 100.0f;
+                        pidRollPitch.Ki = cfg.pidPitch.Ki * 100.0f;
+                        pidRollPitch.Kd = cfg.pidPitch.Kd * 100.0f;
+                        pidRollPitch.integrationLimit = cfg.pidPitch.integrationLimit * 100.0f;
+                        sendData((uint8_t*)&pidRollPitch, sizeof(pidRollPitch));
 #if DEBUG_BLUETOOTH_PROTOCOL
-                            UARTprintf("GET_PID_ROLL_PITCH\n");
+                        UARTprintf("GET_PID_ROLL_PITCH\n");
 #endif
-                            msg.cmd = GET_PID_ROLL_PITCH;
-                            msg.length = sizeof(pidRollPitch);
-                            pidRollPitch.Kp = cfg.pidPitch.Kp * 100.0f;
-                            pidRollPitch.Ki = cfg.pidPitch.Ki * 100.0f;
-                            pidRollPitch.Kd = cfg.pidPitch.Kd * 100.0f;
-                            pidRollPitch.integrationLimit = cfg.pidPitch.integrationLimit * 100.0f;
-                            sendData((uint8_t*)&pidRollPitch, sizeof(pidRollPitch));
+                     }
+#if DEBUG_BLUETOOTH_PROTOCOL
+                     else
+                        UARTprintf("GET_PID_ROLL_PITCH error\n");
+#endif
+                    break;
+                    
+                case SET_PID_YAW:
+                    if (msg.length == sizeof(pidYaw)) { // Make sure that it has the right length
+                        if (getData((uint8_t*)&pidYaw, sizeof(pidYaw))) { // This will read the data and check the checksum
+                            cfg.pidYaw.Kp = pidYaw.Kp / 100.0f;
+                            cfg.pidYaw.Ki = pidYaw.Ki / 100.0f;
+                            cfg.pidYaw.Kd = pidYaw.Kd / 100.0f;
+                            cfg.pidYaw.integrationLimit = pidYaw.integrationLimit / 100.0f;
+                            updateConfig();
+#if DEBUG_BLUETOOTH_PROTOCOL
+                            printPIDValues(&cfg.pidYaw); // Print PID Values
+#endif
                         }
 #if DEBUG_BLUETOOTH_PROTOCOL
                         else
-                            UARTprintf("GET_PID_ROLL_PITCH checksum error\n");
+                            UARTprintf("SET_PID_YAW checksum error\n");
 #endif
                     }
+#if DEBUG_BLUETOOTH_PROTOCOL
+                    else
+                        UARTprintf("SET_PID_YAW length error: %u\n", msg.length);
+#endif
                     break;
 
-#if 0
-                case SET_TARGET:
-                    if (msg.length == sizeof(target)) { // Make sure that it has the right length
-                        if (getData((uint8_t*)&target, sizeof(target))) { // This will read the data and check the checksum
-                            cfg.targetAngle = (double)target.targetAngle / 100.0;
-                            updateEEPROMValues();
-                        }
-        #if DEBUG_BLUETOOTH_PROTOCOL
-                        else
-                            Serial.println(F("SET_TARGET checksum error"));
-        #endif
+                case GET_PID_YAW:
+                    if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
+                        msg.cmd = GET_PID_YAW;
+                        msg.length = sizeof(pidYaw);
+                        pidYaw.Kp = cfg.pidYaw.Kp * 100.0f;
+                        pidYaw.Ki = cfg.pidYaw.Ki * 100.0f;
+                        pidYaw.Kd = cfg.pidYaw.Kd * 100.0f;
+                        pidYaw.integrationLimit = cfg.pidYaw.integrationLimit * 100.0f;
+                        sendData((uint8_t*)&pidYaw, sizeof(pidYaw));
+#if DEBUG_BLUETOOTH_PROTOCOL
+                        UARTprintf("GET_PID_YAW\n");
+#endif
                     }
-        #if DEBUG_BLUETOOTH_PROTOCOL
-                    else {
-                      Serial.print(F("SET_TARGET length error: "));
-                      Serial.println(msg.length);
-                    }
-        #endif
+#if DEBUG_BLUETOOTH_PROTOCOL
+                    else
+                        UARTprintf("GET_PID_YAW error\n");
+#endif
                     break;
 
-                case GET_TARGET:
-                    if (msg.length == 0) {
-                        if (getData(NULL, 0)) { // This will check the checksum
-                            msg.cmd = GET_TARGET;
-                            msg.length = sizeof(target);
-                            target.targetAngle = cfg.targetAngle * 100.0;
-                            sendData((uint8_t*)&target, sizeof(target));
+                case SET_ANGLE_KP:
+                    if (msg.length == sizeof(angleKp)) { // Make sure that it has the right length
+                        if (getData((uint8_t*)&angleKp, sizeof(angleKp))) { // This will read the data and check the checksum
+                            cfg.angleKp = angleKp / 100.0f;
+                            updateConfig();
+#if DEBUG_BLUETOOTH_PROTOCOL
+                            UARTprintf("%d.%02u\n", (int16_t)cfg.angleKp, (uint16_t)(abs(cfg.angleKp * 100.0f) % 100));
+                            UARTFlushTx(false);
+#endif
                         }
-        #if DEBUG_BLUETOOTH_PROTOCOL
+#if DEBUG_BLUETOOTH_PROTOCOL
                         else
-                            Serial.println(F("GET_PID checksum error"));
-        #endif
+                            UARTprintf("SET_ANGLE_KP checksum error\n");
+#endif
                     }
+#if DEBUG_BLUETOOTH_PROTOCOL
+                    else
+                        UARTprintf("SET_ANGLE_KP length error: %u\n", msg.length);
+#endif
                     break;
 
-                case SET_TURNING:
-                    if (msg.length == sizeof(turning)) { // Make sure that it has the right length
-                        if (getData((uint8_t*)&turning, sizeof(turning))) { // This will read the data and check the checksum
-                            cfg.turningScale = turning.turningScale;
-                            updateEEPROMValues();
+                case GET_ANGLE_KP:
+                    if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
+                        msg.cmd = GET_ANGLE_KP;
+                        msg.length = sizeof(angleKp);
+                        angleKp = cfg.angleKp * 100.0f;
+                        sendData((uint8_t*)&angleKp, sizeof(angleKp));
+#if DEBUG_BLUETOOTH_PROTOCOL
+                        UARTprintf("GET_ANGLE_KP\n");
+#endif
+                    }
+#if DEBUG_BLUETOOTH_PROTOCOL
+                    else
+                        UARTprintf("GET_ANGLE_KP error\n");
+#endif
+                    break;
+                    
+                case SET_STICK_SCALING:
+                    if (msg.length == sizeof(stickScaling)) { // Make sure that it has the right length
+                        if (getData((uint8_t*)&stickScaling, sizeof(stickScaling))) { // This will read the data and check the checksum
+                            cfg.stickScalingRollPitch = stickScaling.stickScalingRollPitch / 100.0f;
+                            cfg.stickScalingYaw = stickScaling.stickScalingYaw / 100.0f;
+                            updateConfig();
+#if DEBUG_BLUETOOTH_PROTOCOL
+                            UARTprintf("%d.%02u\t%d.%02u\n", (int16_t)cfg.stickScalingRollPitch, (uint16_t)(abs(cfg.stickScalingRollPitch * 100.0f) % 100),
+                                                             (int16_t)cfg.stickScalingYaw, (uint16_t)(abs(cfg.stickScalingYaw * 100.0f) % 100));
+                            UARTFlushTx(false);
+#endif
                         }
-        #if DEBUG_BLUETOOTH_PROTOCOL
+#if DEBUG_BLUETOOTH_PROTOCOL
                         else
-                            Serial.println(F("SET_TURNING checksum error"));
-        #endif
+                            UARTprintf("SET_STICK_SCALING checksum error\n");
+#endif
                     }
-        #if DEBUG_BLUETOOTH_PROTOCOL
-                    else {
-                        Serial.print(F("SET_TURNING length error: "));
-                        Serial.println(msg.length);
-                    }
-        #endif
+#if DEBUG_BLUETOOTH_PROTOCOL
+                    else
+                        UARTprintf("SET_STICK_SCALING length error: %u\n", msg.length);
+#endif
                     break;
 
-                case GET_TURNING:
-                    if (msg.length == 0) {
-                        if (getData(NULL, 0)) { // This will check the checksum
-                            msg.cmd = GET_TURNING;
-                            msg.length = sizeof(turning);
-                            turning.turningScale = cfg.turningScale;
-                            sendData((uint8_t*)&turning, sizeof(turning));
-                        }
-        #if DEBUG_BLUETOOTH_PROTOCOL
-                        else
-                            Serial.println(F("GET_TURNING checksum error"));
-        #endif
+                case GET_STICK_SCALING:
+                    if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
+                        msg.cmd = GET_STICK_SCALING;
+                        msg.length = sizeof(stickScaling);
+                        stickScaling.stickScalingRollPitch = cfg.stickScalingRollPitch * 100.0f;
+                        stickScaling.stickScalingYaw = cfg.stickScalingYaw * 100.0f;
+                        sendData((uint8_t*)&stickScaling, sizeof(stickScaling));
+#if DEBUG_BLUETOOTH_PROTOCOL
+                        UARTprintf("GET_STICK_SCALING\n");
+#endif
                     }
+#if DEBUG_BLUETOOTH_PROTOCOL
+                    else
+                        UARTprintf("GET_STICK_SCALING error\n");
+#endif
+                    break;
+
+                case SET_ANGLE_MAX_INC:
+                    if (msg.length == sizeof(maxAngleInclination)) { // Make sure that it has the right length
+                        if (getData((uint8_t*)&maxAngleInclination, sizeof(maxAngleInclination))) { // This will read the data and check the checksum
+                            cfg.maxAngleInclination = maxAngleInclination;
+                            updateConfig();
+#if DEBUG_BLUETOOTH_PROTOCOL
+                            UARTprintf("%u\n", cfg.maxAngleInclination);
+#endif
+                        }
+#if DEBUG_BLUETOOTH_PROTOCOL
+                        else
+                            UARTprintf("SET_ANGLE_MAX_INC checksum error\n");
+#endif
+                    }
+#if DEBUG_BLUETOOTH_PROTOCOL
+                    else
+                        UARTprintf("SET_ANGLE_MAX_INC length error: %u\n", msg.length);
+#endif
+                    break;
+
+                case GET_ANGLE_MAX_INC:
+                    if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
+                        msg.cmd = GET_ANGLE_MAX_INC;
+                        msg.length = sizeof(maxAngleInclination);
+                        maxAngleInclination = cfg.maxAngleInclination;
+                        sendData((uint8_t*)&maxAngleInclination, sizeof(maxAngleInclination));
+#if DEBUG_BLUETOOTH_PROTOCOL
+                        UARTprintf("GET_ANGLE_MAX_INC\n");
+#endif
+                    }
+#if DEBUG_BLUETOOTH_PROTOCOL
+                    else
+                        UARTprintf("GET_ANGLE_MAX_INC error\n");
+#endif
                     break;
 
                 case SET_KALMAN:
-                    if (msg.length == sizeof(kalman)) { // Make sure that it has the right length
-                        if (getData((uint8_t*)&kalman, sizeof(kalman))) { // This will read the data and check the checksum
-                            cfg.Qangle = kalman.Qangle / 10000.0;
-                            cfg.Qbias = kalman.Qbias / 10000.0;
-                            cfg.Rmeasure = kalman.Rmeasure / 10000.0;
-                            updateEEPROMValues();
+                    if (msg.length == sizeof(kalmanCoefficients)) { // Make sure that it has the right length
+                        if (getData((uint8_t*)&kalmanCoefficients, sizeof(kalmanCoefficients))) { // This will read the data and check the checksum
+                            cfg.Q_angle = kalmanCoefficients.Q_angle / 10000.0f;
+                            cfg.Q_bias = kalmanCoefficients.Q_bias / 10000.0f;
+                            cfg.R_measure = kalmanCoefficients.R_measure / 10000.0f;
+                            updateConfig();
+#if DEBUG_BLUETOOTH_PROTOCOL
+                            UARTprintf("Kalman: %d.%04u\t%d.%04u\t%d.%04u\n", (int16_t)cfg.Q_angle, (uint16_t)(abs(cfg.Q_angle * 10000.0f) % 10000),
+                                                                              (int16_t)cfg.Q_bias, (uint16_t)(abs(cfg.Q_bias * 10000.0f) % 10000),
+                                                                              (int16_t)cfg.R_measure, (uint16_t)(abs(cfg.R_measure * 10000.0f) % 10000));
+                            UARTFlushTx(false);
+#endif
                         }
-        #if DEBUG_BLUETOOTH_PROTOCOL
+#if DEBUG_BLUETOOTH_PROTOCOL
                         else
-                            Serial.println(F("SET_KALMAN checksum error"));
-        #endif
+                            UARTprintf("SET_KALMAN checksum error\n");
+#endif
                     }
-        #if DEBUG_BLUETOOTH_PROTOCOL
-                    else {
-                        Serial.print(F("SET_KALMAN length error: "));
-                        Serial.println(msg.length);
-                    }
-        #endif
+#if DEBUG_BLUETOOTH_PROTOCOL
+                    else
+                        UARTprintf("SET_KALMAN length error: %u\n", msg.length);
+#endif
                     break;
 
                 case GET_KALMAN:
-                    if (msg.length == 0) {
-                        if (getData(NULL, 0)) { // This will check the checksum
-                            msg.cmd = GET_KALMAN;
-                            msg.length = sizeof(kalman);
-                            kalman.Qangle = cfg.Qangle * 10000.0;
-                            kalman.Qbias = cfg.Qbias * 10000.0;
-                            kalman.Rmeasure = cfg.Rmeasure * 10000.0;
-                            sendData((uint8_t*)&kalman, sizeof(kalman));
-                        }
-        #if DEBUG_BLUETOOTH_PROTOCOL
-                        else
-                            Serial.println(F("GET_KALMAN checksum error"));
-        #endif
-                    }
-                    break;
-
-                case START_INFO:
-                    if (msg.length == 0) {
-                        if (getData(NULL, 0)) // This will check the checksum
-                            sendSpeed = true;
-        #if DEBUG_BLUETOOTH_PROTOCOL
-                        else
-                            Serial.println(F("START_INFO checksum error"));
-        #endif
-                    }
-                    break;
-
-                case STOP_INFO:
-                    if (msg.length == 0) {
-                        if (getData(NULL, 0)) // This will check the checksum
-                            sendSpeed = false;
-        #if DEBUG_BLUETOOTH_PROTOCOL
-                        else
-                            Serial.println(F("STOP_INFO checksum error"));
-        #endif
-                    }
-                    break;
+                    if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
+                        msg.cmd = GET_KALMAN;
+                        msg.length = sizeof(kalmanCoefficients);
+                        kalmanCoefficients.Q_angle = cfg.Q_angle * 10000.0f;
+                        kalmanCoefficients.Q_bias = cfg.Q_bias * 10000.0f;
+                        kalmanCoefficients.R_measure = cfg.R_measure * 10000.0f;
+                        sendData((uint8_t*)&kalmanCoefficients, sizeof(kalmanCoefficients));
+#if DEBUG_BLUETOOTH_PROTOCOL
+                        UARTprintf("GET_KALMAN\n");
 #endif
-                case START_IMU:
-                    if (msg.length == 0) {
-                        if (getData(NULL, 0)) // This will read the data and check the checksum
-                            sendImu = true;
-        #if DEBUG_BLUETOOTH_PROTOCOL
-                        else
-                            UARTprintf("START_IMU checksum error\n");
-        #endif
                     }
+#if DEBUG_BLUETOOTH_PROTOCOL
+                    else
+                        UARTprintf("GET_KALMAN error\n");
+#endif
                     break;
 
-                case STOP_IMU:
-                    if (msg.length == 0) {
-                        if (getData(NULL, 0)) // This will check the checksum
-                            sendImu = false;
-        #if DEBUG_BLUETOOTH_PROTOCOL
-                        else
-                            UARTprintf("STOP_IMU checksum error\n");
-        #endif
+                case SEND_IMU:
+                    if (msg.length == sizeof(sendImu)) { // Make sure that it has the right length
+                        if (getData((uint8_t*)&sendImu, sizeof(sendImu))) { // This will read the data and check the checksum
+#if DEBUG_BLUETOOTH_PROTOCOL
+                            UARTprintf("sendImu: %u\n", sendImu);
+#endif
+                        }
+                        else {
+                            sendImu = 0; // If there was an error, we reset it back to 0, just to be sure
+#if DEBUG_BLUETOOTH_PROTOCOL
+                            UARTprintf("SEND_IMU checksum error\n");
+#endif
+                        }
                     }
+#if DEBUG_BLUETOOTH_PROTOCOL
+                    else
+                        UARTprintf("SEND_IMU length error: %u\n", msg.length);
+#endif
                     break;
 
+                case SEND_INFO:
+                    if (msg.length == sizeof(sendInfo)) { // Make sure that it has the right length
+                        if (getData((uint8_t*)&sendInfo, sizeof(sendInfo))) { // This will read the data and check the checksum
+#if DEBUG_BLUETOOTH_PROTOCOL
+                            UARTprintf("sendInfo: %u\n", sendInfo);
+#endif
+                        }
+                        else {
+                            sendInfo = 0; // If there was an error, we reset it back to 0, just to be sure
+#if DEBUG_BLUETOOTH_PROTOCOL
+                            UARTprintf("SEND_INFO checksum error\n");
+#endif
+                        }
+                    }
+#if DEBUG_BLUETOOTH_PROTOCOL
+                    else
+                        UARTprintf("SEND_INFO length error: %u\n", msg.length);
+#endif
+                    break;
+                    
 #if DEBUG_BLUETOOTH_PROTOCOL
                 default:
                     UARTprintf("Unknown command: %u\n", msg.cmd);
@@ -355,10 +422,11 @@ void readBluetoothData() {
             }
         }
     }
+
+    if (sendInfo && millis() - infoTimer > 100) {
 #if 0
-    if (sendSpeed && millis() - speedTimer > 100) {
-        speedTimer = millis();
-        msg.cmd = START_INFO;
+        infoTimer = millis();
+        msg.cmd = SEND_INFO;
         msg.length = sizeof(info);
         info.speed = constrain(abs(PIDValue), 0, 100.0) * 100.0;
         if (deadmanButton::IsSet()) {
@@ -369,13 +437,12 @@ void readBluetoothData() {
             info.current = 0; // When the reset button is held low on the motor drivers, the current sensor will give out an incorrect value
         info.turning = turningValue * 100.0;
         info.battery = batteryLevel;
-        info.runTime = speedTimer;
+        info.runTime = infoTimer;
         sendData((uint8_t*)&info, sizeof(info));
-    } else
 #endif
-    if (sendImu && millis() - imuTimer > 100) {
+    } else if (sendImu && millis() - imuTimer > 100) {
         imuTimer = millis();
-        msg.cmd = START_IMU;
+        msg.cmd = SEND_IMU;
         msg.length = sizeof(imu);
         imu.acc = 0;
         imu.gyro = roll * 100.0f;
@@ -404,7 +471,7 @@ void readBluetoothData() {
 // Carriage return and line feed ("\r\n")
 
 // All floats/doubles are multiplied by 100 before sending
-// Except the Kalman values which are multiplied by 10000 before sending
+// Except the Kalman coefficients which are multiplied by 10000 before sending
 
 static bool findString(const char* string) {
     int pos = UARTPeek1(*string); // Look for the first character
@@ -417,7 +484,7 @@ static bool findString(const char* string) {
         if (UARTgetc1() != *string++) // Compare with string - note this is a blocking call
             return false;
     }
-    return true; // If we get here, then the string have been found
+    return true; // If we get here, then the string has been found
 }
 
 static void readBytes(uint8_t* data, uint8_t length) {

@@ -21,9 +21,12 @@
 
 void KalmanInit(kalman_t *kalman) {
     /* We will set the variables like so, these can also be tuned by the user */
-    kalman->Q_angle = 0.001f;
-    kalman->Q_bias = 0.003f;
-    kalman->R_measure = 0.03f;
+    if (kalman->Q_angle == 0) // Make sure coefficients are not already set
+        kalman->Q_angle = 0.001f;
+    if (kalman->Q_bias == 0)
+        kalman->Q_bias = 0.003f;
+    if (kalman->R_measure == 0)
+        kalman->R_measure = 0.03f;
 
     kalman->angle = 0.0f; // Reset the angle
     kalman->bias = 0.0f; // Reset bias

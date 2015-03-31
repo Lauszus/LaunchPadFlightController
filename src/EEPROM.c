@@ -19,26 +19,33 @@
 #include <stdbool.h>
 
 #include "EEPROM.h"
+#include "Kalman.h"
 
 #include "driverlib/eeprom.h"
 #include "driverlib/sysctl.h"
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 
-const uint32_t configVersion = 4; // Must be bumped every time config_t is changed
+extern kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch
+
+const uint32_t configVersion = 5; // Must be bumped every time config_t is changed
 config_t cfg;
 
 void setDefaultConfig(void) {
     setDefaultPIDValues();
-
-    for (uint8_t axis = 0; axis < 3; axis++)
-        cfg.accZero.data[axis] = 0;
 
     cfg.angleKp = 4.0f;
     cfg.stickScalingRollPitch = 2.0f;
     cfg.stickScalingYaw = 2.0f;
     cfg.maxAngleInclination = 50.0f; // Max angle in self level mode
 
+    cfg.Q_angle = 0.001f; // Kalman filter coefficients default values
+    cfg.Q_bias = 0.003f;
+    cfg.R_measure = 0.03f;
+
     cfg.calibrateESCs = false;
+
+    for (uint8_t axis = 0; axis < 3; axis++)
+        cfg.accZero.data[axis] = 0;
 
     uint32_t rcode = EEPROMProgram((uint32_t*)&configVersion, 0, sizeof(configVersion)); // Write version number to EEPROM
     if (rcode) {
@@ -70,13 +77,22 @@ void initEEPROM(void) {
     EEPROMRead(&version, 0, sizeof(version));
     if (version != configVersion)
         setDefaultConfig();
-    else
+    else {
         EEPROMRead((uint32_t*)&cfg, sizeof(configVersion), sizeof(config_t)); // Read config from EEPROM
+
+        kalmanRoll.Q_angle = kalmanPitch.Q_angle = cfg.Q_angle; // Set Kalman filter coefficients
+        kalmanRoll.Q_bias = kalmanPitch.Q_angle = cfg.Q_bias;
+        kalmanRoll.R_measure = kalmanPitch.Q_angle = cfg.R_measure;
+    }
 }
 void updateConfig(void) {
     uint32_t rcode = EEPROMProgram((uint32_t*)&cfg, sizeof(configVersion), sizeof(config_t)); // Write config to EEPROM
     if (rcode) {
         UARTprintf("Error writing config to EEPROM: %u\n", rcode);
         // TODO: Turn buzzer on
+    } else {
+        kalmanRoll.Q_angle = kalmanPitch.Q_angle = cfg.Q_angle; // Set Kalman filter coefficients
+        kalmanRoll.Q_bias = kalmanPitch.Q_angle = cfg.Q_bias;
+        kalmanRoll.R_measure = kalmanPitch.Q_angle = cfg.R_measure;
     }
 }

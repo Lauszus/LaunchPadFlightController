@@ -50,7 +50,7 @@
 #define GPIO_MPU_INT_PIN            GPIO_PIN_3
 
 static gyro_t gyroZero; // Gyroscope zero values are found at every power on
-static kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch
+kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch
 
 // Returns true when data is ready to be read
 bool dataReadyMPU6500(void) {
