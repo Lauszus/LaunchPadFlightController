@@ -423,6 +423,10 @@ void readBluetoothData() {
 #endif
             }
         }
+#if DEBUG_BLUETOOTH_PROTOCOL
+        else
+            UARTprintf("Could not find string\n");
+#endif
     }
 
     if (sendInfo && millis() - infoTimer > 100) {
@@ -477,8 +481,11 @@ void readBluetoothData() {
 
 static bool findString(const char* string) {
     int pos = UARTPeek1(*string); // Look for the first character
-    if (pos == -1) // String was not found
+    if (pos == -1) { // String was not found
+        while (UARTRxBytesAvail1())
+            UARTgetc1(); // Consume all characters in buffer
         return false;
+    }
     while (pos--)
         UARTgetc1(); // Consume any characters in front
 
