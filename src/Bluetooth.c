@@ -132,7 +132,7 @@ void initBluetooth(void) {
 }
 
 void readBluetoothData() {
-    if (UARTRxBytesAvail1()) {
+    if (UARTRxBytesAvail1() > strlen(commandHeader)) {
         if (findString(commandHeader)) {
             readBytes((uint8_t*)&msg, sizeof(msg));
             switch (msg.cmd) {
