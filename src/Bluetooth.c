@@ -423,10 +423,6 @@ void readBluetoothData() {
 #endif
             }
         }
-#if DEBUG_BLUETOOTH_PROTOCOL
-        else
-            UARTprintf("Could not find string\n");
-#endif
     }
 
     if (sendInfo && millis() - infoTimer > 100) {
@@ -480,18 +476,26 @@ void readBluetoothData() {
 // Except the Kalman coefficients which are multiplied by 10000 before sending
 
 static bool findString(const char* string) {
+	int nbytes = UARTRxBytesAvail1();
     int pos = UARTPeek1(*string); // Look for the first character
     if (pos == -1) { // String was not found
-        while (UARTRxBytesAvail1())
-            UARTgetc1(); // Consume all characters in buffer
+        while (nbytes--)
+            UARTgetc1(); // Consume all characters in the buffer
+#if DEBUG_BLUETOOTH_PROTOCOL
+        UARTprintf("Could not find string\n");
+#endif
         return false;
     }
     while (pos--)
         UARTgetc1(); // Consume any characters in front
 
     while (*string != '\0') {
-        if (UARTgetc1() != *string++) // Compare with string - note this is a blocking call
+        if (UARTgetc1() != *string++) { // Compare with string - note this is a blocking call
+#if DEBUG_BLUETOOTH_PROTOCOL
+            UARTprintf("String mismatch\n");
+#endif
             return false;
+        }
     }
     return true; // If we get here, then the string has been found
 }
