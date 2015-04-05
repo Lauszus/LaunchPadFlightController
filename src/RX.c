@@ -33,8 +33,15 @@
 //#include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
 
-volatile uint16_t rxChannel[RX_NUM_CHANNELS];
+// These are specific to my receiver and might need adjustment
+#define RX_MIN_INPUT 665
+#define RX_MAX_INPUT 1730
+#define RX_MID_INPUT ((RX_MAX_INPUT + RX_MIN_INPUT) / 2)
+
 volatile bool validRXData;
+
+static volatile uint16_t rxChannel[RX_NUM_CHANNELS];
+static uint32_t timerLoadValue;
 
 static void CaptureHandler(void) {
     static uint8_t channelIndex = 0;
@@ -60,7 +67,7 @@ static void CaptureHandler(void) {
                     validRXData = false;
             }
             if (validRXData)
-                TimerLoadSet(WTIMER1_BASE, TIMER_B, SysCtlClockGet() / 10 - 1); // Reset timeout value to 100ms
+                TimerLoadSet(WTIMER1_BASE, TIMER_B, timerLoadValue); // Reset timeout value to 100ms
 #if 0
             for (uint8_t i = 0; i < RX_NUM_CHANNELS; i++) {
                 if (rxChannel[i] > 0)
@@ -108,7 +115,8 @@ void initRX(void) {
     IntEnable(INT_WTIMER1A); // Enable Wide Timer 1A interrupt
 
     // Configure WTimer1B
-    TimerLoadSet(WTIMER1_BASE, TIMER_B, SysCtlClockGet() / 10 - 1); // Set to interrupt every 100ms
+    timerLoadValue = SysCtlClockGet() / 10 - 1; // Set to interrupt every 100ms
+    TimerLoadSet(WTIMER1_BASE, TIMER_B, timerLoadValue);
     TimerIntRegister(WTIMER1_BASE, TIMER_B, TimeoutHandler); // Register interrupt handler
     TimerIntEnable(WTIMER1_BASE, TIMER_TIMB_TIMEOUT); // Enable timer timeout interrupt
     IntPrioritySet(INT_WTIMER1B, 0); // Configure Wide Timer 1B interrupt priority as 0
