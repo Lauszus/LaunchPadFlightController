@@ -425,9 +425,10 @@ void readBluetoothData() {
         }
     }
 
-    if (sendInfo && millis() - infoTimer > 100) {
+    uint32_t now = millis();
+    if (sendInfo && now - infoTimer > 100) {
 #if 0
-        infoTimer = millis();
+        infoTimer = now;
         msg.cmd = SEND_INFO;
         msg.length = sizeof(info);
         info.speed = constrain(abs(PIDValue), 0, 100.0) * 100.0;
@@ -442,9 +443,9 @@ void readBluetoothData() {
         info.runTime = infoTimer;
         sendData((uint8_t*)&info, sizeof(info));
 #endif
-    } else if (sendAngles && millis() - anglesTimer > 100) {
-        anglesTimer = millis();
-        msg.cmd = SEND_ANGLES;;
+    } else if (sendAngles && now - anglesTimer > 100) {
+        anglesTimer = now;
+        msg.cmd = SEND_ANGLES;
         msg.length = sizeof(angles);
         angles.roll = kalmanRoll.angle * 100.0f;
         angles.pitch = kalmanPitch.angle * 100.0f;
