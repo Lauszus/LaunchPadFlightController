@@ -76,7 +76,7 @@ void initEEPROM(void) {
     SysCtlPeripheralEnable(SYSCTL_PERIPH_EEPROM0); // Enable EEPROM peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 
-    // Make sure config_t is a multiple of 4 - the compiler should pack struct to 4 bytes, but I added this check to be 100% sure
+    // Make sure config_t is a multiple of 4 - the compiler should pack structs to 4 bytes, but I added this check to be 100% sure
     if (sizeof(config_t) % 4 != 0) {
 #if UART_DEBUG
         UARTprintf("Config size error: %u\n", sizeof(config_t));
