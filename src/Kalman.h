@@ -32,7 +32,7 @@ typedef struct {
     float rate; // Unbiased rate calculated from the rate and the calculated bias - you have to call getAngle to update the rate
 
     float P[2][2]; // Error covariance matrix - This is a 2x2 matrix
-} kalman_t;
+} __attribute__((packed)) kalman_t;
 
 void KalmanInit(kalman_t *kalman);
 
