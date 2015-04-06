@@ -47,16 +47,12 @@ enum {
     GET_PID_ROLL_PITCH,
     SET_PID_YAW,
     GET_PID_YAW,
-    SET_ANGLE_KP,
-    GET_ANGLE_KP,
-    SET_STICK_SCALING,
-    GET_STICK_SCALING,
-    SET_ANGLE_MAX_INC,
-    GET_ANGLE_MAX_INC,
+    SET_SETTINGS,
+    GET_SETTINGS,
     SET_KALMAN,
     GET_KALMAN,
     SEND_ANGLES,
-    SEND_INFO,
+    SEND_INFO, // TODO
 };
 
 struct msg_t {
@@ -70,17 +66,17 @@ typedef struct {
 } __attribute__((packed)) pidBluetooth_t;
 
 typedef struct {
+    uint16_t angleKp; // Value multiplied by 100
+    uint8_t maxAngleInclination; // Inclination angle in degrees
     uint16_t stickScalingRollPitch, stickScalingYaw; // Stick scaling values multiplied by 100
-} __attribute__((packed)) stickScalingBluetooth_t;
+} __attribute__((packed)) settings_t;
 
 typedef struct {
     uint16_t Q_angle, Q_bias, R_measure; // Kalman coefficients are multiplied by 10000
 } __attribute__((packed)) kalmanBluetooth_t;
 
 static pidBluetooth_t pidRollPitch, pidYaw; // PID values multiplied by 100
-static uint16_t angleKp; // Value multiplied by 100
-static stickScalingBluetooth_t stickScaling; // Stick scaling values multiplied by 100
-static uint8_t maxAngleInclination; // Inclination angle in degrees
+static settings_t settings; // Settings
 static kalmanBluetooth_t kalmanCoefficients; // Kalman coefficients are multiplied by 10000
 static uint8_t sendInfo, sendAngles; // Non-zero if values should be sent
 
@@ -220,116 +216,49 @@ void readBluetoothData() {
 #endif
                     break;
 
-                case SET_ANGLE_KP:
-                    if (msg.length == sizeof(angleKp)) { // Make sure that it has the right length
-                        if (getData((uint8_t*)&angleKp, sizeof(angleKp))) { // This will read the data and check the checksum
-                            cfg.angleKp = angleKp / 100.0f;
+                case SET_SETTINGS:
+                    if (msg.length == sizeof(settings)) { // Make sure that it has the right length
+                        if (getData((uint8_t*)&settings, sizeof(settings))) { // This will read the data and check the checksum
+                            cfg.angleKp = settings.angleKp / 100.0f;
+                            cfg.maxAngleInclination = settings.maxAngleInclination;
+                            cfg.stickScalingRollPitch = settings.stickScalingRollPitch / 100.0f;
+                            cfg.stickScalingYaw = settings.stickScalingYaw / 100.0f;
                             updateConfig();
 #if DEBUG_BLUETOOTH_PROTOCOL
-                            UARTprintf("%d.%02u\n", (int16_t)cfg.angleKp, (uint16_t)(abs(cfg.angleKp * 100.0f) % 100));
-                            UARTFlushTx(false);
-#endif
-                        }
-#if DEBUG_BLUETOOTH_PROTOCOL
-                        else
-                            UARTprintf("SET_ANGLE_KP checksum error\n");
-#endif
-                    }
-#if DEBUG_BLUETOOTH_PROTOCOL
-                    else
-                        UARTprintf("SET_ANGLE_KP length error: %u\n", msg.length);
-#endif
-                    break;
-
-                case GET_ANGLE_KP:
-                    if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
-                        msg.cmd = GET_ANGLE_KP;
-                        msg.length = sizeof(angleKp);
-                        angleKp = cfg.angleKp * 100.0f;
-                        sendData((uint8_t*)&angleKp, sizeof(angleKp));
-#if DEBUG_BLUETOOTH_PROTOCOL
-                        UARTprintf("GET_ANGLE_KP\n");
-#endif
-                    }
-#if DEBUG_BLUETOOTH_PROTOCOL
-                    else
-                        UARTprintf("GET_ANGLE_KP error\n");
-#endif
-                    break;
-
-                case SET_STICK_SCALING:
-                    if (msg.length == sizeof(stickScaling)) { // Make sure that it has the right length
-                        if (getData((uint8_t*)&stickScaling, sizeof(stickScaling))) { // This will read the data and check the checksum
-                            cfg.stickScalingRollPitch = stickScaling.stickScalingRollPitch / 100.0f;
-                            cfg.stickScalingYaw = stickScaling.stickScalingYaw / 100.0f;
-                            updateConfig();
-#if DEBUG_BLUETOOTH_PROTOCOL
-                            UARTprintf("%d.%02u\t%d.%02u\n", (int16_t)cfg.stickScalingRollPitch, (uint16_t)(abs(cfg.stickScalingRollPitch * 100.0f) % 100),
+                            UARTprintf("Angle Kp: %d.%02u\n", (int16_t)cfg.angleKp, (uint16_t)(abs(cfg.angleKp * 100.0f) % 100));
+                            UARTprintf("Max angle incl: %u\n", cfg.maxAngleInclination);
+                            UARTprintf("Stick scaling: %d.%02u\t%d.%02u\n", (int16_t)cfg.stickScalingRollPitch, (uint16_t)(abs(cfg.stickScalingRollPitch * 100.0f) % 100),
                                                              (int16_t)cfg.stickScalingYaw, (uint16_t)(abs(cfg.stickScalingYaw * 100.0f) % 100));
                             UARTFlushTx(false);
 #endif
                         }
 #if DEBUG_BLUETOOTH_PROTOCOL
                         else
-                            UARTprintf("SET_STICK_SCALING checksum error\n");
+                            UARTprintf("SET_SETTINGS checksum error\n");
 #endif
                     }
 #if DEBUG_BLUETOOTH_PROTOCOL
                     else
-                        UARTprintf("SET_STICK_SCALING length error: %u\n", msg.length);
+                        UARTprintf("SET_SETTINGS length error: %u\n", msg.length);
 #endif
                     break;
 
-                case GET_STICK_SCALING:
+                case GET_SETTINGS:
                     if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
-                        msg.cmd = GET_STICK_SCALING;
-                        msg.length = sizeof(stickScaling);
-                        stickScaling.stickScalingRollPitch = cfg.stickScalingRollPitch * 100.0f;
-                        stickScaling.stickScalingYaw = cfg.stickScalingYaw * 100.0f;
-                        sendData((uint8_t*)&stickScaling, sizeof(stickScaling));
+                        msg.cmd = GET_SETTINGS;
+                        msg.length = sizeof(settings);
+                        settings.angleKp = cfg.angleKp * 100.0f;
+                        settings.maxAngleInclination = cfg.maxAngleInclination;
+                        settings.stickScalingRollPitch = cfg.stickScalingRollPitch * 100.0f;
+                        settings.stickScalingYaw = cfg.stickScalingYaw * 100.0f;
+                        sendData((uint8_t*)&settings, sizeof(settings));
 #if DEBUG_BLUETOOTH_PROTOCOL
-                        UARTprintf("GET_STICK_SCALING\n");
+                        UARTprintf("GET_SETTINGS\n");
 #endif
                     }
 #if DEBUG_BLUETOOTH_PROTOCOL
                     else
-                        UARTprintf("GET_STICK_SCALING error\n");
-#endif
-                    break;
-
-                case SET_ANGLE_MAX_INC:
-                    if (msg.length == sizeof(maxAngleInclination)) { // Make sure that it has the right length
-                        if (getData((uint8_t*)&maxAngleInclination, sizeof(maxAngleInclination))) { // This will read the data and check the checksum
-                            cfg.maxAngleInclination = maxAngleInclination;
-                            updateConfig();
-#if DEBUG_BLUETOOTH_PROTOCOL
-                            UARTprintf("%u\n", cfg.maxAngleInclination);
-#endif
-                        }
-#if DEBUG_BLUETOOTH_PROTOCOL
-                        else
-                            UARTprintf("SET_ANGLE_MAX_INC checksum error\n");
-#endif
-                    }
-#if DEBUG_BLUETOOTH_PROTOCOL
-                    else
-                        UARTprintf("SET_ANGLE_MAX_INC length error: %u\n", msg.length);
-#endif
-                    break;
-
-                case GET_ANGLE_MAX_INC:
-                    if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
-                        msg.cmd = GET_ANGLE_MAX_INC;
-                        msg.length = sizeof(maxAngleInclination);
-                        maxAngleInclination = cfg.maxAngleInclination;
-                        sendData((uint8_t*)&maxAngleInclination, sizeof(maxAngleInclination));
-#if DEBUG_BLUETOOTH_PROTOCOL
-                        UARTprintf("GET_ANGLE_MAX_INC\n");
-#endif
-                    }
-#if DEBUG_BLUETOOTH_PROTOCOL
-                    else
-                        UARTprintf("GET_ANGLE_MAX_INC error\n");
+                        UARTprintf("GET_SETTINGS error\n");
 #endif
                     break;
 

@@ -29,8 +29,8 @@ typedef struct {
 	// Can be set by the user
     pid_t pidRoll, pidPitch, pidYaw; // PID values
     float angleKp; // Self level mode Kp value
-    float stickScalingRollPitch, stickScalingYaw; // Stick scaling values
     uint8_t maxAngleInclination; // Max angle in self level mode
+    float stickScalingRollPitch, stickScalingYaw; // Stick scaling values
     float Q_angle, Q_bias, R_measure; // Kalman filter coefficients
 
     // Will be set by the microcontroller

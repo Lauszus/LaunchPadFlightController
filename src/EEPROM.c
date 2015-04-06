@@ -29,7 +29,7 @@
 
 extern kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch in main.c
 
-static const uint32_t configVersion = 5; // Must be bumped every time config_t is changed
+static const uint32_t configVersion = 6; // Must be bumped every time config_t is changed
 config_t cfg;
 
 static void setDefaultConfig(void) {
@@ -49,9 +49,9 @@ static void setDefaultConfig(void) {
     resetPIDError();
 
     cfg.angleKp = 4.0f;
+    cfg.maxAngleInclination = 50.0f; // Max angle in self level mode
     cfg.stickScalingRollPitch = 2.0f;
     cfg.stickScalingYaw = 2.0f;
-    cfg.maxAngleInclination = 50.0f; // Max angle in self level mode
 
     cfg.Q_angle = 0.001f; // Kalman filter coefficients default values
     cfg.Q_bias = 0.003f;
