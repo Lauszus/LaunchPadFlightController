@@ -37,11 +37,14 @@ void initTime(void) {
 }
 
 void delay(uint32_t ms) {
-    SysCtlDelay(SysCtlClockGet() / 3000UL * ms); // TOOD: Check if it needs to be tuned
+    delayMicroseconds(ms * 1000UL);
 }
 
 void delayMicroseconds(uint32_t us) {
-    SysCtlDelay(SysCtlClockGet() / 3000000UL * us); // TOOD: Check if it needs to be tuned
+    uint32_t start = micros();
+    while (micros() - start < us) {
+        // Do nothing
+    };
 }
 
 uint32_t millis(void) {
