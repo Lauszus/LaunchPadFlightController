@@ -47,8 +47,10 @@ Some video demonstrations of the flight controller can be seen at my [YouTube ch
 | PE3 |     INT       |
 | PC4 |  Sonar echo   |
 | PC5 | Sonar trigger |
-| PB0 |   UART1 RX    |
-| PB1 |   UART1 TX    |
+| PB0* |   UART1 RX    |
+| PB1* |   UART1 TX    |
+
+* Not 5V tolerant
 
 Note that the motor layout follow the Naze32 in x-configuration i.e. motor 1 is bottom right, motor 2 is top right, motor 3 is bottom left and motor 4 is top left when looking from the back.
 
