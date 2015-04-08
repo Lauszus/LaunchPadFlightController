@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "Buzzer.h"
 #include "EEPROM.h"
 #include "Kalman.h"
 
@@ -67,7 +68,7 @@ static void setDefaultConfig(void) {
 #if UART_DEBUG
         UARTprintf("Error writing version number to EEPROM: %u\n", rcode);
 #endif
-        // TODO: Turn buzzer on
+        buzzer(true);
     } else
         updateConfig(); // Write values to EEPROM
 }
@@ -81,7 +82,7 @@ void initEEPROM(void) {
 #if UART_DEBUG
         UARTprintf("Config size error: %u\n", sizeof(config_t));
 #endif
-        // TODO: Turn on buzzer
+        buzzer(true);
         while (1);
     }
 
@@ -90,7 +91,7 @@ void initEEPROM(void) {
 #if UART_DEBUG
         UARTprintf("EEPROMInit error: %u\n", rcode);
 #endif
-        // TODO: Turn on buzzer
+        buzzer(true);
         while (1);
     }
 
@@ -113,7 +114,7 @@ void updateConfig(void) {
 #if UART_DEBUG
         UARTprintf("Error writing config to EEPROM: %u\n", rcode);
 #endif
-        // TODO: Turn buzzer on
+        buzzer(true);
     } else {
         kalmanRoll.Q_angle = kalmanPitch.Q_angle = cfg.Q_angle; // Set Kalman filter coefficients
         kalmanRoll.Q_bias = kalmanPitch.Q_angle = cfg.Q_bias;

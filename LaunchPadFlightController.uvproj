@@ -477,6 +477,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\uartstdio1.c</FilePath>
             </File>
+            <File>
+              <FileName>Buzzer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\Buzzer.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>

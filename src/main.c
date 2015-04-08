@@ -19,6 +19,7 @@
 #include <stdbool.h>
 
 #include "Bluetooth.h"
+#include "Buzzer.h"
 #include "EEPROM.h"
 #include "I2C.h"
 #include "MPU6500.h"
@@ -56,6 +57,7 @@ int main(void) {
     SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ); // Set clock to 80 MHz (400 MHz(PLL) / 2 / 2.5 = 80 MHz)
 
     initUART();
+    initBuzzer();
     initEEPROM();
     initTime();
     initPPM();
@@ -69,15 +71,12 @@ int main(void) {
     KalmanInit(&kalmanRoll); // Init Kalman filter
     KalmanInit(&kalmanPitch);
 
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_LED); // Enable GPIOF peripheral
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_LED); // Enable peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
     GPIOPinTypeGPIOOutput(GPIO_LED_BASE, GPIO_RED_LED | GPIO_BLUE_LED | GPIO_GREEN_LED); // Set red, blue and green LEDs as outputs
 
     printPIDValues(&cfg.pidRoll); // Print PID Values
     printPIDValues(&cfg.pidYaw);
-    while (!validRXData || getRXChannel(RX_AUX2_CHAN) > 0) {
-        // Wait until we have valid data and safety aux channel is in safe position
-    }
 
 #if 0 // Set to one in order to run the acceleromter calibration routine
     while (calibrateAcc()) { // Get accelerometer zero values
@@ -96,6 +95,16 @@ int main(void) {
     UARTprintf("Calibrating ESCs on next power cycle\n");
 #endif
 
+    while (!validRXData || getRXChannel(RX_AUX2_CHAN) > 0) {
+        // Wait until we have valid data and safety aux channel is in safe position
+    }
+
+    buzzer(true);
+    delay(100);
+    buzzer(false);
+
+    UARTprintf("Ready\n");
+
     while (1) {
         // Make sure there is valid data and safety channel is in armed position
         if (validRXData && getRXChannel(RX_AUX2_CHAN) > 0) {
@@ -105,6 +114,14 @@ int main(void) {
                 armed = false;
         } else
             armed = false;
+
+        static bool lastArmed = false;
+        if (armed != lastArmed) {
+            buzzer(true);
+            delay(100);
+            buzzer(false);
+        }
+        lastArmed = armed;
 
         // Turn on red led if armed otherwise turn on green LED
         GPIOPinWrite(GPIO_LED_BASE, GPIO_RED_LED | GPIO_GREEN_LED, armed ? GPIO_RED_LED : GPIO_GREEN_LED);
@@ -230,7 +247,6 @@ int main(void) {
         // Set Kd as well
         // Retune PID again and tune stickscaling
     // Takes average of three readings in DTerm: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/pid.c#L721-L732
-    // Add buzzer. Beep on startup, arm changed, turn on at gyro/acc calibration error, connection loss etc.
     // Add disarm timer
     // Remove safety AUX channel once 100% stable
     // Measure loop time - print value or toggle I/O pin

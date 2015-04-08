@@ -164,7 +164,6 @@ static bool calibrateGyro(void) {
 #if UART_DEBUG
         UARTprintf("Gyro calibration error\n");
 #endif
-        // TODO: Turn on buzzer
     }
 
     return rcode;
@@ -183,7 +182,6 @@ bool calibrateAcc(void) {
 #if UART_DEBUG
         UARTprintf("Accelerometer calibration error\n");
 #endif
-        // TODO: Turn on buzzer
     }
 
     return rcode; // No error

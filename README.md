@@ -35,20 +35,21 @@ Some video demonstrations of the flight controller can be seen at my [YouTube ch
 
 # Pinout
 
-| Pin |   Connection  |
-|-----|---------------|
-| PB6 |    Motor 1    |
-| PB7 |    Motor 2    |
-| PB4 |    Motor 3    |
-| PB5 |    Motor 4    |
-| PC6 |   CPPM input  |
-| PA6 |     SCL       |
-| PA7 |     SDA       |
-| PE3 |     INT       |
-| PC4 |  Sonar echo   |
-| PC5 | Sonar trigger |
+| Pin  |   Connection  |
+|------|---------------|
+| PB6  |    Motor 1    |
+| PB7  |    Motor 2    |
+| PB4  |    Motor 3    |
+| PB5  |    Motor 4    |
+| PC6  |   CPPM input  |
+| PA6  |     SCL       |
+| PA7  |     SDA       |
+| PE3  |     INT       |
+| PC4  |  Sonar echo   |
+| PC5  | Sonar trigger |
 | PB0* |   UART1 RX    |
 | PB1* |   UART1 TX    |
+| PA5  |    Buzzer     |
 
 * Not 5V tolerant
 
