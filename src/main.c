@@ -82,6 +82,9 @@ int main(void) {
     while (calibrateAcc()) { // Get accelerometer zero values
         // Loop until calibration values are found
     }
+    buzzer(true);
+    delay(1000);
+    buzzer(false);
 #else
 #if UART_DEBUG
     UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", cfg.accZero.X, cfg.accZero.Y, cfg.accZero.Z);
