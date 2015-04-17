@@ -30,13 +30,13 @@
 
 extern kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch in main.c
 
-static const uint32_t configVersion = 8; // Must be bumped every time config_t is changed
+static const uint32_t configVersion = 9; // Must be bumped every time config_t is changed
 config_t cfg;
 
 static void setDefaultConfig(void) {
-    cfg.pidRollValues.Kp = 0.460f;
-    cfg.pidRollValues.Ki = 0.725f;
-    cfg.pidRollValues.Kd = 0.0000f;
+    cfg.pidRollValues.Kp = 0.400f;
+    cfg.pidRollValues.Ki = 1.000f;
+    cfg.pidRollValues.Kd = 0.0008f;
     cfg.pidRollValues.integrationLimit = 10.0f; // Prevent windup
 
     cfg.pidPitchValues = cfg.pidRollValues; // Use same PID values for both pitch and roll
@@ -48,7 +48,7 @@ static void setDefaultConfig(void) {
 
     resetPIDTerms();
 
-    cfg.angleKp = 7.0f;
+    cfg.angleKp = 3.0f;
     cfg.maxAngleInclination = 50.0f; // Max angle in self level mode
     cfg.stickScalingRollPitch = 2.0f;
     cfg.stickScalingYaw = 2.0f;
