@@ -61,7 +61,7 @@ struct msg_t {
 } __attribute__((packed)) msg;
 
 typedef struct {
-    uint16_t Kp, Ki, Kd; // Kp and Ki are multiplied by 1000 and Kd are multiplied by 10000
+    uint16_t Kp, Ki, Kd; // Kp is multiplied by 1000, Ki multiplied by 100 and Kd are multiplied by 100000
     uint16_t integrationLimit; // Integration limit multiplied by 100
 } __attribute__((packed)) pidBT_t;
 
@@ -137,8 +137,8 @@ bool readBluetoothData() {
                     if (msg.length == sizeof(pidRollPitchBT)) { // Make sure that it has the right length
                         if (getData((uint8_t*)&pidRollPitchBT, sizeof(pidRollPitchBT))) { // This will read the data and check the checksum
                             pidRoll.values->Kp = pidPitch.values->Kp = pidRollPitchBT.Kp / 1000.0f;
-                            pidRoll.values->Ki = pidPitch.values->Ki = pidRollPitchBT.Ki / 1000.0f;
-                            pidRoll.values->Kd = pidPitch.values->Kd = pidRollPitchBT.Kd / 10000.0f;
+                            pidRoll.values->Ki = pidPitch.values->Ki = pidRollPitchBT.Ki / 100.0f;
+                            pidRoll.values->Kd = pidPitch.values->Kd = pidRollPitchBT.Kd / 100000.0f;
                             pidRoll.values->integrationLimit = pidPitch.values->integrationLimit = pidRollPitchBT.integrationLimit / 100.0f;
                             updateConfig();
                             newValuesReceived = true;
@@ -162,8 +162,8 @@ bool readBluetoothData() {
                         msg.cmd = GET_PID_ROLL_PITCH;
                         msg.length = sizeof(pidRollPitchBT);
                         pidRollPitchBT.Kp = pidPitch.values->Kp * 1000.0f;
-                        pidRollPitchBT.Ki = pidPitch.values->Ki * 1000.0f;
-                        pidRollPitchBT.Kd = pidPitch.values->Kd * 10000.0f;
+                        pidRollPitchBT.Ki = pidPitch.values->Ki * 100.0f;
+                        pidRollPitchBT.Kd = pidPitch.values->Kd * 100000.0f;
                         pidRollPitchBT.integrationLimit = pidPitch.values->integrationLimit * 100.0f;
                         sendData((uint8_t*)&pidRollPitchBT, sizeof(pidRollPitchBT));
 #if DEBUG_BLUETOOTH_PROTOCOL
@@ -180,8 +180,8 @@ bool readBluetoothData() {
                     if (msg.length == sizeof(pidYawBT)) { // Make sure that it has the right length
                         if (getData((uint8_t*)&pidYawBT, sizeof(pidYawBT))) { // This will read the data and check the checksum
                             pidYaw.values->Kp = pidYawBT.Kp / 1000.0f;
-                            pidYaw.values->Ki = pidYawBT.Ki / 1000.0f;
-                            pidYaw.values->Kd = pidYawBT.Kd / 10000.0f;
+                            pidYaw.values->Ki = pidYawBT.Ki / 100.0f;
+                            pidYaw.values->Kd = pidYawBT.Kd / 100000.0f;
                             pidYaw.values->integrationLimit = pidYawBT.integrationLimit / 100.0f;
                             updateConfig();
                             newValuesReceived = true;
@@ -205,8 +205,8 @@ bool readBluetoothData() {
                         msg.cmd = GET_PID_YAW;
                         msg.length = sizeof(pidYawBT);
                         pidYawBT.Kp = pidYaw.values->Kp * 1000.0f;
-                        pidYawBT.Ki = pidYaw.values->Ki * 1000.0f;
-                        pidYawBT.Kd = pidYaw.values->Kd * 10000.0f;
+                        pidYawBT.Ki = pidYaw.values->Ki * 100.0f;
+                        pidYawBT.Kd = pidYaw.values->Kd * 100000.0f;
                         pidYawBT.integrationLimit = pidYaw.values->integrationLimit * 100.0f;
                         sendData((uint8_t*)&pidYawBT, sizeof(pidYawBT));
 #if DEBUG_BLUETOOTH_PROTOCOL

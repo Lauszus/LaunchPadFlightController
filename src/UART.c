@@ -59,10 +59,10 @@ void initUART(void) {
 }
 
 void printPIDValues(pid_values_t *pidValues) {
-    UARTprintf("PID: %d.%04u\t%d.%04u\t%d.%04u\t%d.%04u\n",
+    UARTprintf("PID: %d.%04u\t%d.%04u\t%d.%05u\t%d.%04u\n",
                                             (int16_t)pidValues->Kp, (uint16_t)(abs(pidValues->Kp * 10000.0f) % 10000),
                                             (int16_t)pidValues->Ki, (uint16_t)(abs(pidValues->Ki * 10000.0f) % 10000),
-                                            (int16_t)pidValues->Kd, (uint16_t)(abs(pidValues->Kd * 10000.0f) % 10000),
+                                            (int16_t)pidValues->Kd, (uint16_t)(abs(pidValues->Kd * 100000.0f) % 100000),
                                             (int16_t)pidValues->integrationLimit, (uint16_t)(abs(pidValues->integrationLimit * 10000.0f) % 10000));
     UARTFlushTx(false);
 }
