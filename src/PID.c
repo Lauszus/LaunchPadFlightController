@@ -24,9 +24,9 @@
 float updatePID(pid_t *pid, float setPoint, float input, float dt) {
     float error = setPoint - input;
     float pTerm = pid->Kp * error;
-    pid->integratedError += error * dt;
+    pid->integratedError += error * dt * pid->Ki; // Multiplication with Ki is done before integration limit, to make it independent from integration limit value
     pid->integratedError = constrain(pid->integratedError, -pid->integrationLimit, pid->integrationLimit); // Limit the integrated error - prevents windup
-    float iTerm = pid->Ki * pid->integratedError;
+    float iTerm = pid->integratedError;
     float dTerm = pid->Kd * (error - pid->lastError) / dt;
     pid->lastError = error;
     return pTerm + iTerm + dTerm;
