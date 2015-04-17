@@ -61,7 +61,7 @@ struct msg_t {
 } __attribute__((packed)) msg;
 
 typedef struct {
-    uint16_t Kp, Ki, Kd; // PID values multiplied by 100
+    uint16_t Kp, Ki, Kd; // Kp and Ki are multiplied by 1000 and Kd are multiplied by 10000
     uint16_t integrationLimit; // Integration limit multiplied by 100
 } __attribute__((packed)) pidBluetooth_t;
 
@@ -75,9 +75,9 @@ typedef struct {
     uint16_t Q_angle, Q_bias, R_measure; // Kalman coefficients are multiplied by 10000
 } __attribute__((packed)) kalmanBluetooth_t;
 
-static pidBluetooth_t pidRollPitch, pidYaw; // PID values multiplied by 100
+static pidBluetooth_t pidRollPitch, pidYaw; // PID values
 static settings_t settings; // Settings
-static kalmanBluetooth_t kalmanCoefficients; // Kalman coefficients are multiplied by 10000
+static kalmanBluetooth_t kalmanCoefficients; // Kalman coefficients
 static uint8_t sendInfo, sendAngles; // Non-zero if values should be sent
 
 struct angles_t {
@@ -135,9 +135,9 @@ void readBluetoothData() {
                 case SET_PID_ROLL_PITCH:
                     if (msg.length == sizeof(pidRollPitch)) { // Make sure that it has the right length
                         if (getData((uint8_t*)&pidRollPitch, sizeof(pidRollPitch))) { // This will read the data and check the checksum
-                            cfg.pidRoll.Kp = cfg.pidPitch.Kp = pidRollPitch.Kp / 100.0f;
-                            cfg.pidRoll.Ki = cfg.pidPitch.Ki = pidRollPitch.Ki / 100.0f;
-                            cfg.pidRoll.Kd = cfg.pidPitch.Kd = pidRollPitch.Kd / 100.0f;
+                            cfg.pidRoll.Kp = cfg.pidPitch.Kp = pidRollPitch.Kp / 1000.0f;
+                            cfg.pidRoll.Ki = cfg.pidPitch.Ki = pidRollPitch.Ki / 1000.0f;
+                            cfg.pidRoll.Kd = cfg.pidPitch.Kd = pidRollPitch.Kd / 10000.0f;
                             cfg.pidRoll.integrationLimit = cfg.pidPitch.integrationLimit = pidRollPitch.integrationLimit / 100.0f;
                             updateConfig();
 #if DEBUG_BLUETOOTH_PROTOCOL
@@ -159,9 +159,9 @@ void readBluetoothData() {
                     if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
                         msg.cmd = GET_PID_ROLL_PITCH;
                         msg.length = sizeof(pidRollPitch);
-                        pidRollPitch.Kp = cfg.pidPitch.Kp * 100.0f;
-                        pidRollPitch.Ki = cfg.pidPitch.Ki * 100.0f;
-                        pidRollPitch.Kd = cfg.pidPitch.Kd * 100.0f;
+                        pidRollPitch.Kp = cfg.pidPitch.Kp * 1000.0f;
+                        pidRollPitch.Ki = cfg.pidPitch.Ki * 1000.0f;
+                        pidRollPitch.Kd = cfg.pidPitch.Kd * 10000.0f;
                         pidRollPitch.integrationLimit = cfg.pidPitch.integrationLimit * 100.0f;
                         sendData((uint8_t*)&pidRollPitch, sizeof(pidRollPitch));
 #if DEBUG_BLUETOOTH_PROTOCOL
@@ -177,9 +177,9 @@ void readBluetoothData() {
                 case SET_PID_YAW:
                     if (msg.length == sizeof(pidYaw)) { // Make sure that it has the right length
                         if (getData((uint8_t*)&pidYaw, sizeof(pidYaw))) { // This will read the data and check the checksum
-                            cfg.pidYaw.Kp = pidYaw.Kp / 100.0f;
-                            cfg.pidYaw.Ki = pidYaw.Ki / 100.0f;
-                            cfg.pidYaw.Kd = pidYaw.Kd / 100.0f;
+                            cfg.pidYaw.Kp = pidYaw.Kp / 1000.0f;
+                            cfg.pidYaw.Ki = pidYaw.Ki / 1000.0f;
+                            cfg.pidYaw.Kd = pidYaw.Kd / 10000.0f;
                             cfg.pidYaw.integrationLimit = pidYaw.integrationLimit / 100.0f;
                             updateConfig();
 #if DEBUG_BLUETOOTH_PROTOCOL
@@ -201,9 +201,9 @@ void readBluetoothData() {
                     if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
                         msg.cmd = GET_PID_YAW;
                         msg.length = sizeof(pidYaw);
-                        pidYaw.Kp = cfg.pidYaw.Kp * 100.0f;
-                        pidYaw.Ki = cfg.pidYaw.Ki * 100.0f;
-                        pidYaw.Kd = cfg.pidYaw.Kd * 100.0f;
+                        pidYaw.Kp = cfg.pidYaw.Kp * 1000.0f;
+                        pidYaw.Ki = cfg.pidYaw.Ki * 1000.0f;
+                        pidYaw.Kd = cfg.pidYaw.Kd * 10000.0f;
                         pidYaw.integrationLimit = cfg.pidYaw.integrationLimit * 100.0f;
                         sendData((uint8_t*)&pidYaw, sizeof(pidYaw));
 #if DEBUG_BLUETOOTH_PROTOCOL
@@ -401,9 +401,6 @@ void readBluetoothData() {
 // Data: n uint8_t
 // Checksum (calculated from cmd, length and data)
 // Carriage return and line feed ("\r\n")
-
-// All floats/doubles are multiplied by 100 before sending
-// Except the Kalman coefficients which are multiplied by 10000 before sending
 
 static bool findString(const char* string) {
 	int nbytes = UARTRxBytesAvail1();
