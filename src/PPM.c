@@ -18,6 +18,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "Buzzer.h"
 #include "EEPROM.h"
 #include "PID.h"
 #include "PPM.h"
@@ -78,9 +79,16 @@ void initPPM(void) {
         // ESCs are calibrated by sending out the maximum pulse when power is applied and then sending lowest pulse afterwards
         for (uint8_t i = 0; i < 4; i++)
             writePPMUs(i, PPM_MAX);
-        delay(1000); // Wait 1s - TODO: Make sure both buttons are held in
+        delay(4000); // Wait 4s - TODO: Make sure both buttons are held in
         for (uint8_t i = 0; i < 4; i++)
             writePPMUs(i, PPM_MIN);
+        delay(3000);
+        buzzer(true);
+        delay(1000);
+        buzzer(false);
+        while (1) {
+            // Prevent user from flying
+        }
 #else
         writePPMAllOff();
 #endif
