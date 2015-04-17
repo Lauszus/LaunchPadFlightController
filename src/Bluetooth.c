@@ -127,7 +127,8 @@ void initBluetooth(void) {
     }
 }
 
-void readBluetoothData() {
+bool readBluetoothData() {
+    bool newValuesReceived = false;
     if (UARTRxBytesAvail1() > strlen(commandHeader)) {
         if (findString(commandHeader)) {
             readBytes((uint8_t*)&msg, sizeof(msg));
@@ -140,6 +141,7 @@ void readBluetoothData() {
                             cfg.pidRoll.Kd = cfg.pidPitch.Kd = pidRollPitch.Kd / 10000.0f;
                             cfg.pidRoll.integrationLimit = cfg.pidPitch.integrationLimit = pidRollPitch.integrationLimit / 100.0f;
                             updateConfig();
+                            newValuesReceived = true;
 #if DEBUG_BLUETOOTH_PROTOCOL
                             printPIDValues(&cfg.pidRoll); // Print PID Values
 #endif
@@ -182,6 +184,7 @@ void readBluetoothData() {
                             cfg.pidYaw.Kd = pidYaw.Kd / 10000.0f;
                             cfg.pidYaw.integrationLimit = pidYaw.integrationLimit / 100.0f;
                             updateConfig();
+                            newValuesReceived = true;
 #if DEBUG_BLUETOOTH_PROTOCOL
                             printPIDValues(&cfg.pidYaw); // Print PID Values
 #endif
@@ -224,6 +227,7 @@ void readBluetoothData() {
                             cfg.stickScalingRollPitch = settings.stickScalingRollPitch / 100.0f;
                             cfg.stickScalingYaw = settings.stickScalingYaw / 100.0f;
                             updateConfig();
+                            newValuesReceived = true;
 #if DEBUG_BLUETOOTH_PROTOCOL
                             UARTprintf("Angle Kp: %d.%02u\n", (int16_t)cfg.angleKp, (uint16_t)(abs(cfg.angleKp * 100.0f) % 100));
                             UARTprintf("Max angle incl: %u\n", cfg.maxAngleInclination);
@@ -269,6 +273,7 @@ void readBluetoothData() {
                             cfg.Q_bias = kalmanCoefficients.Q_bias / 10000.0f;
                             cfg.R_measure = kalmanCoefficients.R_measure / 10000.0f;
                             updateConfig();
+                            newValuesReceived = true;
 #if DEBUG_BLUETOOTH_PROTOCOL
                             UARTprintf("Kalman: %d.%04u\t%d.%04u\t%d.%04u\n", (int16_t)cfg.Q_angle, (uint16_t)(abs(cfg.Q_angle * 10000.0f) % 10000),
                                                                               (int16_t)cfg.Q_bias, (uint16_t)(abs(cfg.Q_bias * 10000.0f) % 10000),
@@ -384,6 +389,8 @@ void readBluetoothData() {
         /*UARTprintf("%d\t%d\n", imu.gyro, imu.kalman);
         UARTFlushTx(false);*/
     }
+    
+    return newValuesReceived;
 }
 
 // Message protocol (Inspired by MultiWii):

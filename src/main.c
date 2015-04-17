@@ -99,11 +99,8 @@ int main(void) {
         // Wait until we have valid data and safety aux channel is in safe position
     }
 
-    buzzer(true);
-    delay(100);
-    buzzer(false);
-
     UARTprintf("Ready\n");
+    beepBuzzer(); // Indicate startup
 
     while (1) {
         // Make sure there is valid data and safety channel is in armed position
@@ -116,11 +113,8 @@ int main(void) {
             armed = false;
 
         static bool lastArmed = false;
-        if (armed != lastArmed) {
-            buzzer(true);
-            delay(100);
-            buzzer(false);
-        }
+        if (armed != lastArmed)
+            beepBuzzer(); // Indicate that armed status were changed
         lastArmed = armed;
 
         // Turn on red led if armed otherwise turn on green LED
@@ -162,8 +156,10 @@ int main(void) {
         if (!armed)
             checkUARTData(); // Poll UART for incoming data if unarmed
 
-        if (!runMotors)
-            readBluetoothData(); // Read Bluetooth data if motors are not spinning
+        if (!runMotors) {
+            if (readBluetoothData()) // Read Bluetooth data if motors are not spinning
+                beepBuzzer(); // Indicate if new values were set
+        }
 
         if (runMotors) {
             uint32_t now = micros();

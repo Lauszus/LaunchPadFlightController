@@ -23,7 +23,7 @@ extern "C" {
 #endif
 
 void initBluetooth(void);
-void readBluetoothData(void);
+bool readBluetoothData(void);
 
 #ifdef __cplusplus
 }

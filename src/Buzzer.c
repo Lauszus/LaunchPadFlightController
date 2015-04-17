@@ -19,6 +19,7 @@
 #include <stdbool.h>
 
 #include "Buzzer.h"
+#include "Time.h"
 
 #include "inc/hw_memmap.h"
 #include "driverlib/gpio.h"
@@ -36,4 +37,10 @@ void initBuzzer(void) {
 
 void buzzer(bool enable) {
     GPIOPinWrite(GPIO_BUZZER_BASE, GPIO_PIN_BUZZER, enable ? GPIO_PIN_BUZZER : 0);
+}
+
+void beepBuzzer(void) {
+    buzzer(true);
+    delay(100);
+    buzzer(false);
 }
