@@ -241,16 +241,13 @@ int main(void) {
     // Use sonar distance for something usefull - see: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/altitudehold.c
         // https://github.com/cleanflight/cleanflight/blob/master/src/main/sensors/sonar.c#L90-L99
     // Limit other motors if one reaches maximum: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/mixer.c#L677-L684
-    // Create Android App
-        // Do not hardcode integrationLimit in Android application
+    // Android App
         // Tune yaw PID values separately
         // Set Kd as well
-        // Retune PID again and tune stickscaling
+        // Calibrate accelerometer values via Android application
+        // Self level angle trim
+        // Sent out yaw angle as well
     // Takes average of three readings in DTerm: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/pid.c#L721-L732
     // Add disarm timer
     // Remove safety AUX channel once 100% stable
-    // Measure loop time - print value or toggle I/O pin
     // Check that both buttons are held in while calibrating ESCs
-    // Self level angle trim
-    // Sent out yaw angle as well
-    // Multiply PID values by 10000 as well
