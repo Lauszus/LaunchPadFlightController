@@ -34,22 +34,21 @@ static const uint32_t configVersion = 7; // Must be bumped every time config_t i
 config_t cfg;
 
 static void setDefaultConfig(void) {
-    cfg.pidRoll.Kp = 0.2f;
-    cfg.pidRoll.Ki = 0.8f;
-    cfg.pidRoll.Kd = 0.0f;
-    cfg.pidRoll.integrationLimit = 0.6f; // Prevent windup
+    cfg.pidRoll.Kp = 0.460f;
+    cfg.pidRoll.Ki = 0.725f;
+    cfg.pidRoll.Kd = 0.0000f;
+    cfg.pidRoll.integrationLimit = 10.0f; // Prevent windup
 
     cfg.pidPitch = cfg.pidRoll; // Use same PID values for both pitch and roll
 
-    // x2 the values work pretty well - TODO: Fine-tune these
-    cfg.pidYaw = cfg.pidRoll;
-    cfg.pidYaw.Kp *= 3.0f;
-    cfg.pidYaw.Ki *= 3.5f; // I increased this in order for it to stop yawing slowly
-    cfg.pidYaw.Kd *= 2.0f;
+    cfg.pidYaw.Kp = 0.500f;
+    cfg.pidYaw.Ki = 0.500f;
+    cfg.pidYaw.Kd = 0.0000f;
+    cfg.pidYaw.integrationLimit = 10.0f; // Prevent windup
 
     resetPIDTerms();
 
-    cfg.angleKp = 4.0f;
+    cfg.angleKp = 7.0f;
     cfg.maxAngleInclination = 50.0f; // Max angle in self level mode
     cfg.stickScalingRollPitch = 2.0f;
     cfg.stickScalingYaw = 2.0f;
