@@ -33,7 +33,42 @@ extern kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll 
 static const uint32_t configVersion = 9; // Must be bumped every time config_t is changed
 config_t cfg;
 
-static void setDefaultConfig(void) {
+void initEEPROM(void) {
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_EEPROM0); // Enable EEPROM peripheral
+    SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
+
+    // Make sure config_t is a multiple of 4 - the compiler should pack structs to 4 bytes, but I added this check to be 100% sure
+    if (sizeof(config_t) % 4 != 0) {
+#if UART_DEBUG
+        UARTprintf("Config size error: %u\n", sizeof(config_t));
+#endif
+        buzzer(true);
+        while (1);
+    }
+
+    uint32_t rcode = EEPROMInit();
+    if (rcode) {
+#if UART_DEBUG
+        UARTprintf("EEPROMInit error: %u\n", rcode);
+#endif
+        buzzer(true);
+        while (1);
+    }
+
+    uint32_t version;
+    EEPROMRead(&version, 0, sizeof(version));
+    if (version != configVersion)
+        setDefaultConfig();
+    else {
+        EEPROMRead((uint32_t*)&cfg, sizeof(configVersion), sizeof(config_t)); // Read config from EEPROM
+
+        kalmanRoll.Q_angle = kalmanPitch.Q_angle = cfg.Q_angle; // Set Kalman filter coefficients
+        kalmanRoll.Q_bias = kalmanPitch.Q_angle = cfg.Q_bias;
+        kalmanRoll.R_measure = kalmanPitch.Q_angle = cfg.R_measure;
+    }
+}
+
+void setDefaultConfig(void) {
     cfg.pidRollValues.Kp = 0.400f;
     cfg.pidRollValues.Ki = 1.000f;
     cfg.pidRollValues.Kd = 0.0008f;
@@ -70,41 +105,6 @@ static void setDefaultConfig(void) {
         buzzer(true);
     } else
         updateConfig(); // Write values to EEPROM
-}
-
-void initEEPROM(void) {
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_EEPROM0); // Enable EEPROM peripheral
-    SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
-
-    // Make sure config_t is a multiple of 4 - the compiler should pack structs to 4 bytes, but I added this check to be 100% sure
-    if (sizeof(config_t) % 4 != 0) {
-#if UART_DEBUG
-        UARTprintf("Config size error: %u\n", sizeof(config_t));
-#endif
-        buzzer(true);
-        while (1);
-    }
-
-    uint32_t rcode = EEPROMInit();
-    if (rcode) {
-#if UART_DEBUG
-        UARTprintf("EEPROMInit error: %u\n", rcode);
-#endif
-        buzzer(true);
-        while (1);
-    }
-
-    uint32_t version;
-    EEPROMRead(&version, 0, sizeof(version));
-    if (version != configVersion)
-        setDefaultConfig();
-    else {
-        EEPROMRead((uint32_t*)&cfg, sizeof(configVersion), sizeof(config_t)); // Read config from EEPROM
-
-        kalmanRoll.Q_angle = kalmanPitch.Q_angle = cfg.Q_angle; // Set Kalman filter coefficients
-        kalmanRoll.Q_bias = kalmanPitch.Q_angle = cfg.Q_bias;
-        kalmanRoll.R_measure = kalmanPitch.Q_angle = cfg.R_measure;
-    }
 }
 
 void updateConfig(void) {

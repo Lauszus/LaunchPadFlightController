@@ -79,17 +79,8 @@ int main(void) {
     printPIDValues(pidRoll.values); // Print PID Values
     printPIDValues(pidYaw.values);
 
-#if 0 // Set to one in order to run the acceleromter calibration routine
-    while (calibrateAcc()) { // Get accelerometer zero values
-        // Loop until calibration values are found
-    }
-    buzzer(true);
-    delay(1000);
-    buzzer(false);
-#else
 #if UART_DEBUG
     UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", cfg.accZero.X, cfg.accZero.Y, cfg.accZero.Z);
-#endif
 #endif
 
 #if 0 // Set to one in order to run the ESC calibration routine at next power cycle
@@ -242,7 +233,6 @@ int main(void) {
         // https://github.com/cleanflight/cleanflight/blob/master/src/main/sensors/sonar.c#L90-L99
     // Limit other motors if one reaches maximum: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/mixer.c#L677-L684
     // Android App
-        // Calibrate accelerometer values via Android application
         // Self level angle trim
         // Sent out yaw angle as well
     // Add disarm timer

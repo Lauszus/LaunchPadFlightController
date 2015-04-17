@@ -41,6 +41,7 @@ typedef struct {
 extern config_t cfg;
 
 void initEEPROM(void);
+void setDefaultConfig(void);
 void updateConfig(void);
 
 #ifdef __cplusplus

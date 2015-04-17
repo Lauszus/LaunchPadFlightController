@@ -21,6 +21,7 @@
 #include <string.h>
 
 #include "Bluetooth.h"
+#include "Buzzer.h"
 #include "EEPROM.h"
 #include "Kalman.h"
 #include "Time.h"
@@ -53,6 +54,8 @@ enum {
     GET_KALMAN,
     SEND_ANGLES,
     SEND_INFO, // TODO
+    CAL_ACC,
+    RESTORE_DEFAULTS,
 };
 
 struct msg_t {
@@ -347,6 +350,40 @@ bool readBluetoothData() {
 #if DEBUG_BLUETOOTH_PROTOCOL
                     else
                         UARTprintf("SEND_INFO length error: %u\n", msg.length);
+#endif
+                    break;
+
+                case CAL_ACC:
+                    if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
+                        while (calibrateAcc()) { // Get accelerometer zero values
+                            // Loop until calibration values are found
+                        }
+                        buzzer(true);
+                        delay(1000);
+                        buzzer(false);
+#if DEBUG_BLUETOOTH_PROTOCOL
+                        UARTprintf("CAL_ACC\n");
+#endif
+                    }
+#if DEBUG_BLUETOOTH_PROTOCOL
+                    else
+                        UARTprintf("CAL_ACC error\n");
+#endif
+                    break;
+
+                 case RESTORE_DEFAULTS:
+                    if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
+                        setDefaultConfig();
+                        buzzer(true);
+                        delay(1000);
+                        buzzer(false);
+#if DEBUG_BLUETOOTH_PROTOCOL
+                        UARTprintf("RESTORE_DEFAULTS\n");
+#endif
+                    }
+#if DEBUG_BLUETOOTH_PROTOCOL
+                    else
+                        UARTprintf("RESTORE_DEFAULTS error\n");
 #endif
                     break;
 
