@@ -126,8 +126,8 @@ int main(void) {
         // Turn on red led if armed otherwise turn on green LED
         GPIOPinWrite(GPIO_LED_BASE, GPIO_RED_LED | GPIO_GREEN_LED, armed ? GPIO_RED_LED : GPIO_GREEN_LED);
 
-        uint32_t now = micros();
         if (dataReadyMPU6500()) {
+            uint32_t now = micros();
             float dt = (float)(now - imuTimer) / 1000000.0f;
             //UARTprintf("%d\n", now - imuTimer);
             imuTimer = now;
@@ -166,7 +166,7 @@ int main(void) {
             readBluetoothData(); // Read Bluetooth data if motors are not spinning
 
         if (runMotors) {
-            now = micros();
+            uint32_t now = micros();
             float dt = (float)(now - pidTimer);
             if (runMotors && dt > 2500) { // Limit to 2.5ms (400 Hz)
                 //UARTprintf("%d\n", now - pidTimer);
