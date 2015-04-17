@@ -30,7 +30,7 @@
 
 extern kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch in main.c
 
-static const uint32_t configVersion = 6; // Must be bumped every time config_t is changed
+static const uint32_t configVersion = 7; // Must be bumped every time config_t is changed
 config_t cfg;
 
 static void setDefaultConfig(void) {
@@ -47,7 +47,7 @@ static void setDefaultConfig(void) {
     cfg.pidYaw.Ki *= 3.5f; // I increased this in order for it to stop yawing slowly
     cfg.pidYaw.Kd *= 2.0f;
 
-    resetPIDError();
+    resetPIDTerms();
 
     cfg.angleKp = 4.0f;
     cfg.maxAngleInclination = 50.0f; // Max angle in self level mode

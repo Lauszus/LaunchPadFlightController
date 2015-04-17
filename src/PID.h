@@ -28,11 +28,12 @@ extern "C" {
 typedef struct {
     float Kp, Ki, Kd; // PID variables
     float integrationLimit;
-    float lastError, integratedError;
+    float integratedError;
+    float lastError, deltaError1, deltaError2;
 } __attribute__((packed)) pid_t;
 
 float updatePID(pid_t *pid, float setPoint, float input, float dt);
-void resetPIDError(void);
+void resetPIDTerms(void);
 
 #ifdef __cplusplus
 }

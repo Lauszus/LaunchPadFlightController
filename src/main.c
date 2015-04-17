@@ -150,7 +150,7 @@ int main(void) {
             runMotors = true;
         else {
             writePPMAllOff();
-            resetPIDError();
+            resetPIDTerms();
         }
 
         if (!armed)
@@ -238,12 +238,9 @@ int main(void) {
         // https://github.com/cleanflight/cleanflight/blob/master/src/main/sensors/sonar.c#L90-L99
     // Limit other motors if one reaches maximum: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/mixer.c#L677-L684
     // Android App
-        // Tune yaw PID values separately
-        // Set Kd as well
         // Calibrate accelerometer values via Android application
         // Self level angle trim
         // Sent out yaw angle as well
-    // Takes average of three readings in DTerm: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/pid.c#L721-L732
     // Add disarm timer
     // Remove safety AUX channel once 100% stable
     // Check that both buttons are held in while calibrating ESCs

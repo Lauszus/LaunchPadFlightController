@@ -23,17 +23,29 @@
 
 float updatePID(pid_t *pid, float setPoint, float input, float dt) {
     float error = setPoint - input;
+    
+    // P-term
     float pTerm = pid->Kp * error;
+
+    // I-term
     pid->integratedError += error * dt * pid->Ki; // Multiplication with Ki is done before integration limit, to make it independent from integration limit value
     pid->integratedError = constrain(pid->integratedError, -pid->integrationLimit, pid->integrationLimit); // Limit the integrated error - prevents windup
     float iTerm = pid->integratedError;
-    float dTerm = pid->Kd * (error - pid->lastError) / dt;
+
+    // D-term
+    float deltaError = (error - pid->lastError) / dt; // Calculate difference and compensate for difference in time by dividing by dt
     pid->lastError = error;
-    return pTerm + iTerm + dTerm;
+    // Use moving average here to reduce noise
+    float deltaSum = pid->deltaError1 + pid->deltaError2 + deltaError;
+    pid->deltaError2 = pid->deltaError1;
+    pid->deltaError1 = deltaError;
+    float dTerm = pid->Kd * deltaSum;
+
+    return pTerm + iTerm + dTerm; // Return sum
 }
 
-void resetPIDError(void) {
-    cfg.pidRoll.integratedError = cfg.pidRoll.lastError = 0.0f;
-    cfg.pidPitch.integratedError = cfg.pidPitch.lastError = 0.0f;
-    cfg.pidYaw.integratedError = cfg.pidYaw.lastError = 0.0f;
+void resetPIDTerms(void) {
+    cfg.pidRoll.integratedError = cfg.pidRoll.lastError = cfg.pidRoll.deltaError1 = cfg.pidRoll.deltaError2 = 0.0f;
+    cfg.pidPitch.integratedError = cfg.pidPitch.lastError = cfg.pidPitch.deltaError1 = cfg.pidPitch.deltaError2 = 0.0f;
+    cfg.pidYaw.integratedError = cfg.pidYaw.lastError = cfg.pidYaw.deltaError1 = cfg.pidYaw.deltaError2 = 0.0f;
 }
