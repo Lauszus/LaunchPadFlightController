@@ -56,6 +56,7 @@ int main(void) {
     // Set the clocking to run directly from the external crystal/oscillator and use PLL to run at 80 MHz
     SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ); // Set clock to 80 MHz (400 MHz(PLL) / 2 / 2.5 = 80 MHz)
 
+    initPID();
     initUART();
     initBuzzer();
     initEEPROM();
@@ -75,8 +76,8 @@ int main(void) {
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
     GPIOPinTypeGPIOOutput(GPIO_LED_BASE, GPIO_RED_LED | GPIO_BLUE_LED | GPIO_GREEN_LED); // Set red, blue and green LEDs as outputs
 
-    printPIDValues(&cfg.pidRoll); // Print PID Values
-    printPIDValues(&cfg.pidYaw);
+    printPIDValues(pidRoll.values); // Print PID Values
+    printPIDValues(pidYaw.values);
 
 #if 0 // Set to one in order to run the acceleromter calibration routine
     while (calibrateAcc()) { // Get accelerometer zero values
@@ -192,9 +193,9 @@ int main(void) {
                 /*UARTprintf("%d\t%d\n", (int16_t)setPointRoll, (int16_t)setPointPitch);
                 UARTFlushTx(false);*/
 
-                float rollOut = updatePID(&cfg.pidRoll, setPointRoll, mpu6500.gyroRate.Y, dt);
-                float pitchOut = updatePID(&cfg.pidPitch, setPointPitch, mpu6500.gyroRate.X, dt);
-                float yawOut = updatePID(&cfg.pidYaw, setPointYaw, mpu6500.gyroRate.Z, dt);
+                float rollOut = updatePID(&pidRoll, setPointRoll, mpu6500.gyroRate.Y, dt);
+                float pitchOut = updatePID(&pidPitch, setPointPitch, mpu6500.gyroRate.X, dt);
+                float yawOut = updatePID(&pidYaw, setPointYaw, mpu6500.gyroRate.Z, dt);
 
                 float throttle = getRXChannel(RX_THROTTLE_CHAN);
                 for (uint8_t i = 0; i < 4; i++)

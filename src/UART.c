@@ -58,19 +58,19 @@ void initUART(void) {
     UARTprintf("Started\n");
 }
 
-void printPIDValues(pid_t *pid) {
+void printPIDValues(pid_values_t *pidValues) {
     UARTprintf("PID: %d.%04u\t%d.%04u\t%d.%04u\t%d.%04u\n",
-                                            (int16_t)pid->Kp, (uint16_t)(abs(pid->Kp * 10000.0f) % 10000),
-                                            (int16_t)pid->Ki, (uint16_t)(abs(pid->Ki * 10000.0f) % 10000),
-                                            (int16_t)pid->Kd, (uint16_t)(abs(pid->Kd * 10000.0f) % 10000),
-                                            (int16_t)pid->integrationLimit, (uint16_t)(abs(pid->integrationLimit * 10000.0f) % 10000));
+                                            (int16_t)pidValues->Kp, (uint16_t)(abs(pidValues->Kp * 10000.0f) % 10000),
+                                            (int16_t)pidValues->Ki, (uint16_t)(abs(pidValues->Ki * 10000.0f) % 10000),
+                                            (int16_t)pidValues->Kd, (uint16_t)(abs(pidValues->Kd * 10000.0f) % 10000),
+                                            (int16_t)pidValues->integrationLimit, (uint16_t)(abs(pidValues->integrationLimit * 10000.0f) % 10000));
     UARTFlushTx(false);
 }
 
 static void setValues(char *input) {
     if (input[0] == 'G' && input[1] == 'P') { // Send "GP;" to get the current PID Values
-        printPIDValues(&cfg.pidRoll); // Print PID Values
-        printPIDValues(&cfg.pidYaw);
+        printPIDValues(pidRoll.values); // Print PID Values
+        printPIDValues(pidYaw.values);
     }
 }
 
@@ -100,7 +100,7 @@ void initUART(void) {
 }
 void checkUARTData(void) {
 }
-void printPIDValues(pid_t *pid) {
+void printPIDValues(pid_values_t *pidValues) {
 }
 
 #endif

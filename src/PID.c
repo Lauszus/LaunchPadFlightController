@@ -21,15 +21,24 @@
 #include "EEPROM.h"
 #include "PID.h"
 
+pid_t pidRoll, pidPitch, pidYaw;
+
+void initPID(void) {
+    // Set PID values to point at values read from EEPROM
+    pidRoll.values = &cfg.pidPitchValues;
+    pidPitch.values = &cfg.pidRollValues;
+    pidYaw.values = &cfg.pidYawValues;
+}
+
 float updatePID(pid_t *pid, float setPoint, float input, float dt) {
     float error = setPoint - input;
     
     // P-term
-    float pTerm = pid->Kp * error;
+    float pTerm = pid->values->Kp * error;
 
     // I-term
-    pid->integratedError += error * dt * pid->Ki; // Multiplication with Ki is done before integration limit, to make it independent from integration limit value
-    pid->integratedError = constrain(pid->integratedError, -pid->integrationLimit, pid->integrationLimit); // Limit the integrated error - prevents windup
+    pid->integratedError += error * dt * pid->values->Ki; // Multiplication with Ki is done before integration limit, to make it independent from integration limit value
+    pid->integratedError = constrain(pid->integratedError, -pid->values->integrationLimit, pid->values->integrationLimit); // Limit the integrated error - prevents windup
     float iTerm = pid->integratedError;
 
     // D-term
@@ -39,13 +48,13 @@ float updatePID(pid_t *pid, float setPoint, float input, float dt) {
     float deltaSum = pid->deltaError1 + pid->deltaError2 + deltaError;
     pid->deltaError2 = pid->deltaError1;
     pid->deltaError1 = deltaError;
-    float dTerm = pid->Kd * deltaSum;
+    float dTerm = pid->values->Kd * deltaSum;
 
     return pTerm + iTerm + dTerm; // Return sum
 }
 
 void resetPIDTerms(void) {
-    cfg.pidRoll.integratedError = cfg.pidRoll.lastError = cfg.pidRoll.deltaError1 = cfg.pidRoll.deltaError2 = 0.0f;
-    cfg.pidPitch.integratedError = cfg.pidPitch.lastError = cfg.pidPitch.deltaError1 = cfg.pidPitch.deltaError2 = 0.0f;
-    cfg.pidYaw.integratedError = cfg.pidYaw.lastError = cfg.pidYaw.deltaError1 = cfg.pidYaw.deltaError2 = 0.0f;
+    pidRoll.integratedError = pidRoll.lastError = pidRoll.deltaError1 = pidRoll.deltaError2 = 0.0f;
+    pidPitch.integratedError = pidPitch.lastError = pidPitch.deltaError1 = pidPitch.deltaError2 = 0.0f;
+    pidYaw.integratedError = pidYaw.lastError = pidYaw.deltaError1 = pidYaw.deltaError2 = 0.0f;
 }

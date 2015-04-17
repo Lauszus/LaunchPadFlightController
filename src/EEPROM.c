@@ -30,21 +30,21 @@
 
 extern kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch in main.c
 
-static const uint32_t configVersion = 7; // Must be bumped every time config_t is changed
+static const uint32_t configVersion = 8; // Must be bumped every time config_t is changed
 config_t cfg;
 
 static void setDefaultConfig(void) {
-    cfg.pidRoll.Kp = 0.460f;
-    cfg.pidRoll.Ki = 0.725f;
-    cfg.pidRoll.Kd = 0.0000f;
-    cfg.pidRoll.integrationLimit = 10.0f; // Prevent windup
+    cfg.pidRollValues.Kp = 0.460f;
+    cfg.pidRollValues.Ki = 0.725f;
+    cfg.pidRollValues.Kd = 0.0000f;
+    cfg.pidRollValues.integrationLimit = 10.0f; // Prevent windup
 
-    cfg.pidPitch = cfg.pidRoll; // Use same PID values for both pitch and roll
+    cfg.pidPitchValues = cfg.pidRollValues; // Use same PID values for both pitch and roll
 
-    cfg.pidYaw.Kp = 0.500f;
-    cfg.pidYaw.Ki = 0.500f;
-    cfg.pidYaw.Kd = 0.0000f;
-    cfg.pidYaw.integrationLimit = 10.0f; // Prevent windup
+    cfg.pidYawValues.Kp = 0.500f;
+    cfg.pidYawValues.Ki = 0.500f;
+    cfg.pidYawValues.Kd = 0.0000f;
+    cfg.pidYawValues.integrationLimit = 10.0f; // Prevent windup
 
     resetPIDTerms();
 
