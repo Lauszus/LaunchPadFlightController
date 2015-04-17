@@ -71,27 +71,6 @@ static void setValues(char *input) {
     if (input[0] == 'G' && input[1] == 'P') { // Send "GP;" to get the current PID Values
         printPIDValues(&cfg.pidRoll); // Print PID Values
         printPIDValues(&cfg.pidYaw);
-    } else if (input[0] == 'S' && input[2] == ',') { // Set different values
-        float value = ustrtof(input + 3, NULL); // Skip first three letters
-        if (input[1] == 'P')
-            cfg.pidRoll.Kp = value;
-        else if (input[1] == 'I')
-            cfg.pidRoll.Ki = value;
-        else if (input[1] == 'D')
-            cfg.pidRoll.Kd = value;
-
-        // Use same PID values for both pitch and roll
-        cfg.pidPitch.Kp = cfg.pidRoll.Kp;
-        cfg.pidPitch.Ki = cfg.pidRoll.Ki;
-        cfg.pidPitch.Kd = cfg.pidRoll.Kd;
-
-        cfg.pidYaw.Kp = cfg.pidRoll.Kp * 3.0f; // TODO: Tune these separately
-        cfg.pidYaw.Ki = cfg.pidRoll.Ki * 3.5f; // I increased this in order for it to stop yawing slowly
-        cfg.pidYaw.Kd = cfg.pidRoll.Kd * 2.0f;
-
-        printPIDValues(&cfg.pidRoll); // Print PID Values
-        printPIDValues(&cfg.pidYaw);
-        updateConfig(); // Write new values to EEPROM
     }
 }
 
