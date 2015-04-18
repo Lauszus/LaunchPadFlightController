@@ -37,16 +37,14 @@ Some video demonstrations of the flight controller can be seen at my [YouTube ch
 
 # Current setup
 
-* Microcontroller: Tiva C Series TM4C123G LaunchPad
-* IMU: MPU-6500
-* Motors: Sunnysky X2204 2300kv
-* ESC's: Blue Series 12A RapidESC (SimonK v2013-05-15)
-* Props: Gemfan 5x3
-* Frame: ZMR250 FPV Quadcopter (Bought on eBay)
-* LiPo: Turnigy nano-tech 1500 mAh
-* RX: OrangeRX R615X
-* TX: Turnigy 9XR
-* TX module: OrangeRX 2.4GHz transmitter module
+* Motors: Dualsky 980kv
+* ESC's: [Hobby King 20A ESC 3A UBEC (F-20A)](http://hobbyking.com/hobbyking/store/uh_viewItem.asp?idProduct=37253) - flashed with SimonK bs_nfet with OneShot125 and COMP_PWM = 1
+* Props: 10x4.5
+* Frame: [Hobby King Q450 V3 Glass Fiber Quadcopter Frame 450mm](http://hobbyking.com/hobbyking/store/__49725__Q450_V3_Glass_Fiber_Quadcopter_Frame_450mm_Integrated_PCB_Version.html)
+* LiPo: [Turnigy 3300mAh 3S 30C Lipo Pack](http://hobbyking.com/hobbyking/store/uh_viewItem.asp?idProduct=35870)
+* RX: [OrangeRX R615X](http://www.hobbyking.com/hobbyking/store/__46632__OrangeRx_R615X_Spektrum_JR_DSM2_DSMX_Compatible_6Ch_2_4GHz_Receiver_w_CPPM.html)
+* TX: [Turnigy 9XR](http://www.hobbyking.com/hobbyking/store/__31544__Turnigy_9XR_Transmitter_Mode_2_No_Module_.html) flashed with OpenTX
+* TX module: [OrangeRX 2.4GHz transmitter module](http://hobbyking.com/hobbyking/store/__24656__OrangeRX_DSMX_DSM2_2_4Ghz_Transmitter_Module_JR_Turnigy_compatible_.html)
 
 # Pinout
 
