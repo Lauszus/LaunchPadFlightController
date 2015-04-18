@@ -94,7 +94,9 @@ int main(void) {
         // Wait until we have valid data and safety aux channel is in safe position
     }
 
+#if UART_DEBUG
     UARTprintf("Ready\n");
+#endif
     beepBuzzer(); // Indicate startup
 
     while (1) {
