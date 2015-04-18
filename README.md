@@ -20,6 +20,21 @@ Android application is available at the following repository: <https://github.co
 
 Some video demonstrations of the flight controller can be seen at my [YouTube channel](https://www.youtube.com/user/kslauszus).
 
+# Features
+
+* Store PID values, calibration values etc. in EEPROM
+* Calibrate gyro and accelerometer
+* Arm/disarm using rudder
+* Status LEDs
+* Ultrasound sensor aka sonar (HC-SR04)
+* Supports CPPM receiver
+* Gyro & accelerometer (MPU-6500)
+* Kalman filtered IMU data
+* Self level mode
+* [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid)
+* OneShot125 ESC support
+* Buzzer feedback
+
 # Current setup
 
 * Microcontroller: Tiva C Series TM4C123G LaunchPad
