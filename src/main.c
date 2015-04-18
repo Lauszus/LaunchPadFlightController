@@ -221,7 +221,6 @@ int main(void) {
 // TODO:
     // Only enable peripheral clock once
     // Use SPI instead of I2C for MPU-6500
-    // Scope PWM output and check that it is in sync with control loop
     // Define all pins in a pins.h
     // Use sonar distance for something usefull - see: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/altitudehold.c
         // https://github.com/cleanflight/cleanflight/blob/master/src/main/sensors/sonar.c#L90-L99
