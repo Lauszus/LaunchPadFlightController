@@ -69,16 +69,16 @@ void initEEPROM(void) {
 }
 
 void setDefaultConfig(void) {
-    cfg.pidRollValues.Kp = 0.400f;
-    cfg.pidRollValues.Ki = 1.000f;
-    cfg.pidRollValues.Kd = 0.0008f;
+    cfg.pidRollValues.Kp = 0.460f;
+    cfg.pidRollValues.Ki = 3.00f;
+    cfg.pidRollValues.Kd = 0.00056f;
     cfg.pidRollValues.integrationLimit = 10.0f; // Prevent windup
 
     cfg.pidPitchValues = cfg.pidRollValues; // Use same PID values for both pitch and roll
 
-    cfg.pidYawValues.Kp = 0.500f;
-    cfg.pidYawValues.Ki = 0.500f;
-    cfg.pidYawValues.Kd = 0.0000f;
+    cfg.pidYawValues.Kp = 1.000f;
+    cfg.pidYawValues.Ki = 6.00f;
+    cfg.pidYawValues.Kd = 0.00040f;
     cfg.pidYawValues.integrationLimit = 10.0f; // Prevent windup
 
     resetPIDTerms();
