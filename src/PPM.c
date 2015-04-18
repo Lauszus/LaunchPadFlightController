@@ -31,8 +31,20 @@
 #include "driverlib/sysctl.h"
 
 #define CALIBRATE_ESC_ACTIVATED 0
+#define ONESHOT125 1
+
+#if ONESHOT125
+    #define PPM_MIN 125
+    #define PPM_MAX 250
+#else
+    #define PPM_MIN 1064 // From SimonK firmware
+    #define PPM_MAX 1864 // From SimonK firmware
+#endif
 
 static uint16_t period;
+
+static void writePPMUs(uint8_t motor, uint16_t us);
+static void syncMotors(void);
 
 // Sets calibrating flag in EEPROM
 // Calibration routine will be run next time power is applied if flag is true
@@ -42,7 +54,11 @@ void calibrateESCs(bool flag) {
 }
 
 void initPPM(void) {
+#if ONESHOT125
+    SysCtlPWMClockSet(SYSCTL_PWMDIV_2); // Set divider to 2
+#else
     SysCtlPWMClockSet(SYSCTL_PWMDIV_4); // Set divider to 4
+#endif
 
     SysCtlPeripheralEnable(SYSCTL_PERIPH_PWM0); // Enable PWM peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
@@ -61,10 +77,15 @@ void initPPM(void) {
     PWMGenConfigure(PWM0_BASE, PWM_GEN_1, PWM_GEN_MODE_DOWN | PWM_GEN_MODE_NO_SYNC);
 
     // The value is given by (SysClk * period) / divider
+#if ONESHOT125
+    // The period is set to 1.5 ms (666 Hz) - this just has to be longer than the IMU update rate (1 kHz)
+    period = (SysCtlClockGet() / 10000 * 15) / 2; // = 60000
+#else
     // The period is set to 2.5ms (400 Hz)
     period = (SysCtlClockGet() / 10000 * 25) / 4; // = 50000
+#endif
     PWMGenPeriodSet(PWM0_BASE, PWM_GEN_0, period); // Set the period
-    PWMGenPeriodSet(PWM0_BASE, PWM_GEN_1, period); // Set the period
+    PWMGenPeriodSet(PWM0_BASE, PWM_GEN_1, period);
 
     // Start the timers in generator 0 and 1
     PWMGenEnable(PWM0_BASE, PWM_GEN_0);
@@ -79,32 +100,42 @@ void initPPM(void) {
         // ESCs are calibrated by sending out the maximum pulse when power is applied and then sending lowest pulse afterwards
         for (uint8_t i = 0; i < 4; i++)
             writePPMUs(i, PPM_MAX);
+#if ONESHOT125
+        syncMotors();
+#endif
         delay(4000); // Wait 4s - TODO: Make sure both buttons are held in
         for (uint8_t i = 0; i < 4; i++)
             writePPMUs(i, PPM_MIN);
+#if ONESHOT125
+        syncMotors();
+#endif
         delay(3000);
         buzzer(true);
         delay(1000);
         buzzer(false);
-        while (1) {
-            // Prevent user from flying
-        }
-#else
+#else // CALIBRATE_ESC_ACTIVATED
         writePPMAllOff();
 #endif
         calibrateESCs(false); // Set back to false
+        
+        while (1) {
+            // Prevent user from flying
+        }
     } else
         writePPMAllOff();
-}
 
-uint16_t getPeriod(void) {
-    return period;
+#if ONESHOT125
+    syncMotors();
+#endif
 }
 
 // Turn off all motors
 void writePPMAllOff(void) {
     for (uint8_t i = 0; i < 4; i++)
         writePPMUs(i, PPM_MIN);
+#if ONESHOT125
+    syncMotors();
+#endif
 }
 
 float mapf(float x, float in_min, float in_max, float out_min, float out_max) {
@@ -113,7 +144,7 @@ float mapf(float x, float in_min, float in_max, float out_min, float out_max) {
 }
 
 // Motors are in the range [-100:100]
-void updateMotor(uint8_t motor, float value) {
+static void updateMotor(uint8_t motor, float value) {
     uint16_t motorOutput = mapf(value, -100.0f, 100.0f, PPM_MIN, PPM_MAX); // Map to PPM min and max value
     writePPMUs(motor, motorOutput);
 }
@@ -121,12 +152,24 @@ void updateMotor(uint8_t motor, float value) {
 void updateMotorsAll(float *values) {
     for (uint8_t i = 0; i < 4; i++)
         updateMotor(i, values[i]);
+#if ONESHOT125
+    syncMotors();
+#endif
 }
 
-void writePPMUs(uint8_t motor, uint16_t us) {
-    writePPMWidth(motor, period * us / 2500); // 400 Hz
-}
-
-void writePPMWidth(uint8_t motor, uint16_t width) {
+static void writePPMWidth(uint8_t motor, uint16_t width) {
     PWMPulseWidthSet(PWM0_BASE, motor == 0 ? PWM_OUT_0 : motor == 1 ? PWM_OUT_1 : motor == 2 ? PWM_OUT_2 : PWM_OUT_3, width);
+}
+
+static void writePPMUs(uint8_t motor, uint16_t us) {
+#if ONESHOT125
+    writePPMWidth(motor, period * us / 1500); // 666 Hz
+#else
+    writePPMWidth(motor, period * us / 2500); // 400 Hz
+#endif
+}
+
+static void syncMotors(void) { // Used to update the output values imidiatly ignoring the period
+    PWMSyncUpdate(PWM0_BASE, PWM_GEN_0_BIT | PWM_GEN_1_BIT);
+    PWMSyncTimeBase(PWM0_BASE, PWM_GEN_0_BIT | PWM_GEN_1_BIT);
 }

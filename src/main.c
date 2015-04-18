@@ -46,7 +46,7 @@
 
 kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch
 static mpu6500_t mpu6500; // Gyro and accelerometer readings
-static uint32_t imuTimer = 0, pidTimer = 0; // Used to keep track of the time
+static uint32_t timer = 0; // Used to keep track of the time
 
 // Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
 static float motors[4] = { -100.0f, -100.0f, -100.0f, -100.0f };
@@ -117,21 +117,18 @@ int main(void) {
         // Turn on red led if armed otherwise turn on green LED
         GPIOPinWrite(GPIO_LED_BASE, GPIO_RED_LED | GPIO_GREEN_LED, armed ? GPIO_RED_LED : GPIO_GREEN_LED);
 
-        if (dataReadyMPU6500()) {
-            uint32_t now = micros();
-            float dt = (float)(now - imuTimer) / 1000000.0f;
-            //UARTprintf("%d\n", now - imuTimer);
-            imuTimer = now;
+        if (!armed)
+            checkUARTData(); // Poll UART for incoming data if unarmed
 
-            getMPU6500Data(&mpu6500); // Get accelerometer and gyroscope values
-            getMPU6500Angles(&mpu6500, &kalmanRoll, &kalmanPitch, dt); // Calculate pitch and roll
-
-            /*UARTprintf("%d\t%d\t%d\n", mpu6500.gyro.X, mpu6500.gyro.Y, mpu6500.gyro.Z);
-            UARTFlushTx(false);*/
-            /*UARTprintf("%d.%02u\t%d.%02u\n", (int16_t)roll, (uint16_t)(abs(roll * 100.0f) % 100), (int16_t)pitch, (uint16_t)(abs(pitch * 100.0f) % 100));
-            UARTFlushTx(false);*/
+        // Don't spin motors if the throttle is low
+        bool runMotors = false;
+        if (armed && getRXChannel(RX_THROTTLE_CHAN) > -95)
+            runMotors = true;
+        else {
+            if (readBluetoothData()) // Read Bluetooth data if motors are not spinning
+                beepBuzzer(); // Indicate if new values were set
         }
-
+        
         static bool angleMode = false;
         if (!angleMode && getRXChannel(RX_AUX1_CHAN) > -10) {
             angleMode = true;
@@ -141,31 +138,23 @@ int main(void) {
             GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED if in acro mode
         }
 
-        // Don't spin motors if the throttle is low
-        bool runMotors = false;
-        if (armed && getRXChannel(RX_THROTTLE_CHAN) > -95)
-            runMotors = true;
-        else {
-            writePPMAllOff();
-            resetPIDTerms();
-        }
-
-        if (!armed)
-            checkUARTData(); // Poll UART for incoming data if unarmed
-
-        if (!runMotors) {
-            if (readBluetoothData()) // Read Bluetooth data if motors are not spinning
-                beepBuzzer(); // Indicate if new values were set
-        }
-
-        if (runMotors) {
+        if (dataReadyMPU6500()) {
             uint32_t now = micros();
-            float dt = (float)(now - pidTimer);
-            if (runMotors && dt > 2500) { // Limit to 2.5ms (400 Hz)
-                //UARTprintf("%d\n", now - pidTimer);
-                pidTimer = now;
-                dt /= 1000000.0f; // Convert to seconds
+            float dt = (float)(now - timer) / 1000000.0f;
+            //UARTprintf("%d\n", now - timer);
+            timer = now;
 
+            // Read IMU
+            getMPU6500Data(&mpu6500); // Get accelerometer and gyroscope values
+            getMPU6500Angles(&mpu6500, &kalmanRoll, &kalmanPitch, dt); // Calculate pitch and roll
+
+            /*UARTprintf("%d\t%d\t%d\n", mpu6500.gyro.X, mpu6500.gyro.Y, mpu6500.gyro.Z);
+            UARTFlushTx(false);*/
+            /*UARTprintf("%d.%02u\t%d.%02u\n", (int16_t)roll, (uint16_t)(abs(roll * 100.0f) % 100), (int16_t)pitch, (uint16_t)(abs(pitch * 100.0f) % 100));
+            UARTFlushTx(false);*/
+
+            // Motors routine
+            if (runMotors) {
                 float aileron = getRXChannel(RX_AILERON_CHAN);
                 float elevator = getRXChannel(RX_ELEVATOR_CHAN);
                 float rudder = getRXChannel(RX_RUDDER_CHAN);
@@ -219,6 +208,9 @@ int main(void) {
                 UARTprintf("%d\t%d\t%d\t%d\n", (int16_t)motors[0], (int16_t)motors[1], (int16_t)motors[2], (int16_t)motors[3]);
                 UARTFlushTx(false);
 #endif
+            } else {
+                writePPMAllOff();
+                resetPIDTerms();
             }
         }
 

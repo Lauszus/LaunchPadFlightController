@@ -22,16 +22,9 @@
 extern "C" {
 #endif
 
-#define PPM_MIN 1064 // From SimonK firmware
-#define PPM_MAX 1864 // From SimonK firmware
-
 void initPPM(void);
 void writePPMAllOff(void);
-void updateMotor(uint8_t motor, float value);
 void updateMotorsAll(float *values);
-void writePPMUs(uint8_t motor, uint16_t us);
-void writePPMWidth(uint8_t motor, uint16_t width);
-uint16_t getPeriod(void);
 void calibrateESCs(bool flag);
 
 float mapf(float x, float in_min, float in_max, float out_min, float out_max);
