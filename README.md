@@ -64,7 +64,7 @@ Some video demonstrations of the flight controller can be seen at my [YouTube ch
 | PB1* |   UART1 TX    |
 | PA5  |    Buzzer     |
 
-* Not 5V tolerant
+\* Not 5V tolerant
 
 Note that the motor layout follow the Naze32 in x-configuration i.e. motor 1 is bottom right, motor 2 is top right, motor 3 is bottom left and motor 4 is top left when looking from the back.
 
