@@ -32,14 +32,13 @@ void initPID(void) {
 
 float updatePID(pid_t *pid, float setPoint, float input, float dt) {
     float error = setPoint - input;
-    
+
     // P-term
     float pTerm = pid->values->Kp * error;
 
     // I-term
-    pid->integratedError += error * dt * pid->values->Ki; // Multiplication with Ki is done before integration limit, to make it independent from integration limit value
-    pid->integratedError = constrain(pid->integratedError, -pid->values->integrationLimit, pid->values->integrationLimit); // Limit the integrated error - prevents windup
-    float iTerm = pid->integratedError;
+    pid->iTerm += pid->values->Ki * error * dt; // Multiplication with Ki is done before integration limit, to make it independent from integration limit value
+    pid->iTerm = constrain(pid->iTerm, -pid->values->integrationLimit, pid->values->integrationLimit); // Limit the integrated error - prevents windup
 
     // D-term
     float deltaError = (error - pid->lastError) / dt; // Calculate difference and compensate for difference in time by dividing by dt
@@ -50,11 +49,11 @@ float updatePID(pid_t *pid, float setPoint, float input, float dt) {
     pid->deltaError1 = deltaError;
     float dTerm = pid->values->Kd * deltaSum;
 
-    return pTerm + iTerm + dTerm; // Return sum
+    return pTerm + pid->iTerm + dTerm; // Return sum
 }
 
 void resetPIDTerms(void) {
-    pidRoll.integratedError = pidRoll.lastError = pidRoll.deltaError1 = pidRoll.deltaError2 = 0.0f;
-    pidPitch.integratedError = pidPitch.lastError = pidPitch.deltaError1 = pidPitch.deltaError2 = 0.0f;
-    pidYaw.integratedError = pidYaw.lastError = pidYaw.deltaError1 = pidYaw.deltaError2 = 0.0f;
+    pidRoll.iTerm = pidRoll.lastError = pidRoll.deltaError1 = pidRoll.deltaError2 = 0.0f;
+    pidPitch.iTerm = pidPitch.lastError = pidPitch.deltaError1 = pidPitch.deltaError2 = 0.0f;
+    pidYaw.iTerm = pidYaw.lastError = pidYaw.deltaError1 = pidYaw.deltaError2 = 0.0f;
 }

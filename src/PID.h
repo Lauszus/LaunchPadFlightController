@@ -24,7 +24,7 @@ extern "C" {
 
 // From Arduino source code
 #define constrain(amt,low,high) ((amt)<(low)?(low):((amt)>(high)?(high):(amt)))
-    
+
 typedef struct {
     float Kp, Ki, Kd; // PID variables
     float integrationLimit;
@@ -32,7 +32,7 @@ typedef struct {
 
 typedef struct {
     pid_values_t *values; // Use pointer to pid_values_t struct that are saved in the EEPROM
-    float integratedError;
+    float iTerm;
     float lastError, deltaError1, deltaError2;
 } __attribute__((packed)) pid_t;
 
