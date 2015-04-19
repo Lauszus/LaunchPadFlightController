@@ -49,7 +49,7 @@ static mpu6500_t mpu6500; // Gyro and accelerometer readings
 static uint32_t timer = 0; // Used to keep track of the time
 
 // Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
-static float motors[4] = { -100.0f, -100.0f, -100.0f, -100.0f };
+static float motors[4] = { MIN_MOTOR_OUT, MIN_MOTOR_OUT, MIN_MOTOR_OUT, MIN_MOTOR_OUT };
 static bool armed = false;
 
 int main(void) {
@@ -128,7 +128,7 @@ int main(void) {
             if (readBluetoothData()) // Read Bluetooth data if motors are not spinning
                 beepBuzzer(); // Indicate if new values were set
         }
-        
+
         static bool angleMode = false;
         if (!angleMode && getRXChannel(RX_AUX1_CHAN) > -10) {
             angleMode = true;
@@ -199,6 +199,21 @@ int main(void) {
                 motors[2] += yawOut;
                 motors[3] -= yawOut;
 
+                // Find the maximum motor output
+                float maxMotor = motors[0];
+                for (uint8_t i = 1; i < 4; i++) {
+                    // If one motor is above the maxthrottle threshold, we reduce the value
+                    // of all motors by the amount of overshoot. That way, only one motor
+                    // is at max and the relative power of each motor is preserved
+                    if (motors[i] > maxMotor)
+                        maxMotor = motors[i];
+                }
+
+                for (uint8_t i = 0; i < 4; i++) {
+                    if (maxMotor > MAX_MOTOR_OUT)
+                        motors[i] -= maxMotor - MAX_MOTOR_OUT; // This is a way to still have good gyro corrections if at least one motor reaches its max
+                }
+
                 updateMotorsAll(motors);
 
                 //UARTprintf("%d\t%d\n", (int16_t)elevator, (int16_t)aileron);
@@ -224,7 +239,6 @@ int main(void) {
     // Define all pins in a pins.h
     // Use sonar distance for something usefull - see: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/altitudehold.c
         // https://github.com/cleanflight/cleanflight/blob/master/src/main/sensors/sonar.c#L90-L99
-    // Limit other motors if one reaches maximum: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/mixer.c#L677-L684
     // Android App
         // Self level angle trim
         // Sent out yaw angle as well

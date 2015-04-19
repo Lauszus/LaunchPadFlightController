@@ -117,7 +117,7 @@ void initPPM(void) {
         writePPMAllOff();
 #endif
         calibrateESCs(false); // Set back to false
-        
+
         while (1) {
             // Prevent user from flying
         }
@@ -143,9 +143,9 @@ float mapf(float x, float in_min, float in_max, float out_min, float out_max) {
     return constrain(value, out_min, out_max); // Limit output
 }
 
-// Motors are in the range [-100:100]
+// Motor input is in the range [MIN_MOTOR_OUT:MAX_MOTOR_OUT]
 static void updateMotor(uint8_t motor, float value) {
-    uint16_t motorOutput = mapf(value, -100.0f, 100.0f, PPM_MIN, PPM_MAX); // Map to PPM min and max value
+    uint16_t motorOutput = mapf(value, MIN_MOTOR_OUT, MAX_MOTOR_OUT, PPM_MIN, PPM_MAX); // Map to PPM min and max value
     writePPMUs(motor, motorOutput);
 }
 
