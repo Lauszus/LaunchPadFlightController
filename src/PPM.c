@@ -112,9 +112,7 @@ void initPPM(void) {
         syncMotors();
 #endif
         delay(3000);
-        buzzer(true);
-        delay(1000);
-        buzzer(false);
+        buzzerLongBeep();
 #else // CALIBRATE_ESC_ACTIVATED
         writePPMAllOff();
 #endif

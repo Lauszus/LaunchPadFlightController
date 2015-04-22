@@ -44,3 +44,9 @@ void beepBuzzer(void) {
     delay(100);
     buzzer(false);
 }
+
+void beepLongBuzzer(void) {
+    buzzer(true);
+    delay(1000);
+    buzzer(false);
+}

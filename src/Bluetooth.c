@@ -358,9 +358,7 @@ bool readBluetoothData() {
                         while (calibrateAcc()) { // Get accelerometer zero values
                             // Loop until calibration values are found
                         }
-                        buzzer(true);
-                        delay(1000);
-                        buzzer(false);
+                        beepLongBuzzer();
 #if DEBUG_BLUETOOTH_PROTOCOL
                         UARTprintf("CAL_ACC\n");
 #endif
@@ -374,9 +372,7 @@ bool readBluetoothData() {
                  case RESTORE_DEFAULTS:
                     if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
                         setDefaultConfig();
-                        buzzer(true);
-                        delay(1000);
-                        buzzer(false);
+                        beepLongBuzzer();
 #if DEBUG_BLUETOOTH_PROTOCOL
                         UARTprintf("RESTORE_DEFAULTS\n");
 #endif

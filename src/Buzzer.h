@@ -25,6 +25,7 @@ extern "C" {
 void initBuzzer(void);
 void buzzer(bool enable);
 void beepBuzzer(void);
+void beepLongBuzzer(void);
 
 #ifdef __cplusplus
 }
