@@ -34,8 +34,8 @@
 #define ONESHOT125 1
 
 #if ONESHOT125
-    #define PPM_MIN 125
-    #define PPM_MAX 250
+    #define PPM_MIN 1250 // The values in OneShot125 are in 0.1 us steps to increase the resolution
+    #define PPM_MAX 2500
 #else
     #define PPM_MIN 1064 // From SimonK firmware
     #define PPM_MAX 1864 // From SimonK firmware
@@ -44,7 +44,9 @@
 static uint16_t period;
 
 static void writePPMUs(uint8_t motor, uint16_t us);
+#if ONESHOT125
 static void syncMotors(void);
+#endif
 
 // Sets calibrating flag in EEPROM
 // Calibration routine will be run next time power is applied if flag is true
@@ -163,13 +165,15 @@ static void writePPMWidth(uint8_t motor, uint16_t width) {
 
 static void writePPMUs(uint8_t motor, uint16_t us) {
 #if ONESHOT125
-    writePPMWidth(motor, period * us / 1500); // 666 Hz
+    writePPMWidth(motor, period * us / 15000); // 666 Hz - the values in OneShot125 are in 0.1 us steps to increase the resolution
 #else
     writePPMWidth(motor, period * us / 2500); // 400 Hz
 #endif
 }
 
-static void syncMotors(void) { // Used to update the output values imidiatly ignoring the period
-    PWMSyncUpdate(PWM0_BASE, PWM_GEN_0_BIT | PWM_GEN_1_BIT);
-    PWMSyncTimeBase(PWM0_BASE, PWM_GEN_0_BIT | PWM_GEN_1_BIT);
+#if ONESHOT125
+static void syncMotors(void) { // Used to update the output values immediately ignoring the period
+    PWMSyncUpdate(PWM0_BASE, PWM_GEN_0_BIT | PWM_GEN_1_BIT); // Apply any updates of the pulse width next time generator counters becomes 0
+    PWMSyncTimeBase(PWM0_BASE, PWM_GEN_0_BIT | PWM_GEN_1_BIT); // Reset both generator counters to 0, so the width value is written to the output
 }
+#endif
