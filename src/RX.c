@@ -56,7 +56,7 @@ static void CaptureHandler(void) {
     if (last_edge && !edge) { // Check that we are going from a positive to falling edge
         uint32_t diff = curr - prev; // Calculate diff
         uint32_t diff_us = 1000000UL / (SysCtlClockGet() / diff); // Convert to us
-#if 0
+#if 0 && UART_DEBUG
         UARTprintf("%u %u %d\n", diff, diff_us,  micros() - prev_micros);
 #else
         if (diff_us > 2700) { // Check if sync pulse is received - see: https://github.com/multiwii/baseflight/blob/master/src/drv_pwm.c
@@ -68,7 +68,7 @@ static void CaptureHandler(void) {
             }
             if (validRXData)
                 TimerLoadSet(WTIMER1_BASE, TIMER_B, timerLoadValue); // Reset timeout value to 100ms
-#if 0
+    #if 0 && UART_DEBUG
             for (uint8_t i = 0; i < RX_NUM_CHANNELS; i++) {
                 if (rxChannel[i] > 0)
                     UARTprintf("%u\t", rxChannel[i]);
@@ -76,7 +76,7 @@ static void CaptureHandler(void) {
                     break;
             }
             UARTprintf("\n");
-#endif
+    #endif
         } else if (channelIndex < RX_NUM_CHANNELS)
             rxChannel[channelIndex++] = diff_us;
 #endif
