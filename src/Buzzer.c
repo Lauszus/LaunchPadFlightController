@@ -35,7 +35,7 @@ void initBuzzer(void) {
     GPIOPinTypeGPIOOutput(GPIO_BUZZER_BASE, GPIO_PIN_BUZZER);
 }
 
-void buzzer(bool enable) {
+inline void buzzer(bool enable) {
     GPIOPinWrite(GPIO_BUZZER_BASE, GPIO_PIN_BUZZER, enable ? GPIO_PIN_BUZZER : 0);
 }
 
