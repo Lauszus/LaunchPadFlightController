@@ -20,6 +20,10 @@ Android application is available at the following repository: <https://github.co
 
 Some video demonstrations of the flight controller can be seen at my [YouTube channel](https://www.youtube.com/user/kslauszus).
 
+# GUI
+
+A simple GUI can be found inside the [GUI](GUI) directory. It can be used to visualize the orientation of the flight controller.
+
 # Features
 
 * Store PID values, calibration values etc. in EEPROM
