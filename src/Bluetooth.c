@@ -98,7 +98,7 @@ struct info_t {
 static const char *commandHeader = "$S>"; // Standard command header
 static const char *responseHeader = "$S<"; // Standard response header
 
-static uint32_t infoTimer, anglesTimer;
+static uint32_t infoTimer, angleTimer;
 
 static bool findString(const char* string);
 static void readBytes(uint8_t* data, uint8_t length);
@@ -391,7 +391,7 @@ bool readBluetoothData(angle_t *angle) {
     }
 
     uint32_t now = millis();
-    if (sendInfo && now - infoTimer > 100) {
+    if (sendInfo && (int32_t)(now - infoTimer) > 100) {
 #if 0
         infoTimer = now;
         msg.cmd = SEND_INFO;
@@ -408,8 +408,8 @@ bool readBluetoothData(angle_t *angle) {
         info.runTime = infoTimer;
         sendData((uint8_t*)&info, sizeof(info));
 #endif
-    } else if (sendAngles && now - anglesTimer > 100) {
-        anglesTimer = now;
+    } else if (sendAngles && (int32_t)(now - angleTimer) > 100) {
+        angleTimer = now;
         msg.cmd = SEND_ANGLES;
         msg.length = sizeof(angles);
         angles.roll = angle->roll * 100.0f;
@@ -420,7 +420,7 @@ bool readBluetoothData(angle_t *angle) {
         /*UARTprintf("%d\t%d\n", imu.gyro, imu.kalman);
         UARTFlushTx(false);*/
     }
-    
+
     return newValuesReceived;
 }
 

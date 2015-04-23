@@ -42,7 +42,7 @@ void delay(uint32_t ms) {
 
 void delayMicroseconds(uint32_t us) {
     uint32_t start = micros();
-    while (micros() - start < us) {
+    while ((int32_t)(micros() - start) < us) {
         // Do nothing
     };
 }

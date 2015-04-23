@@ -62,7 +62,7 @@ void triggerSonar(void) {
     static uint32_t lastTrigger = 0;
 
     uint32_t now = millis();
-    if (now - lastTrigger > 25) { // Trigger every 25ms
+    if ((int32_t)(now - lastTrigger) > 25) { // Trigger every 25ms
         lastTrigger = now;
         GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_5, GPIO_PIN_5); // Set pin high
         delayMicroseconds(10); // Other sources wait 10us
