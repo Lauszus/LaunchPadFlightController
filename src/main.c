@@ -59,9 +59,9 @@ int main(void) {
 
     initPID();
     initUART();
+    initTime();
     initBuzzer();
     initEEPROM();
-    initTime();
     initPPM();
     initRX();
     initSonar();

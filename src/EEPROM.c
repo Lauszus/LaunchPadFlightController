@@ -55,9 +55,10 @@ void initEEPROM(void) {
 
     uint32_t version;
     EEPROMRead(&version, 0, sizeof(version));
-    if (version != configVersion)
+    if (version != configVersion) {
         setDefaultConfig();
-    else {
+        beepLongBuzzer();
+    } else {
         EEPROMRead((uint32_t*)&cfg, sizeof(configVersion), sizeof(config_t)); // Read config from EEPROM
 
         /*kalmanRoll.Q_angle = kalmanPitch.Q_angle = cfg.Q_angle; // Set Kalman filter coefficients
