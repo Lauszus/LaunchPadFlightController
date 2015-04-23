@@ -69,10 +69,10 @@ void initEEPROM(void) {
 }
 
 void setDefaultConfig(void) {
-    cfg.pidRollValues.Kp = 0.460f;
-    cfg.pidRollValues.Ki = 3.00f;
-    cfg.pidRollValues.Kd = 0.00056f;
-    cfg.pidRollValues.integrationLimit = 10.0f; // Prevent windup
+    cfg.pidRollValues.Kp = 0.310f;
+    cfg.pidRollValues.Ki = 1.65f;
+    cfg.pidRollValues.Kd = 0.00040f;
+    cfg.pidRollValues.integrationLimit = 5.85f; // Prevent windup
 
     cfg.pidPitchValues = cfg.pidRollValues; // Use same PID values for both pitch and roll
 
@@ -83,9 +83,9 @@ void setDefaultConfig(void) {
 
     resetPIDTerms();
 
-    cfg.angleKp = 3.0f;
+    cfg.angleKp = 5.0f;
     cfg.maxAngleInclination = 50.0f; // Max angle in self level mode
-    cfg.stickScalingRollPitch = 2.0f;
+    cfg.stickScalingRollPitch = 4.69f;
     cfg.stickScalingYaw = 2.0f;
 
     cfg.Q_angle = 0.001f; // Kalman filter coefficients default values
