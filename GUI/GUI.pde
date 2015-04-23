@@ -52,7 +52,7 @@ void draw() {
 
     pushMatrix();
     translate(width/2, height/2, 0);
-    rotateX(-radians(pitch) + HALF_PI); // Add PI/2, so it sits flat by default
+    rotateX(radians(pitch) + HALF_PI); // Add PI/2, so it sits flat by default
     rotateY(radians(roll));
     rotateZ(radians(yaw));
     box(200, 200, 30);

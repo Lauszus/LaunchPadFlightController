@@ -35,8 +35,8 @@ static void rotateV(sensor_t *v, sensor_t *gyroRate, float dt);
 static void normalizeV(sensor_t *src, sensor_t *dest);
 
 // Accelerometer readings can be in any scale, but gyro rate needs to be in deg/s
-// Make sure that roll increase when tilting quadcopter to the right, pitch increase
-// when pitching quadcopter upward and yaw should increase when tilting quadcopter clockwise.
+// Make sure that roll increases when tilting quadcopter to the right, pitch increases
+// when pitching quadcopter downward and yaw increases when rotating quadcopter clockwise.
 void calculateAngles(mpu6500_t *mpu6500, angle_t *angle, float dt) {
     static const float acc_lpf_factor = 4.0f;
     static const float gyro_cmpf_factor = 600.0f;
@@ -65,12 +65,12 @@ void calculateAngles(mpu6500_t *mpu6500, angle_t *angle, float dt) {
     // It is then converted from radians to degrees
 #if 0 // Set to 0 to restrict roll to ±90deg instead - please read: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf
     // Eq. 25 and 26
-    angle->roll = -atan2f(acc.Y, -acc.Z);
-    angle->pitch  = atan2f(acc.X, sqrtf(acc.Y * acc.Y + acc.Z * acc.Z)); // Use atan2 here anyway, to prevent division by 0
+    angle->roll = atan2f(acc.Y, acc.Z);
+    angle->pitch  = atan2f(-acc.X, sqrtf(acc.Y * acc.Y + acc.Z * acc.Z)); // Use atan2 here anyway, to prevent division by 0
 #else
     // Eq. 28 and 29
-    angle->roll = -atan2f(acc.Y, sqrtf(acc.X * acc.X + acc.Z * acc.Z)); // Use atan2 here anyway, to prevent division by 0
-    angle->pitch  = atan2f(acc.X, -acc.Z);
+    angle->roll = atan2f(acc.Y, sqrtf(acc.X * acc.X + acc.Z * acc.Z)); // Use atan2 here anyway, to prevent division by 0
+    angle->pitch  = atan2f(-acc.X, acc.Z);
 #endif
 
     rotateV(&mag, &gyro, dt); // Rotate magnetometer vector according to delta angle given by the gyro reading
@@ -94,14 +94,12 @@ void calculateAngles(mpu6500_t *mpu6500, angle_t *angle, float dt) {
 #endif
 }
 
-// See: http://www.freescale.com/files/sensors/doc/app_note/AN4248.pdf
+// See: http://www.freescale.com/files/sensors/doc/app_note/AN4248.pdf eq. 22
+// Note heading is inverted, so it increases when rotating clockwise. This is done so it works well with the RC yaw control input
 static float imuCalculateHeading(angle_t *angle, sensor_t *mag) {
-  float rollAngle = angle->roll;
-  float pitchAngle = angle->pitch;
-
-  float Bfy = mag->Z * sinf(rollAngle) - mag->Y * cosf(rollAngle);
-  float Bfx = mag->X * cosf(pitchAngle) + mag->Y * sinf(pitchAngle) * sinf(rollAngle) + mag->Z * sinf(pitchAngle) * cosf(rollAngle);
-  return atan2f(Bfy, Bfx); // Return heading
+  float Bfy = mag->Z * sinf(angle->roll) - mag->Y * cosf(angle->roll);
+  float Bfx = mag->X * cosf(angle->pitch) + mag->Y * sinf(angle->pitch) * sinf(angle->roll) + mag->Z * sinf(angle->pitch) * cosf(angle->roll);
+  return -atan2f(Bfy, Bfx); // Return heading
 }
 
 // Rotate accelerometer sensor readings by a delta angle from gyroscope

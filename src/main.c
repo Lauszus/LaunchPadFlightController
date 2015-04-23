@@ -173,7 +173,7 @@ int main(void) {
 
                 float rollOut = updatePID(&pidRoll, setPointRoll, mpu6500.gyroRate.roll, dt);
                 float pitchOut = updatePID(&pidPitch, setPointPitch, mpu6500.gyroRate.pitch, dt);
-                float yawOut = updatePID(&pidYaw, setPointYaw, mpu6500.gyroRate.yaw, dt);
+                float yawOut = updatePID(&pidYaw, setPointYaw, -mpu6500.gyroRate.yaw, dt); // Gyro rate is inverted, so it works well with RC yaw control input
 
                 float throttle = getRXChannel(RX_THROTTLE_CHAN);
                 for (uint8_t i = 0; i < 4; i++)
@@ -185,10 +185,10 @@ int main(void) {
                 motors[2] += rollOut;
                 motors[3] += rollOut;
 
-                motors[0] -= pitchOut;
-                motors[1] += pitchOut;
-                motors[2] -= pitchOut;
-                motors[3] += pitchOut;
+                motors[0] += pitchOut;
+                motors[1] -= pitchOut;
+                motors[2] += pitchOut;
+                motors[3] -= pitchOut;
 
                 motors[0] -= yawOut;
                 motors[1] += yawOut;

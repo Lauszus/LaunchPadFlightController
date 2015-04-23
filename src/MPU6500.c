@@ -53,13 +53,13 @@ bool dataReadyMPU6500(void) {
 }
 
 // X-axis should be facing forward
-// Y-axis should be facing to the right
-// Z-axis should be facing downward
+// Y-axis should be facing to the left
+// Z-axis should be facing upward
 static void mpu6500BoardOrientation(sensorRaw_t *sensorRaw) {
     sensorRaw_t sensorRawTemp = *sensorRaw;
     sensorRaw->X = sensorRawTemp.Y;
-    sensorRaw->Y = -sensorRawTemp.X;
-    sensorRaw->Z = sensorRawTemp.Z;
+    sensorRaw->Y = sensorRawTemp.X;
+    sensorRaw->Z = -sensorRawTemp.Z;
 }
 
 // Returns accelerometer and gyro data with zero values subtracted
@@ -146,7 +146,7 @@ static bool calibrateGyro(void) {
 
 bool calibrateAcc(void) {
     bool rcode = calibrateSensor(&cfg.accZero, MPU6500_ACCEL_XOUT_H, 100); // 100 / 4096 ~= 0.02g
-    cfg.accZero.Z += MPU6500_ACC_SCALE_FACTOR; // Z-axis is reading -1g when horizontal, so we add 1g to the value found
+    cfg.accZero.Z -= MPU6500_ACC_SCALE_FACTOR; // Z-axis is reading +1g when horizontal, so we subtract 1g from the value found
 
     if (!rcode) {
 #if UART_DEBUG
