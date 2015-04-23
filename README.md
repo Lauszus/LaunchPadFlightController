@@ -68,7 +68,7 @@ Some video demonstrations of the flight controller can be seen at my [YouTube ch
 
 Note that the motor layout follow the Naze32 in x-configuration i.e. motor 1 is bottom right, motor 2 is top right, motor 3 is bottom left and motor 4 is top left when looking from the back.
 
-Also make sure that pitch increase when pitching quadcopter downward and roll should increase when tilting quadcopter clockwise.
+Make sure that roll increase when tilting quadcopter to the right, pitch increase when pitching quadcopter upward and yaw should increase when tilting quadcopter clockwise.
 
 It is a good idea to run the accelerometer and ESCs calibration routines before flying the aircraft.
 

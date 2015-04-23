@@ -23,7 +23,6 @@
 #include "I2C.h"
 #include "MPU6500.h"
 #include "Time.h"
-#include "Kalman.h"
 
 #include "inc/hw_memmap.h"
 #include "driverlib/gpio.h"
@@ -42,20 +41,25 @@
 #define MPU6500_ADDRESS             0x68
 #define MPU6500_WHO_AM_I_ID         0x70
 
-#define MPU6500_GYRO_SCALE_FACTOR   16.4f // Scale factor for +-2000deg/s - see datasheet: http://www.invensense.com/mems/gyro/documents/PS-MPU-6500A-01.pdf at page 9
-
-#define PI                          3.1415926535897932384626433832795f
-#define RAD_TO_DEG                  57.295779513082320876798154814105f
-
 #define GPIO_MPU_INT_PERIPH         SYSCTL_PERIPH_GPIOE
 #define GPIO_MPU_INT_BASE           GPIO_PORTE_BASE
 #define GPIO_MPU_INT_PIN            GPIO_PIN_3
 
-static gyro_t gyroZero; // Gyroscope zero values are found at every power on
+static sensorRaw_t gyroZero; // Gyroscope zero values are found at every power on
 
 // Returns true when data is ready to be read
 bool dataReadyMPU6500(void) {
     return GPIOPinRead(GPIO_MPU_INT_BASE, GPIO_MPU_INT_PIN);
+}
+
+// X-axis should be facing forward
+// Y-axis should be facing to the right
+// Z-axis should be facing downward
+static void mpu6500BoardOrientation(sensorRaw_t *sensorRaw) {
+    sensorRaw_t sensorRawTemp = *sensorRaw;
+    sensorRaw->X = sensorRawTemp.Y;
+    sensorRaw->Y = -sensorRawTemp.X;
+    sensorRaw->Z = sensorRawTemp.Z;
 }
 
 // Returns accelerometer and gyro data with zero values subtracted
@@ -71,45 +75,14 @@ void getMPU6500Data(mpu6500_t *mpu6500) {
     mpu6500->gyro.Y = (buf[10] << 8) | buf[11];
     mpu6500->gyro.Z = (buf[12] << 8) | buf[13];
 
+    mpu6500BoardOrientation(&mpu6500->acc); // Apply board orientation
+    mpu6500BoardOrientation(&mpu6500->gyro);
+
     for (uint8_t axis = 0; axis < 3; axis++) {
         mpu6500->acc.data[axis] -= cfg.accZero.data[axis]; // Subtract accelerometer zero values
         mpu6500->gyro.data[axis] -= gyroZero.data[axis]; // Subtract gyro zero values
         mpu6500->gyroRate.data[axis] = ((float)mpu6500->gyro.data[axis]) / MPU6500_GYRO_SCALE_FACTOR; // Convert to deg/s
     }
-}
-
-// Accelerometer readings can be in any scale, but gyro rate needs to be in deg/s
-void getMPU6500Angles(mpu6500_t *mpu6500, kalman_t *kalmanRoll, kalman_t *kalmanPitch, float dt) {
-    const float accz_lpf_cutoff = 5.0f; // Source: https://github.com/cleanflight/cleanflight
-    const float fc_acc = 0.5f / (PI * accz_lpf_cutoff); // Calculate RC time constant used in the accZ lpf
-    static float accz_smooth = 0;
-    accz_smooth += (dt / (fc_acc + dt)) * (mpu6500->acc.Z - accz_smooth); // Low pass filter
-
-    // Pitch should increase when pitching quadcopter downward
-    // and roll should increase when tilting quadcopter clockwise
-
-    /*static float gyroAngle[3] = { 0, 0, 0 };
-    for (uint8_t axis = 0; axis < 3; axis++)
-        gyroAngle[axis] += mpu6500->gyroRate.data[axis] * dt; // Gyro angle is only used for debugging*/
-
-    // Source: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf
-    // atan2 outputs the value of -π to π (radians) - see http://en.wikipedia.org/wiki/Atan2
-    // It is then converted from radians to degrees
-    float rollAcc = atanf(mpu6500->acc.X / sqrtf(mpu6500->acc.Y * mpu6500->acc.Y + accz_smooth * accz_smooth)) * RAD_TO_DEG;
-    float pitchAcc  = atan2f(-mpu6500->acc.Y, -accz_smooth) * RAD_TO_DEG;
-
-    getAngle(kalmanRoll, rollAcc, mpu6500->gyroRate.Y, dt);
-    getAngle(kalmanPitch, pitchAcc, mpu6500->gyroRate.X, dt);
-#if 0
-    static float compAngleRoll, compAnglePitch;
-    compAngleRoll = 0.93f * (compAngleRoll + mpu6500->gyroRate.Y * dt) + 0.07f * rollAcc; // Calculate the angle using a Complimentary filter
-    compAnglePitch = 0.93f * (compAnglePitch + mpu6500->gyroRate.X * dt) + 0.07f * pitchAcc;
-
-    UARTprintf("%d\t%d\t%d\t\t", (int16_t)rollAcc, (int16_t)gyroAngle[1], (int16_t)*roll);
-    delay(1);
-    UARTprintf("%d\t%d\t%d\n", (int16_t)pitchAcc, (int16_t)gyroAngle[0], (int16_t)*pitch);
-    UARTFlushTx(false);
-#endif
 }
 
 static bool checkMinMax(int32_t *array, uint8_t length, int16_t maxDifference) { // Used to check that the flight controller is not moved while calibrating
@@ -123,7 +96,7 @@ static bool checkMinMax(int32_t *array, uint8_t length, int16_t maxDifference) {
     return max - min < maxDifference;
 }
 
-static bool calibrateSensor(int16_t *zeroValues, uint8_t regAddr, int16_t maxDifference) {
+static bool calibrateSensor(sensorRaw_t *zeroValues, uint8_t regAddr, int16_t maxDifference) {
     const uint8_t bufLength = 25;
     static int32_t sensorBuffer[3][bufLength];
     uint8_t buf[6];
@@ -147,14 +120,16 @@ static bool calibrateSensor(int16_t *zeroValues, uint8_t regAddr, int16_t maxDif
     for (uint8_t axis = 0; axis < 3; axis++) {
         for (uint8_t i = 1; i < bufLength; i++)
             sensorBuffer[axis][0] += sensorBuffer[axis][i]; // Sum up all readings
-        zeroValues[axis] = sensorBuffer[axis][0] / bufLength; // Get average
+        zeroValues->data[axis] = sensorBuffer[axis][0] / bufLength; // Get average
     }
+
+    mpu6500BoardOrientation(zeroValues); // Apply board orientation
 
     return 0; // No error
 }
 
 static bool calibrateGyro(void) {
-    bool rcode = calibrateSensor(gyroZero.data, MPU6500_GYRO_XOUT_H, 100); // 100 / 16.4 ~= 6.10 deg/s
+    bool rcode = calibrateSensor(&gyroZero, MPU6500_GYRO_XOUT_H, 100); // 100 / 16.4 ~= 6.10 deg/s
 
     if (!rcode) {
 #if UART_DEBUG
@@ -170,8 +145,8 @@ static bool calibrateGyro(void) {
 }
 
 bool calibrateAcc(void) {
-    bool rcode = calibrateSensor(cfg.accZero.data, MPU6500_ACCEL_XOUT_H, 100); // 100 / 4096 ~= 0.02g
-    cfg.accZero.Z += 4096; // Z-axis is reading -1g when horizontal, so we add 1g to the value found
+    bool rcode = calibrateSensor(&cfg.accZero, MPU6500_ACCEL_XOUT_H, 100); // 100 / 4096 ~= 0.02g
+    cfg.accZero.Z += MPU6500_ACC_SCALE_FACTOR; // Z-axis is reading -1g when horizontal, so we add 1g to the value found
 
     if (!rcode) {
 #if UART_DEBUG

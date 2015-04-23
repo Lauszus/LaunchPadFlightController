@@ -15,17 +15,35 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 
-#ifndef __bluetooth_h__
-#define __bluetooth_h__
+#ifndef __types_h__
+#define __types_h__
 
-#include "Types.h"
+#pragma anon_unions
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void initBluetooth(void);
-bool readBluetoothData(angle_t *angle);
+typedef union {
+	struct {
+		int16_t X, Y, Z;
+	} __attribute__((packed));
+	int16_t data[3];
+} sensorRaw_t;
+
+typedef union {
+	struct {
+		float X, Y, Z;
+	} __attribute__((packed));
+	float data[3];
+} sensor_t;
+
+typedef union {
+    struct {
+        float roll, pitch, yaw;
+    } __attribute__((packed));
+    float data[3];
+} angle_t;
 
 #ifdef __cplusplus
 }

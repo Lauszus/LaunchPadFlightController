@@ -18,45 +18,27 @@
 #ifndef __mpu6500_h__
 #define __mpu6500_h__
 
-#pragma anon_unions
+#include <stdbool.h>
 
-#include "Kalman.h"
+#include "Types.h"
+
+// Scale factor for +-2000deg/s and +-8g - see datasheet: http://www.invensense.com/mems/gyro/documents/PS-MPU-6500A-01.pdf at page 9-10
+#define MPU6500_GYRO_SCALE_FACTOR   16.4f
+#define MPU6500_ACC_SCALE_FACTOR    4096.0f
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef union {
-	struct {
-		int16_t X, Y, Z;
-	} __attribute__((packed));
-	int16_t data[3];
-} acc_t;
-
-typedef union {
-	struct {
-		int16_t X, Y, Z;
-	} __attribute__((packed));
-	int16_t data[3];
-} gyro_t;
-
-typedef union {
-    struct {
-        float X, Y, Z;
-    } __attribute__((packed));
-    float data[3];
-} gyroRate_t;
-
 typedef struct {
-    acc_t acc; // Raw accelerometer readings
-    gyro_t gyro; // Raw gyroscope readings
-    gyroRate_t gyroRate; // Gyroscope readings in deg/s
+    sensorRaw_t acc; // Raw accelerometer readings
+    sensorRaw_t gyro; // Raw gyroscope readings
+    angle_t gyroRate; // Gyroscope readings in deg/s
 } mpu6500_t;
 
 void initMPU6500(void);
 bool dataReadyMPU6500(void);
 void getMPU6500Data(mpu6500_t *mpu6500);
-void getMPU6500Angles(mpu6500_t *mpu6500, kalman_t *kalmanRoll, kalman_t *kalmanPitch, float dt);
 bool calibrateAcc(void);
 
 #ifdef __cplusplus

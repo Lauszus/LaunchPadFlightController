@@ -18,8 +18,8 @@
 #ifndef __eeprom_h__
 #define __eeprom_h__
 
-#include "MPU6500.h"
 #include "PID.h"
+#include "Types.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -31,11 +31,11 @@ typedef struct {
     float angleKp; // Self level mode Kp value
     uint8_t maxAngleInclination; // Max angle in self level mode
     float stickScalingRollPitch, stickScalingYaw; // Stick scaling values
-    float Q_angle, Q_bias, R_measure; // Kalman filter coefficients
+    //float Q_angle, Q_bias, R_measure; // Kalman filter coefficients
 
     // Will be set by the microcontroller
     bool calibrateESCs; // Flag used to tell if it should calibrate ESCs at next power cycle
-    acc_t accZero; // Accelerometer calibration values
+    sensorRaw_t accZero; // Accelerometer calibration values
 } config_t;
 
 extern config_t cfg;

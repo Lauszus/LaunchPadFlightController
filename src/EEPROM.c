@@ -28,9 +28,7 @@
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
 
-extern kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch in main.c
-
-static const uint32_t configVersion = 9; // Must be bumped every time config_t is changed
+static const uint32_t configVersion = 10; // Must be bumped every time config_t is changed
 config_t cfg;
 
 void initEEPROM(void) {
@@ -62,9 +60,9 @@ void initEEPROM(void) {
     else {
         EEPROMRead((uint32_t*)&cfg, sizeof(configVersion), sizeof(config_t)); // Read config from EEPROM
 
-        kalmanRoll.Q_angle = kalmanPitch.Q_angle = cfg.Q_angle; // Set Kalman filter coefficients
+        /*kalmanRoll.Q_angle = kalmanPitch.Q_angle = cfg.Q_angle; // Set Kalman filter coefficients
         kalmanRoll.Q_bias = kalmanPitch.Q_angle = cfg.Q_bias;
-        kalmanRoll.R_measure = kalmanPitch.Q_angle = cfg.R_measure;
+        kalmanRoll.R_measure = kalmanPitch.Q_angle = cfg.R_measure;*/
     }
 }
 
@@ -83,14 +81,14 @@ void setDefaultConfig(void) {
 
     resetPIDTerms();
 
-    cfg.angleKp = 5.0f;
+    cfg.angleKp = 4.70f;
     cfg.maxAngleInclination = 50.0f; // Max angle in self level mode
     cfg.stickScalingRollPitch = 4.69f;
     cfg.stickScalingYaw = 2.0f;
 
-    cfg.Q_angle = 0.001f; // Kalman filter coefficients default values
+    /*cfg.Q_angle = 0.001f; // Kalman filter coefficients default values
     cfg.Q_bias = 0.003f;
-    cfg.R_measure = 0.03f;
+    cfg.R_measure = 0.03f;*/
 
     cfg.calibrateESCs = false;
 
@@ -115,8 +113,8 @@ void updateConfig(void) {
 #endif
         buzzer(true);
     } else {
-        kalmanRoll.Q_angle = kalmanPitch.Q_angle = cfg.Q_angle; // Set Kalman filter coefficients
+        /*kalmanRoll.Q_angle = kalmanPitch.Q_angle = cfg.Q_angle; // Set Kalman filter coefficients
         kalmanRoll.Q_bias = kalmanPitch.Q_angle = cfg.Q_bias;
-        kalmanRoll.R_measure = kalmanPitch.Q_angle = cfg.R_measure;
+        kalmanRoll.R_measure = kalmanPitch.Q_angle = cfg.R_measure;*/
     }
 }

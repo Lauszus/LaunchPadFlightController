@@ -23,7 +23,7 @@
 #include "Bluetooth.h"
 #include "Buzzer.h"
 #include "EEPROM.h"
-#include "Kalman.h"
+#include "MPU6500.h"
 #include "Time.h"
 #include "UART.h"
 #include "uartstdio1.h" // Add "UART_BUFFERED1" to preprocessor - it uses a modified version of uartstdio, so it can be used with another UART interface
@@ -41,8 +41,6 @@
 
 #define DEBUG_BLUETOOTH_PROTOCOL 1 && UART_DEBUG
 
-extern kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch in main.c
-
 enum {
     SET_PID_ROLL_PITCH = 0,
     GET_PID_ROLL_PITCH,
@@ -50,8 +48,8 @@ enum {
     GET_PID_YAW,
     SET_SETTINGS,
     GET_SETTINGS,
-    SET_KALMAN,
-    GET_KALMAN,
+    SET_KALMAN, // TODO: Remove
+    GET_KALMAN, // TODO: Remove
     SEND_ANGLES,
     SEND_INFO, // TODO
     CAL_ACC,
@@ -80,7 +78,7 @@ typedef struct {
 
 static pidBT_t pidRollPitchBT, pidYawBT; // PID values
 static settings_t settings; // Settings
-static kalmanBT_t kalmanCoefficients; // Kalman coefficients
+//static kalmanBT_t kalmanCoefficients; // Kalman coefficients
 static uint8_t sendInfo, sendAngles; // Non-zero if values should be sent
 
 struct angles_t {
@@ -130,7 +128,7 @@ void initBluetooth(void) {
     }
 }
 
-bool readBluetoothData() {
+bool readBluetoothData(angle_t *angle) {
     bool newValuesReceived = false;
     if (UARTRxBytesAvail1() > strlen(commandHeader)) {
         if (findString(commandHeader)) {
@@ -268,7 +266,7 @@ bool readBluetoothData() {
                         UARTprintf("GET_SETTINGS error\n");
 #endif
                     break;
-
+/*
                 case SET_KALMAN:
                     if (msg.length == sizeof(kalmanCoefficients)) { // Make sure that it has the right length
                         if (getData((uint8_t*)&kalmanCoefficients, sizeof(kalmanCoefficients))) { // This will read the data and check the checksum
@@ -312,7 +310,7 @@ bool readBluetoothData() {
                         UARTprintf("GET_KALMAN error\n");
 #endif
                     break;
-
+*/
                 case SEND_ANGLES:
                     if (msg.length == sizeof(sendAngles)) { // Make sure that it has the right length
                         if (getData((uint8_t*)&sendAngles, sizeof(sendAngles))) { // This will read the data and check the checksum
@@ -414,9 +412,9 @@ bool readBluetoothData() {
         anglesTimer = now;
         msg.cmd = SEND_ANGLES;
         msg.length = sizeof(angles);
-        angles.roll = kalmanRoll.angle * 100.0f;
-        angles.pitch = kalmanPitch.angle * 100.0f;
-        angles.yaw = 0; // Yaw angle is just zero for now
+        angles.roll = angle->roll * 100.0f;
+        angles.pitch = angle->pitch * 100.0f;
+        angles.yaw = angle->yaw * 100.0f;
         sendData((uint8_t*)&angles, sizeof(angles));
 
         /*UARTprintf("%d\t%d\n", imu.gyro, imu.kalman);

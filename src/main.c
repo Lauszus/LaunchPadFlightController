@@ -22,6 +22,7 @@
 #include "Buzzer.h"
 #include "EEPROM.h"
 #include "I2C.h"
+#include "IMU.h"
 #include "MPU6500.h"
 #include "PPM.h"
 #include "PID.h"
@@ -44,7 +45,7 @@
 #define GPIO_BLUE_LED     GPIO_PIN_2
 #define GPIO_GREEN_LED    GPIO_PIN_3
 
-kalman_t kalmanRoll, kalmanPitch; // Structs used for Kalman filter roll and pitch
+static angle_t angle; // Struct used to store angles
 static mpu6500_t mpu6500; // Gyro and accelerometer readings
 static uint32_t timer = 0; // Used to keep track of the time
 
@@ -68,9 +69,6 @@ int main(void) {
     initMPU6500();
     initBluetooth();
     IntMasterEnable(); // Enable all interrupts
-
-    KalmanInit(&kalmanRoll); // Init Kalman filter
-    KalmanInit(&kalmanPitch);
 
     SysCtlPeripheralEnable(SYSCTL_PERIPH_LED); // Enable peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
@@ -125,7 +123,7 @@ int main(void) {
         if (armed && getRXChannel(RX_THROTTLE_CHAN) > -95)
             runMotors = true;
         else {
-            if (readBluetoothData()) // Read Bluetooth data if motors are not spinning
+            if (readBluetoothData(&angle)) // Read Bluetooth data if motors are not spinning
                 beepBuzzer(); // Indicate if new values were set
         }
 
@@ -146,11 +144,9 @@ int main(void) {
 
             // Read IMU
             getMPU6500Data(&mpu6500); // Get accelerometer and gyroscope values
-            getMPU6500Angles(&mpu6500, &kalmanRoll, &kalmanPitch, dt); // Calculate pitch and roll
+            calculateAngles(&mpu6500, &angle, dt); // Calculate pitch, roll and yaw
 
-            /*UARTprintf("%d\t%d\t%d\n", mpu6500.gyro.X, mpu6500.gyro.Y, mpu6500.gyro.Z);
-            UARTFlushTx(false);*/
-            /*UARTprintf("%d.%02u\t%d.%02u\n", (int16_t)roll, (uint16_t)(abs(roll * 100.0f) % 100), (int16_t)pitch, (uint16_t)(abs(pitch * 100.0f) % 100));
+            /*UARTprintf("%d\t%d\t%d\n", (int16_t)angle.roll, (int16_t)angle.pitch, (int16_t)angle.yaw);
             UARTFlushTx(false);*/
 
             // Motors routine
@@ -163,8 +159,8 @@ int main(void) {
                 float setPointRoll, setPointPitch; // Roll and pitch control can both be gyro or accelerometer based
                 const float setPointYaw = rudder * cfg.stickScalingYaw; // Yaw is always gyro controlled
                 if (angleMode) { // Angle mode
-                    setPointRoll = constrain(aileron, -cfg.maxAngleInclination, cfg.maxAngleInclination) - kalmanRoll.angle;
-                    setPointPitch = constrain(elevator, -cfg.maxAngleInclination, cfg.maxAngleInclination) - kalmanPitch.angle;
+                    setPointRoll = constrain(aileron, -cfg.maxAngleInclination, cfg.maxAngleInclination) - angle.roll;
+                    setPointPitch = constrain(elevator, -cfg.maxAngleInclination, cfg.maxAngleInclination) - angle.pitch;
                     setPointRoll *= cfg.angleKp;
                     setPointPitch *= cfg.angleKp;
                 } else { // Acro mode
@@ -175,9 +171,9 @@ int main(void) {
                 /*UARTprintf("%d\t%d\n", (int16_t)setPointRoll, (int16_t)setPointPitch);
                 UARTFlushTx(false);*/
 
-                float rollOut = updatePID(&pidRoll, setPointRoll, mpu6500.gyroRate.Y, dt);
-                float pitchOut = updatePID(&pidPitch, setPointPitch, mpu6500.gyroRate.X, dt);
-                float yawOut = updatePID(&pidYaw, setPointYaw, mpu6500.gyroRate.Z, dt);
+                float rollOut = updatePID(&pidRoll, setPointRoll, mpu6500.gyroRate.roll, dt);
+                float pitchOut = updatePID(&pidPitch, setPointPitch, mpu6500.gyroRate.pitch, dt);
+                float yawOut = updatePID(&pidYaw, setPointYaw, mpu6500.gyroRate.yaw, dt);
 
                 float throttle = getRXChannel(RX_THROTTLE_CHAN);
                 for (uint8_t i = 0; i < 4; i++)
@@ -189,10 +185,10 @@ int main(void) {
                 motors[2] += rollOut;
                 motors[3] += rollOut;
 
-                motors[0] += pitchOut;
-                motors[1] -= pitchOut;
-                motors[2] += pitchOut;
-                motors[3] -= pitchOut;
+                motors[0] -= pitchOut;
+                motors[1] += pitchOut;
+                motors[2] -= pitchOut;
+                motors[3] += pitchOut;
 
                 motors[0] -= yawOut;
                 motors[1] += yawOut;
@@ -218,7 +214,7 @@ int main(void) {
 
                 //UARTprintf("%d\t%d\n", (int16_t)elevator, (int16_t)aileron);
 #if 0
-                UARTprintf("%d\t%d\t\t", (int16_t)roll, (int16_t)pitch);
+                UARTprintf("%d\t%d\t\t", (int16_t)angle.roll, (int16_t)angle.pitch);
                 UARTprintf("%d\t%d\t\t", (int16_t)rollOut, (int16_t)pitchOut);
                 UARTprintf("%d\t%d\t%d\t%d\n", (int16_t)motors[0], (int16_t)motors[1], (int16_t)motors[2], (int16_t)motors[3]);
                 UARTFlushTx(false);
@@ -245,3 +241,4 @@ int main(void) {
     // Add disarm timer
     // Remove safety AUX channel once 100% stable
     // Check that both buttons are held in while calibrating ESCs
+    // Remove Kalman filter

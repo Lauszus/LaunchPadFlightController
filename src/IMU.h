@@ -15,17 +15,16 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 
-#ifndef __bluetooth_h__
-#define __bluetooth_h__
+#ifndef __imu_h__
+#define __imu_h__
 
-#include "Types.h"
+#include "MPU6500.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void initBluetooth(void);
-bool readBluetoothData(angle_t *angle);
+void calculateAngles(mpu6500_t *mpu6500, angle_t *angle, float dt);
 
 #ifdef __cplusplus
 }
