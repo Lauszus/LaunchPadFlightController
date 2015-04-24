@@ -15,16 +15,25 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 
-#ifndef __imu_h__
-#define __imu_h__
+#ifndef __hmc5883l_h__
+#define __hmc5883l_h__
 
-#include "MPU6500.h"
+#include "Types.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt);
+typedef struct {
+    sensorRaw_t magRaw; // Raw magnetometer readings
+    sensor_t mag; // Magnetometer readings with gain and offset applied
+    sensor_t magGain; // Magnetometer gain
+    sensor_t magOffset; // Magnetometer offset
+} hmc5883l_t;
+
+bool intHMC5883L(hmc5883l_t *hmc5883l);
+bool dataReadyHMC5883L(void);
+void getHMC5883LData(hmc5883l_t *hmc5883l);
 
 #ifdef __cplusplus
 }

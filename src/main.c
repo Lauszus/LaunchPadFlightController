@@ -21,6 +21,7 @@
 #include "Bluetooth.h"
 #include "Buzzer.h"
 #include "EEPROM.h"
+#include "HMC5883L.h"
 #include "I2C.h"
 #include "IMU.h"
 #include "MPU6500.h"
@@ -47,6 +48,8 @@
 
 static angle_t angle; // Struct used to store angles
 static mpu6500_t mpu6500; // Gyro and accelerometer readings
+static hmc5883l_t hmc5883l; // Magnetometer readings
+
 static uint32_t timer = 0; // Used to keep track of the time
 
 // Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
@@ -67,6 +70,12 @@ int main(void) {
     initSonar();
     initI2C();
     initMPU6500();
+    if (!intHMC5883L(&hmc5883l)) {
+        // If no magnetometer is connected, then just define a vector with a x-component only
+        hmc5883l.mag.X = 1.0f;
+        hmc5883l.mag.Y = 0.0f;
+        hmc5883l.mag.Z = 0.0f;
+    }
     initBluetooth();
     IntMasterEnable(); // Enable all interrupts
 
@@ -144,7 +153,10 @@ int main(void) {
 
             // Read IMU
             getMPU6500Data(&mpu6500); // Get accelerometer and gyroscope values
-            calculateAngles(&mpu6500, &angle, dt); // Calculate pitch, roll and yaw
+            if (dataReadyHMC5883L()) // The HMC5883L update rate is very slow (15 Hz), so it does not matter that we sample inside here
+                getHMC5883LData(&hmc5883l); // Get magnetometer values
+
+            getAngles(&mpu6500, &hmc5883l.mag, &angle, dt); // Calculate pitch, roll and yaw
 
             /*UARTprintf("%d\t%d\t%d\n", (int16_t)angle.roll, (int16_t)angle.pitch, (int16_t)angle.yaw);
             UARTFlushTx(false);*/
@@ -230,15 +242,18 @@ int main(void) {
 }
 
 // TODO:
-    // Only enable peripheral clock once
-    // Use SPI instead of I2C for MPU-6500
-    // Define all pins in a pins.h
     // Use sonar distance for something usefull - see: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/altitudehold.c
         // https://github.com/cleanflight/cleanflight/blob/master/src/main/sensors/sonar.c#L90-L99
     // Android App
         // Self level angle trim
-        // Sent out yaw angle as well
+        // Calibrate magnetometer
     // Add disarm timer
     // Remove safety AUX channel once 100% stable
     // Check that both buttons are held in while calibrating ESCs
     // Remove Kalman filter
+    // Magnetometer
+        // Take average of several values for gain
+        // Board orientation
+        // Calibration routine
+        // Dynamically adjust gain when calibrating
+        // Indicate if magnetometer is not connected

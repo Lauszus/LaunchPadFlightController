@@ -27,14 +27,14 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
 # Features
 
 * Store PID values, calibration values etc. in EEPROM
-* Calibrate gyro and accelerometer
+* Gyro & accelerometer calibration routine
 * Arm/disarm using rudder
 * Status LEDs
-* Ultrasound sensor aka sonar (HC-SR04)
-* Supports CPPM receiver
+* Supports CPPM receivers
 * Gyro & accelerometer (MPU-6500)
-* Kalman filtered IMU data
-* Self level mode
+* Magnetometer (HMC5883L)
+* Ultrasound sensor aka sonar (HC-SR04)
+* Rate mode, Self level mode
 * [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid)
 * OneShot125 ESC support
 * Buzzer feedback

@@ -503,6 +503,11 @@
               <FileType>1</FileType>
               <FilePath>.\src\IMU.c</FilePath>
             </File>
+            <File>
+              <FileName>HMC5883L.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\HMC5883L.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
