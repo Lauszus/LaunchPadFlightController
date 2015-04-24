@@ -51,8 +51,9 @@ enum {
     SET_KALMAN, // TODO: Remove
     GET_KALMAN, // TODO: Remove
     SEND_ANGLES,
-    SEND_INFO, // TODO
+    SEND_INFO, // TODO: Remove
     CAL_ACC,
+    //CAL_MAG,
     RESTORE_DEFAULTS,
 };
 
@@ -79,10 +80,11 @@ typedef struct {
 static pidBT_t pidRollPitchBT, pidYawBT; // PID values
 static settings_t settings; // Settings
 //static kalmanBT_t kalmanCoefficients; // Kalman coefficients
-static uint8_t sendInfo, sendAngles; // Non-zero if values should be sent
+static uint8_t sendAngles; // Non-zero if values should be sent
 
 struct angles_t {
-    int16_t roll, pitch, yaw;
+    int16_t roll, pitch; // Roll and pitch are in the range [-180:180]
+    uint16_t yaw; // Yaw is in the range [0:360]
 } __attribute__((packed)) angles;
 
 /*
@@ -97,8 +99,6 @@ struct info_t {
 
 static const char *commandHeader = "$S>"; // Standard command header
 static const char *responseHeader = "$S<"; // Standard response header
-
-static uint32_t infoTimer, angleTimer;
 
 static bool findString(const char* string);
 static void readBytes(uint8_t* data, uint8_t length);
@@ -331,26 +331,6 @@ bool readBluetoothData(angle_t *angle) {
 #endif
                     break;
 
-                case SEND_INFO:
-                    if (msg.length == sizeof(sendInfo)) { // Make sure that it has the right length
-                        if (getData((uint8_t*)&sendInfo, sizeof(sendInfo))) { // This will read the data and check the checksum
-#if DEBUG_BLUETOOTH_PROTOCOL
-                            UARTprintf("sendInfo: %u\n", sendInfo);
-#endif
-                        }
-                        else {
-                            sendInfo = 0; // If there was an error, we reset it back to 0, just to be sure
-#if DEBUG_BLUETOOTH_PROTOCOL
-                            UARTprintf("SEND_INFO checksum error\n");
-#endif
-                        }
-                    }
-#if DEBUG_BLUETOOTH_PROTOCOL
-                    else
-                        UARTprintf("SEND_INFO length error: %u\n", msg.length);
-#endif
-                    break;
-
                 case CAL_ACC:
                     if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
                         while (calibrateAcc()) { // Get accelerometer zero values
@@ -390,26 +370,9 @@ bool readBluetoothData(angle_t *angle) {
         }
     }
 
-    uint32_t now = millis();
-    if (sendInfo && (int32_t)(now - infoTimer) > 100) {
-#if 0
-        infoTimer = now;
-        msg.cmd = SEND_INFO;
-        msg.length = sizeof(info);
-        info.speed = constrain(abs(PIDValue), 0, 100.0) * 100.0;
-        if (deadmanButton::IsSet()) {
-            double CS = ((double)analogRead(CS1_PIN) / 204.6 - 2.5) / 0.066 * 100.0; // 66mV/A and then multiply by 100.0
-            CS -= ((double)analogRead(CS2_PIN) / 204.6 - 2.5) / 0.066 * 100.0; // The motors turn opposite, so we need to subtract the value
-            info.current = CS;
-        } else
-            info.current = 0; // When the reset button is held low on the motor drivers, the current sensor will give out an incorrect value
-        info.turning = turningValue * 100.0;
-        info.battery = batteryLevel;
-        info.runTime = infoTimer;
-        sendData((uint8_t*)&info, sizeof(info));
-#endif
-    } else if (sendAngles && (int32_t)(now - angleTimer) > 100) {
-        angleTimer = now;
+    static uint32_t angleTimer = 0;
+    if (sendAngles && (int32_t)(millis() - angleTimer) > 10) {
+        angleTimer = millis();
         msg.cmd = SEND_ANGLES;
         msg.length = sizeof(angles);
         angles.roll = angle->roll * 100.0f;
@@ -417,8 +380,10 @@ bool readBluetoothData(angle_t *angle) {
         angles.yaw = angle->yaw * 100.0f;
         sendData((uint8_t*)&angles, sizeof(angles));
 
-        /*UARTprintf("%d\t%d\n", imu.gyro, imu.kalman);
-        UARTFlushTx(false);*/
+#if 0 && DEBUG_BLUETOOTH_PROTOCOL
+        UARTprintf("%d\t%d\t%u\n", angles.roll, angles.pitch, angles.yaw);
+        UARTFlushTx(false);
+#endif
     }
 
     return newValuesReceived;
