@@ -82,18 +82,17 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
 
     rotateV(&magFiltered, &gyro, dt); // Rotate magnetometer vector according to delta angle given by the gyro reading
     for (uint8_t axis = 0; axis < 3; axis++)
-        magFiltered.data[axis] = (magFiltered.data[axis] * gyro_cmpfm_factor + mag->data[axis]) * invGyroComplimentaryFilter_M_Factor;
-    angle->yaw = calculateHeading(angle, &magFiltered); // Get heading
+        magFiltered.data[axis] = (magFiltered.data[axis] * gyro_cmpfm_factor + mag->data[axis]) * invGyroComplimentaryFilter_M_Factor; // Use complimentary filter on magnetometer values
+    angle->yaw = calculateHeading(angle, &magFiltered); // Get heading in degrees
 #else
     rotateV(mag, &gyro, dt); // Rotate magnetometer vector according to delta angle given by the gyro reading
     normalizeV(mag, mag); // Normalize magnetometer vector
-    angle->yaw = calculateHeading(angle, mag); // Get heading
+    angle->yaw = calculateHeading(angle, mag); // Get heading in degrees
 #endif
 
     // Convert readings to degrees
     angle->roll *= RAD_TO_DEG;
     angle->pitch *= RAD_TO_DEG;
-    angle->yaw *= RAD_TO_DEG;
 
 #if 0 && UART_DEBUG
     static angle_t gyroAngle;
@@ -110,13 +109,21 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
 // See: http://www.freescale.com/files/sensors/doc/app_note/AN4248.pdf eq. 22
 // Note heading is inverted, so it increases when rotating clockwise. This is done so it works well with the RC yaw control input
 static float calculateHeading(angle_t *angle, sensor_t *mag) {
-#if 1
+#if USE_MAG
+    // Calculate magnetic declination
+    static const int16_t magDeclinationFromConfig = -317; // Get your local magnetic declination here: http://magnetic-declination.com (Mine was +3 deg 17')
+    static const int16_t deg = magDeclinationFromConfig / 100;
+    static const int16_t min = magDeclinationFromConfig % 100;
+    static const float magneticDeclination = (deg + ((float)min * (1.0f / 60.0f)));
+#endif
+
     float Bfy = mag->Z * sinf(angle->roll) - mag->Y * cosf(angle->roll);
     float Bfx = mag->X * cosf(angle->pitch) + mag->Y * sinf(angle->pitch) * sinf(angle->roll) + mag->Z * sinf(angle->pitch) * cosf(angle->roll);
-    return -atan2f(Bfy, Bfx); // Return heading
-#else
-    return atan2f(mag->Y, mag->X); // Return heading
-#endif
+    float heading = -(atan2f(Bfy, Bfx) * RAD_TO_DEG + magneticDeclination); // Return heading
+
+    if (heading < 0) // Convert heading range to 0-360
+        heading += 360;
+    return heading;
 }
 
 // Rotate accelerometer sensor readings by a delta angle from gyroscope

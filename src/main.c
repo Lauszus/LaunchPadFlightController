@@ -265,6 +265,7 @@ int main(void) {
     // Android App
         // Self level angle trim
         // Calibrate magnetometer
+        // Set magnetic declination
     // Add disarm timer
     // Remove safety AUX channel once 100% stable
     // Check that both buttons are held in while calibrating ESCs
