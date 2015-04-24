@@ -363,7 +363,7 @@
             <useXO>0</useXO>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>rvmdk PART_TM4C123GH6PM UART_DEBUG=1 UART_BUFFERED UART_BUFFERED1</Define>
+              <Define>rvmdk PART_TM4C123GH6PM UART_BUFFERED UART_BUFFERED1 UART_DEBUG=1 USE_MAG=1</Define>
               <Undefine></Undefine>
               <IncludePath>.\lib</IncludePath>
             </VariousControls>

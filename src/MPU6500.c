@@ -17,7 +17,6 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <math.h>
 
 #include "EEPROM.h"
 #include "I2C.h"

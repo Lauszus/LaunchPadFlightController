@@ -21,7 +21,9 @@
 #include "Bluetooth.h"
 #include "Buzzer.h"
 #include "EEPROM.h"
+#if USE_MAG
 #include "HMC5883L.h"
+#endif
 #include "I2C.h"
 #include "IMU.h"
 #include "MPU6500.h"
@@ -48,7 +50,9 @@
 
 static angle_t angle; // Struct used to store angles
 static mpu6500_t mpu6500; // Gyro and accelerometer readings
+#if USE_MAG
 static hmc5883l_t hmc5883l; // Magnetometer readings
+#endif
 
 static uint32_t timer = 0; // Used to keep track of the time
 
@@ -70,12 +74,9 @@ int main(void) {
     initSonar();
     initI2C();
     initMPU6500();
-    if (!intHMC5883L(&hmc5883l)) {
-        // If no magnetometer is connected, then just define a vector with a x-component only
-        hmc5883l.mag.X = 1.0f;
-        hmc5883l.mag.Y = 0.0f;
-        hmc5883l.mag.Z = 0.0f;
-    }
+#if USE_MAG
+    intHMC5883L(&hmc5883l);
+#endif
     initBluetooth();
     IntMasterEnable(); // Enable all interrupts
 
@@ -83,19 +84,46 @@ int main(void) {
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
     GPIOPinTypeGPIOOutput(GPIO_LED_BASE, GPIO_RED_LED | GPIO_BLUE_LED | GPIO_GREEN_LED); // Set red, blue and green LEDs as outputs
 
-    printPIDValues(pidRoll.values); // Print PID Values
-    printPIDValues(pidYaw.values);
-
 #if UART_DEBUG
     UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", cfg.accZero.X, cfg.accZero.Y, cfg.accZero.Z);
 #endif
 
-#if 0 // Set to one in order to run the ESC calibration routine at next power cycle
+#if 0 && USE_MAG // Set this to 1 in order to run the magnetometer calibration routine
+#if UART_DEBUG
+    UARTprintf("Starting magnetometer calibration\n");
+#endif
+    sensor_t magZeroMin, magZeroMax;
+    uint32_t now = millis();
+    while ((int32_t)(millis() - now) < 30000) { // Calibrate for 30s
+        while (!dataReadyHMC5883L()); // Wait for data to get ready
+        getHMC5883LData(&hmc5883l, true); // Get magnetometer values without zero values subtracted
+        for (uint8_t axis = 0; axis < 3; axis++) {
+            if (hmc5883l.mag.data[axis] < magZeroMin.data[axis])
+                magZeroMin.data[axis] = hmc5883l.mag.data[axis];
+            if (hmc5883l.mag.data[axis] > magZeroMax.data[axis])
+                magZeroMax.data[axis] = hmc5883l.mag.data[axis];
+        }
+    }
+    for (uint8_t axis = 0; axis < 3; axis++)
+        cfg.magZero.data[axis] = (magZeroMax.data[axis] + magZeroMin.data[axis]) / 2.0f;
+    updateConfig(); // Save new values in EEPROM
+
+#if UART_DEBUG
+    UARTprintf("Finished magnetometer calibration: %d %d %d\n", (int16_t)cfg.magZero.X, (int16_t)cfg.magZero.Y, (int16_t)cfg.magZero.Z);
+#endif
+#elif UART_DEBUG && USE_MAG
+    UARTprintf("Magnetometer zero values: %d\t%d\t%d\n", (int16_t)cfg.magZero.X, (int16_t)cfg.magZero.Y, (int16_t)cfg.magZero.Z);
+#endif
+
+#if 0 // Set to 1 in order to run the ESC calibration routine at next power cycle
     // WARNING: Do this with propellers off!!
     // Also set CALIBRATE_ESC_ACTIVATED to 1 inside PPM.c
     calibrateESCs(true); // ESCs will be calibrated on next power cycle
     UARTprintf("Calibrating ESCs on next power cycle\n");
 #endif
+    
+    printPIDValues(pidRoll.values); // Print PID Values
+    printPIDValues(pidYaw.values);
 
     while (!validRXData || getRXChannel(RX_AUX2_CHAN) > 0) {
         // Wait until we have valid data and safety aux channel is in safe position
@@ -153,10 +181,15 @@ int main(void) {
 
             // Read IMU
             getMPU6500Data(&mpu6500); // Get accelerometer and gyroscope values
+#if USE_MAG
             if (dataReadyHMC5883L()) // The HMC5883L update rate is very slow (15 Hz), so it does not matter that we sample inside here
-                getHMC5883LData(&hmc5883l); // Get magnetometer values
-
+                getHMC5883LData(&hmc5883l, false); // Get magnetometer values with zero values subtracted
             getAngles(&mpu6500, &hmc5883l.mag, &angle, dt); // Calculate pitch, roll and yaw
+#else
+            // If no magnetometer is used, then just define a vector with a x-component only
+            static sensor_t mag = { .data = { 1.0f, 0.0f, 0.0f } };
+            getAngles(&mpu6500, &mag, &angle, dt); // Calculate pitch, roll and yaw
+#endif
 
             /*UARTprintf("%d\t%d\t%d\n", (int16_t)angle.roll, (int16_t)angle.pitch, (int16_t)angle.yaw);
             UARTFlushTx(false);*/
@@ -252,8 +285,6 @@ int main(void) {
     // Check that both buttons are held in while calibrating ESCs
     // Remove Kalman filter
     // Magnetometer
+        // Dynamically adjust gain when calibrating if limit is reached
         // Take average of several values for gain
         // Board orientation
-        // Calibration routine
-        // Dynamically adjust gain when calibrating
-        // Indicate if magnetometer is not connected

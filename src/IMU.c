@@ -17,8 +17,8 @@
 
 // Inspired by: https://github.com/cleanflight/cleanflight/blob/78a4476506c06315d7296a010a2c7ba003146b44/src/main/flight/imu.c
 
-#include <Math.h>
 #include <stdint.h>
+#include <Math.h>
 
 #include "IMU.h"
 #include "MPU6500.h"
@@ -32,7 +32,9 @@
 
 static float calculateHeading(angle_t *angle, sensor_t *mag);
 static void rotateV(sensor_t *v, sensor_t *gyroRate, float dt);
+#if !USE_MAG
 static void normalizeV(sensor_t *src, sensor_t *dest);
+#endif
 
 // Accelerometer readings can be in any scale, but gyro rate needs to be in deg/s
 // Make sure that roll increases when tilting quadcopter to the right, pitch increases
@@ -41,11 +43,11 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
     static const float acc_lpf_factor = 4.0f;
     static const float gyro_cmpf_factor = 600.0f;
     static const float invGyroComplimentaryFilterFactor = (1.0f / (gyro_cmpf_factor + 1.0f));
-    float accMagSquared = 0; // Accelerometer magneturde squared
 
     static sensor_t accLPF; // Accelerometer values after low pass filter
+    static sensor_t accFiltered; // Filtered accelerometer vector
+    float accMagSquared = 0; // Accelerometer magneturde squared
     sensor_t gyro; // Gyro readings in rad/s
-    static sensor_t acc; // Accelerometer vector
 
     for (uint8_t axis = 0; axis < 3; axis++) {
         gyro.data[axis] = mpu6500->gyroRate.data[axis] * DEG_TO_RAD; // Convert from deg/s to rad/s
@@ -53,11 +55,11 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
         accMagSquared += accLPF.data[axis] * accLPF.data[axis] / (MPU6500_ACC_SCALE_FACTOR * MPU6500_ACC_SCALE_FACTOR); // Convert readings to g's
     }
 
-    rotateV(&acc, &gyro, dt); // Rotate accelerometer vector according to delta angle given by gyro reading
+    rotateV(&accFiltered, &gyro, dt); // Rotate accelerometer vector according to delta angle given by gyro reading
 
     if (0.72f < accMagSquared && accMagSquared < 1.32f) { // Check if < 0.85G or > 1.15G, if so we just skip new accelerometer readings
         for (uint8_t axis = 0; axis < 3; axis++)
-            acc.data[axis] = (acc.data[axis] * gyro_cmpf_factor + accLPF.data[axis]) * invGyroComplimentaryFilterFactor; // Complimentary filter accelerometer gyro readings
+            accFiltered.data[axis] = (accFiltered.data[axis] * gyro_cmpf_factor + accLPF.data[axis]) * invGyroComplimentaryFilterFactor; // Complimentary filter accelerometer gyro readings
     }
 
     // Source: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf eq. 25 and eq. 26
@@ -65,17 +67,28 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
     // It is then converted from radians to degrees
 #if 0 // Set to 0 to restrict roll to ±90deg instead - please read: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf
     // Eq. 25 and 26
-    angle->roll = atan2f(acc.Y, acc.Z);
-    angle->pitch  = atan2f(-acc.X, sqrtf(acc.Y * acc.Y + acc.Z * acc.Z)); // Use atan2 here anyway, to prevent division by 0
+    angle->roll = atan2f(accFiltered.Y, accFiltered.Z);
+    angle->pitch  = atan2f(-accFiltered.X, sqrtf(accFiltered.Y * accFiltered.Y + accFiltered.Z * accFiltered.Z)); // Use atan2 here anyway, to prevent division by 0
 #else
     // Eq. 28 and 29
-    angle->roll = atan2f(acc.Y, sqrtf(acc.X * acc.X + acc.Z * acc.Z)); // Use atan2 here anyway, to prevent division by 0
-    angle->pitch  = atan2f(-acc.X, acc.Z);
+    angle->roll = atan2f(accFiltered.Y, sqrtf(accFiltered.X * accFiltered.X + accFiltered.Z * accFiltered.Z)); // Use atan2 here anyway, to prevent division by 0
+    angle->pitch  = atan2f(-accFiltered.X, accFiltered.Z);
 #endif
 
+#if USE_MAG
+    static const float gyro_cmpfm_factor = 250.0f;
+    static const float invGyroComplimentaryFilter_M_Factor = (1.0f / (gyro_cmpfm_factor + 1.0f));
+    static sensor_t magFiltered; // Filtered magnetometer vector
+
+    rotateV(&magFiltered, &gyro, dt); // Rotate magnetometer vector according to delta angle given by the gyro reading
+    for (uint8_t axis = 0; axis < 3; axis++)
+        magFiltered.data[axis] = (magFiltered.data[axis] * gyro_cmpfm_factor + mag->data[axis]) * invGyroComplimentaryFilter_M_Factor;
+    angle->yaw = calculateHeading(angle, &magFiltered); // Get heading
+#else
     rotateV(mag, &gyro, dt); // Rotate magnetometer vector according to delta angle given by the gyro reading
     normalizeV(mag, mag); // Normalize magnetometer vector
     angle->yaw = calculateHeading(angle, mag); // Get heading
+#endif
 
     // Convert readings to degrees
     angle->roll *= RAD_TO_DEG;
@@ -97,9 +110,13 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
 // See: http://www.freescale.com/files/sensors/doc/app_note/AN4248.pdf eq. 22
 // Note heading is inverted, so it increases when rotating clockwise. This is done so it works well with the RC yaw control input
 static float calculateHeading(angle_t *angle, sensor_t *mag) {
-  float Bfy = mag->Z * sinf(angle->roll) - mag->Y * cosf(angle->roll);
-  float Bfx = mag->X * cosf(angle->pitch) + mag->Y * sinf(angle->pitch) * sinf(angle->roll) + mag->Z * sinf(angle->pitch) * cosf(angle->roll);
-  return -atan2f(Bfy, Bfx); // Return heading
+#if 1
+    float Bfy = mag->Z * sinf(angle->roll) - mag->Y * cosf(angle->roll);
+    float Bfx = mag->X * cosf(angle->pitch) + mag->Y * sinf(angle->pitch) * sinf(angle->roll) + mag->Z * sinf(angle->pitch) * cosf(angle->roll);
+    return -atan2f(Bfy, Bfx); // Return heading
+#else
+    return atan2f(mag->Y, mag->X); // Return heading
+#endif
 }
 
 // Rotate accelerometer sensor readings by a delta angle from gyroscope
@@ -136,8 +153,8 @@ static void rotateV(sensor_t *v, sensor_t *gyroRate, float dt) {
   v->Z = v_tmp.X * mat[0][2] + v_tmp.Y * mat[1][2] + v_tmp.Z * mat[2][2];
 }
 
-// Normalize a vector
-static void normalizeV(sensor_t *src, sensor_t *dest) {
+#if !USE_MAG
+static void normalizeV(sensor_t *src, sensor_t *dest) { // Normalize a vector
   float magnitude = sqrtf(src->X * src->X + src->Y * src->Y + src->Z * src->Z);
   if (magnitude != 0) {
     dest->X = src->X / magnitude;
@@ -145,3 +162,4 @@ static void normalizeV(sensor_t *src, sensor_t *dest) {
     dest->Z = src->Z / magnitude;
   }
 }
+#endif

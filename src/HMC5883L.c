@@ -15,11 +15,14 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 
+#if USE_MAG
+
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <Math.h>
 
+#include "EEPROM.h"
 #include "HMC5883L.h"
 #include "I2C.h"
 #include "Time.h"
@@ -111,14 +114,17 @@ static void getHMC5883LDataRaw(sensorRaw_t *magRaw) {
     magRaw->Y = (buf[4] << 8) | buf[5];
 }
 
-void getHMC5883LData(hmc5883l_t *hmc5883l) {
+void getHMC5883LData(hmc5883l_t *hmc5883l, bool calibrating) {
     getHMC5883LDataRaw(&hmc5883l->magRaw); // Get raw reading
     for (uint8_t axis = 0; axis < 3; axis++)
         hmc5883l->mag.data[axis] = (float)hmc5883l->magRaw.data[axis] * hmc5883l->magGain.data[axis]; // Apply gain
 
     hmc5883lBoardOrientation(&hmc5883l->mag); // Apply board orientation
-    for (uint8_t axis = 0; axis < 3; axis++)
-        hmc5883l->mag.data[axis] -= hmc5883l->magOffset.data[axis]; // Subtract offset
+    
+    if (!calibrating) { // If we are not calibrating, then subtract zero values
+        for (uint8_t axis = 0; axis < 3; axis++)
+            hmc5883l->mag.data[axis] -= cfg.magZero.data[axis]; // Subtract zero value stored in EEPROM
+    }
 
 #if 0 && UART_DEBUG
     UARTprintf("%d.%03u\t%d.%03u\t%d.%03u\n",
@@ -141,7 +147,7 @@ static bool checkLimit(sensorRaw_t sensorRaw, int16_t low, int16_t high) {
 }
 
 // Inspired by: https://code.google.com/p/open-headtracker and https://github.com/cleanflight/cleanflight/blob/master/src/main/drivers/compass_hmc5883l.c
-bool intHMC5883L(hmc5883l_t *hmc5883l) {
+void intHMC5883L(hmc5883l_t *hmc5883l) {
     // Enable interrupt for DRDY (Data Ready Interrupt Pin)
     SysCtlPeripheralEnable(GPIO_HMC5883L_DRDY_PERIPH); // Enable GPIO peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
@@ -163,7 +169,7 @@ bool intHMC5883L(hmc5883l_t *hmc5883l) {
 #if UART_DEBUG
         UARTprintf("Could not find HMC5883L: %c%c%c\n", buf[0], buf[1], buf[2]);
 #endif
-        return false;
+        while (1);
     }
 
     // Self test according to datasheet: http://www51.honeywell.com/aero/common/documents/myaerospacecatalog-documents/Defense_Brochures-documents/HMC5883L_3-Axis_Digital_Compass_IC.pdf page 19
@@ -212,19 +218,14 @@ bool intHMC5883L(hmc5883l_t *hmc5883l) {
     mag_total.Z -= hmc5883l->magRaw.Z;
 
     // Calculate gain
-    hmc5883l->magGain.X = fabsf(GAIN_25_GA_LSB_GAIN * HMC5883L_X_SELF_TEST_GAUSS / (mag_total.X / 2.0f));
-    hmc5883l->magGain.Y = fabsf(GAIN_25_GA_LSB_GAIN * HMC5883L_Y_SELF_TEST_GAUSS / (mag_total.Y / 2.0f));
-    hmc5883l->magGain.Z = fabsf(GAIN_25_GA_LSB_GAIN * HMC5883L_Z_SELF_TEST_GAUSS / (mag_total.Z / 2.0f));
+    hmc5883l->magGain.X = GAIN_25_GA_LSB_GAIN * HMC5883L_X_SELF_TEST_GAUSS / (mag_total.X / 2.0f);
+    hmc5883l->magGain.Y = GAIN_25_GA_LSB_GAIN * HMC5883L_Y_SELF_TEST_GAUSS / (mag_total.Y / 2.0f);
+    hmc5883l->magGain.Z = GAIN_25_GA_LSB_GAIN * HMC5883L_Z_SELF_TEST_GAUSS / (mag_total.Z / 2.0f);
 
     i2cWrite(HMC5883L_ADDRESS, HMC5883L_CONF_REG_A, HMC5883L_CONF_REG_A_MA_8 | HMC5883L_CONF_REG_A_D0_15 | HMC5883L_CONF_REG_A_MS_NORM); // Set to 8 samples, update rate to 15 Hz (default) and normal measurement configuration
     i2cWrite(HMC5883L_ADDRESS, HMC5883L_CONF_REG_B, HMC5883L_CONF_REG_B_GN_13); // Set gain to 1.3 Ga (default)
     while (!dataReadyHMC5883L()); // Wait for data
     getHMC5883LDataRaw(&hmc5883l->magRaw); // First values are discarded, as it is from previous gain
-
-    // TODO: Don't hardcode offset
-    hmc5883l->magOffset.X = 0;//(MAG_MAX_X + MAG_MIN_X) / 2.0f;
-    hmc5883l->magOffset.Y = 0;//(MAG_MAX_Y + MAG_MIN_Y) / 2.0f;
-    hmc5883l->magOffset.Z = 0;//(MAG_MAX_Z + MAG_MIN_Z) / 2.0f;
 
 #if UART_DEBUG
     UARTprintf("Mag cal: %d\t%d\t%d\t", (int16_t)mag_total.X, (int16_t)mag_total.Y, (int16_t)mag_total.Z);
@@ -234,6 +235,6 @@ bool intHMC5883L(hmc5883l_t *hmc5883l) {
                                                     (int16_t)hmc5883l->magGain.Z, (uint16_t)(abs(hmc5883l->magGain.Z * 1000.0f) % 1000));
     UARTFlushTx(false);
 #endif
-
-    return true;
 }
+
+#endif // USE_MAG

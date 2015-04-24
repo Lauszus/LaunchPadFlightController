@@ -36,6 +36,7 @@ typedef struct {
     // Will be set by the microcontroller
     bool calibrateESCs; // Flag used to tell if it should calibrate ESCs at next power cycle
     sensorRaw_t accZero; // Accelerometer calibration values
+    sensor_t magZero; // Magnetometer calibration values
 } config_t;
 
 extern config_t cfg;

@@ -15,7 +15,7 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 
-#ifndef __hmc5883l_h__
+#if !defined(__hmc5883l_h__) && USE_MAG
 #define __hmc5883l_h__
 
 #include "Types.h"
@@ -28,12 +28,11 @@ typedef struct {
     sensorRaw_t magRaw; // Raw magnetometer readings
     sensor_t mag; // Magnetometer readings with gain and offset applied
     sensor_t magGain; // Magnetometer gain
-    sensor_t magOffset; // Magnetometer offset
 } hmc5883l_t;
 
-bool intHMC5883L(hmc5883l_t *hmc5883l);
+void intHMC5883L(hmc5883l_t *hmc5883l);
 bool dataReadyHMC5883L(void);
-void getHMC5883LData(hmc5883l_t *hmc5883l);
+void getHMC5883LData(hmc5883l_t *hmc5883l, bool calibrating);
 
 #ifdef __cplusplus
 }

@@ -28,7 +28,7 @@
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
 
-static const uint32_t configVersion = 10; // Must be bumped every time config_t is changed
+static const uint32_t configVersion = 11; // Must be bumped every time config_t is changed
 config_t cfg;
 
 void initEEPROM(void) {
@@ -93,8 +93,10 @@ void setDefaultConfig(void) {
 
     cfg.calibrateESCs = false;
 
-    for (uint8_t axis = 0; axis < 3; axis++)
+    for (uint8_t axis = 0; axis < 3; axis++) {
         cfg.accZero.data[axis] = 0;
+        cfg.magZero.data[axis] = 0;
+    }
 
     uint32_t rcode = EEPROMProgram((uint32_t*)&configVersion, 0, sizeof(configVersion)); // Write version number to EEPROM
     if (rcode) {
