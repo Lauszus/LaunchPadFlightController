@@ -33,6 +33,7 @@ typedef struct {
 void intHMC5883L(hmc5883l_t *hmc5883l);
 bool dataReadyHMC5883L(void);
 void getHMC5883LData(hmc5883l_t *hmc5883l, bool calibrating);
+void calibrateMag(hmc5883l_t *hmc5883l);
 
 #ifdef __cplusplus
 }

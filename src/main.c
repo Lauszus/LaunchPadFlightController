@@ -92,25 +92,7 @@ int main(void) {
 #if UART_DEBUG
     UARTprintf("Starting magnetometer calibration\n");
 #endif
-    while (!dataReadyHMC5883L()); // Wait for data to get ready
-    getHMC5883LData(&hmc5883l, true); // Get magnetometer values without zero values subtracted
-    sensor_t magZeroMin = hmc5883l.mag, magZeroMax = hmc5883l.mag; // Get initial reading
-
-    uint32_t now = millis();
-    while ((int32_t)(millis() - now) < 30000) { // Calibrate for 30s
-        while (!dataReadyHMC5883L()); // Wait for data to get ready
-        getHMC5883LData(&hmc5883l, true); // Get magnetometer values without zero values subtracted
-        for (uint8_t axis = 0; axis < 3; axis++) {
-            if (hmc5883l.mag.data[axis] < magZeroMin.data[axis])
-                magZeroMin.data[axis] = hmc5883l.mag.data[axis];
-            if (hmc5883l.mag.data[axis] > magZeroMax.data[axis])
-                magZeroMax.data[axis] = hmc5883l.mag.data[axis];
-        }
-    }
-    for (uint8_t axis = 0; axis < 3; axis++)
-        cfg.magZero.data[axis] = (magZeroMax.data[axis] + magZeroMin.data[axis]) / 2.0f;
-    updateConfig(); // Save new values in EEPROM
-
+    calibrateMag(&hmc5883l);
 #if UART_DEBUG
     UARTprintf("Finished magnetometer calibration: %d %d %d\n", (int16_t)cfg.magZero.X, (int16_t)cfg.magZero.Y, (int16_t)cfg.magZero.Z);
 #endif
