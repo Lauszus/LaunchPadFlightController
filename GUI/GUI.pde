@@ -52,9 +52,12 @@ void draw() {
 
     pushMatrix();
     translate(width/2, height/2, 0);
-    rotateX(radians(pitch) + HALF_PI); // Add PI/2, so it sits flat by default
-    rotateY(radians(roll));
-    rotateZ(radians(yaw));
+    float radRoll = radians(roll);
+    float radPitch = radians(pitch);
+    float radYaw = radians(yaw);
+    rotateX(radPitch * cos(radYaw) - radRoll * sin(radYaw) + HALF_PI);
+    rotateY(radRoll * cos(radYaw) + radPitch * sin(radYaw));
+    rotateZ(radYaw * cos(radPitch) + radRoll * sin(radPitch));
     box(200, 200, 30);
     popMatrix();
 
