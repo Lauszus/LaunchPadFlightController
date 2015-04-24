@@ -92,7 +92,10 @@ int main(void) {
 #if UART_DEBUG
     UARTprintf("Starting magnetometer calibration\n");
 #endif
-    sensor_t magZeroMin, magZeroMax;
+    while (!dataReadyHMC5883L()); // Wait for data to get ready
+    getHMC5883LData(&hmc5883l, true); // Get magnetometer values without zero values subtracted
+    sensor_t magZeroMin = hmc5883l.mag, magZeroMax = hmc5883l.mag; // Get initial reading
+
     uint32_t now = millis();
     while ((int32_t)(millis() - now) < 30000) { // Calibrate for 30s
         while (!dataReadyHMC5883L()); // Wait for data to get ready
@@ -121,7 +124,7 @@ int main(void) {
     calibrateESCs(true); // ESCs will be calibrated on next power cycle
     UARTprintf("Calibrating ESCs on next power cycle\n");
 #endif
-    
+
     printPIDValues(pidRoll.values); // Print PID Values
     printPIDValues(pidYaw.values);
 
