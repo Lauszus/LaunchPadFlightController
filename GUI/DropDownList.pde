@@ -100,6 +100,7 @@ void connect() {
       SaveSerialPort(Serial.list()[portNumber]);
       serial.bufferUntil('\n');
       connectedSerial = true;
+      sendAngles(true); // Start sending angle information
     }
   } else if (portNumber == -1)
     println("Select COM Port first!");
@@ -111,6 +112,7 @@ void disconnect() {
   if (!connectedSerial)
     return;
   try {
+    sendAngles(false); // Stop sending angle information
     serial.stop();
     serial.clear(); // Empty the buffer
     connectedSerial = false;

@@ -65,26 +65,66 @@ void draw() {
   }
 }
 
+byte[] buffer;
+boolean append;
+
 void serialEvent (Serial serial) {
-  String[] input = trim(split(serial.readString(), '\t'));
-  if (input.length != 6) {
-    println("Wrong length: " + input.length);
-    return;
+  if (append)
+    buffer = concat(buffer, serial.readBytes());
+  else
+    buffer = serial.readBytes();
+  int[] data = new int[buffer.length];
+  for (int i = 0; i < data.length; i++)
+    data[i] = buffer[i] & 0xFF; // Cast to unsigned value
+  //println(data);
+
+  if (new String(buffer).startsWith(responseHeader)) {
+    int cmd = data[responseHeader.length()];
+    int length = data[responseHeader.length() + 1];
+    if (length != (data.length -  responseHeader.length() - 5)) {
+      append = true; // If it's not the correct length, then the rest will come in the next package
+      return;
+    }
+    int input[] = new int[length];
+    int i;
+    for (i = 0; i < length; i++)
+      input[i] = data[i + responseHeader.length() + 2];
+    int checksum = data[i + responseHeader.length() + 2];
+
+    if (checksum == (cmd ^ length ^ getChecksum(input))) {
+      switch(cmd) {
+        case SEND_ANGLES:
+          int rollInt = input[0] | ((byte) input[1] << 8); // This can be negative as well
+          int pitchInt = input[2] | ((byte) input[3] << 8); // This can be negative as well
+          int yawInt = input[4] | (input[5] << 8); // This is always positive
+          //println(rollInt + " " + pitchInt + " " + yawInt);
+
+          roll = (float) rollInt / 100.0f; // Convert values to floating point numbers
+          pitch = (float) pitchInt / 100.0f; // Convert values to floating point numbers
+          yaw = (float) yawInt / 100.0f; // Convert values to floating point numbers
+
+          if (resetYaw) {
+            resetYaw  = false;
+            yawStart = yaw;
+          }
+          yaw -= yawStart; // Subtract starting angle
+          if (yaw < 0) // Convert heading range to 0-360
+            yaw += 360;
+          break;
+        default:
+          println("Unknown command");
+          break;
+      }
+    } else
+      println("Checksum error!");
+  } else {
+    println("Wrong header!");
+    println(new String(buffer));
   }
-
-  roll = float(input[1]); // Store values
-  pitch = float(input[3]);
-  yaw = float(input[5]);
-
-  if (resetYaw) {
-    resetYaw  = false;
-    yawStart = yaw;
-  }
-
-  yaw -= yawStart; // Subtract starting angle
 
   serial.clear(); // Clear buffer
   drawValues = true; // Draw the plane
+  append = false;
 }
 
 void reset() {
@@ -96,7 +136,9 @@ void keyPressed() {
     reset();
   else if (key == ENTER || key == 'c')
     connect(); // Connect to serial port
-  else if (key == 'd')
+  else if (key == ESC || key == 'd' ) {
     disconnect(); // Disconnect serial connection
+    key = 0; // Disable Processing from quiting when pressing ESC
+  }
 }
 
