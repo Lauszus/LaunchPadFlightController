@@ -122,44 +122,44 @@ static float calculateHeading(angle_t *angle, sensor_t *mag) {
 // Rotate accelerometer sensor readings by a delta angle from gyroscope
 // See: http://inside.mines.edu/fs_home/gmurray/ArbitraryAxisRotation
 static void rotateV(sensor_t *v, sensor_t *gyroRate, float dt) {
-  sensor_t v_tmp = *v;
-  angle_t deltaAngle = { .data = { gyroRate->X * dt, gyroRate->Y * dt, gyroRate->Z * dt } };
+    sensor_t v_tmp = *v;
+    angle_t deltaAngle = { .data = { gyroRate->X * dt, gyroRate->Y * dt, gyroRate->Z * dt } };
 
-  float cosx = cosf(deltaAngle.roll);
-  float sinx = sinf(deltaAngle.roll);
-  float cosy = cosf(deltaAngle.pitch);
-  float siny = sinf(deltaAngle.pitch);
-  float cosz = cosf(deltaAngle.yaw);
-  float sinz = sinf(deltaAngle.yaw);
+    float cosx = cosf(deltaAngle.roll);
+    float sinx = sinf(deltaAngle.roll);
+    float cosy = cosf(deltaAngle.pitch);
+    float siny = sinf(deltaAngle.pitch);
+    float cosz = cosf(deltaAngle.yaw);
+    float sinz = sinf(deltaAngle.yaw);
 
-  float coszcosx = cosz * cosx;
-  float sinzcosx = sinz * cosx;
-  float coszsinx = sinx * cosz;
-  float sinzsinx = sinx * sinz;
+    float coszcosx = cosz * cosx;
+    float sinzcosx = sinz * cosx;
+    float coszsinx = sinx * cosz;
+    float sinzsinx = sinx * sinz;
 
-  float mat[3][3];
-  mat[0][0] = cosz * cosy;
-  mat[0][1] = -cosy * sinz;
-  mat[0][2] = siny;
-  mat[1][0] = sinzcosx + (coszsinx * siny);
-  mat[1][1] = coszcosx - (sinzsinx * siny);
-  mat[1][2] = -sinx * cosy;
-  mat[2][0] = (sinzsinx) - (coszcosx * siny);
-  mat[2][1] = (coszsinx) + (sinzcosx * siny);
-  mat[2][2] = cosy * cosx;
+    float mat[3][3];
+    mat[0][0] = cosz * cosy;
+    mat[0][1] = -cosy * sinz;
+    mat[0][2] = siny;
+    mat[1][0] = sinzcosx + (coszsinx * siny);
+    mat[1][1] = coszcosx - (sinzsinx * siny);
+    mat[1][2] = -sinx * cosy;
+    mat[2][0] = (sinzsinx) - (coszcosx * siny);
+    mat[2][1] = (coszsinx) + (sinzcosx * siny);
+    mat[2][2] = cosy * cosx;
 
-  v->X = v_tmp.X * mat[0][0] + v_tmp.Y * mat[1][0] + v_tmp.Z * mat[2][0];
-  v->Y = v_tmp.X * mat[0][1] + v_tmp.Y * mat[1][1] + v_tmp.Z * mat[2][1];
-  v->Z = v_tmp.X * mat[0][2] + v_tmp.Y * mat[1][2] + v_tmp.Z * mat[2][2];
+    v->X = v_tmp.X * mat[0][0] + v_tmp.Y * mat[1][0] + v_tmp.Z * mat[2][0];
+    v->Y = v_tmp.X * mat[0][1] + v_tmp.Y * mat[1][1] + v_tmp.Z * mat[2][1];
+    v->Z = v_tmp.X * mat[0][2] + v_tmp.Y * mat[1][2] + v_tmp.Z * mat[2][2];
 }
 
 #if !USE_MAG
 static void normalizeV(sensor_t *src, sensor_t *dest) { // Normalize a vector
-  float magnitude = sqrtf(src->X * src->X + src->Y * src->Y + src->Z * src->Z);
-  if (magnitude != 0) {
-    dest->X = src->X / magnitude;
-    dest->Y = src->Y / magnitude;
-    dest->Z = src->Z / magnitude;
-  }
+    float magnitude = sqrtf(src->X * src->X + src->Y * src->Y + src->Z * src->Z);
+    if (magnitude != 0) {
+        dest->X = src->X / magnitude;
+        dest->Y = src->Y / magnitude;
+        dest->Z = src->Z / magnitude;
+    }
 }
 #endif
