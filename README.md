@@ -52,29 +52,33 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
 
 # Pinout
 
-| Pin  |   Connection  |
-|------|---------------|
-| PB6  |    Motor 1    |
-| PB7  |    Motor 2    |
-| PB4  |    Motor 3    |
-| PB5  |    Motor 4    |
-| PC6  |   CPPM input  |
-| PA6  |     SCL       |
-| PA7  |     SDA       |
-| PE3  |     INT       |
-| PC4  |  Sonar echo   |
-| PC5  | Sonar trigger |
-| PB0* |   UART1 RX    |
-| PB1* |   UART1 TX    |
-| PA5  |    Buzzer     |
+| Pin  |    Connection  |
+|------|----------------|
+| PB6  |     Motor 1    |
+| PB7  |     Motor 2    |
+| PB4  |     Motor 3    |
+| PB5  |     Motor 4    |
+| PC6  |    CPPM input  |
+| PA6  |      SCL       |
+| PA7  |      SDA       |
+| PE3  |  MPU-6500 INT  |
+| PC4  |   Sonar echo   |
+| PC5  |  Sonar trigger |
+| PB0* |    UART1 RX    |
+| PB1* |    UART1 TX    |
+| PA5  |     Buzzer     |
 
 \* Not 5V tolerant
+
+UART1 is connected to a HC-06 Bluetooth module running at a baudrate of 115200.
+
+# Notes
 
 Note that the motor layout follow the Naze32 in x-configuration i.e. motor 1 is bottom right, motor 2 is top right, motor 3 is bottom left and motor 4 is top left when looking from the back.
 
 Make sure that roll increases when tilting quadcopter to the right, pitch increases when pitching quadcopter downward and yaw increases when rotation quadcopter clockwise.
 
-It is a good idea to run the accelerometer and ESCs calibration routines before flying the aircraft.
+It is a good idea to run the accelerometer, magnetometer and ESCs calibration routines before flying the aircraft.
 
 __WARNING:__ Take propellers OFF when testing and calibrating ESCs!!
 
