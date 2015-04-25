@@ -173,12 +173,12 @@ void intHMC5883L(hmc5883l_t *hmc5883l) {
     SysCtlPeripheralEnable(GPIO_HMC5883L_DRDY_PERIPH); // Enable GPIO peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 
-	GPIOPinTypeGPIOInput(GPIO_HMC5883L_DRDY_BASE, GPIO_HMC5883L_DRDY_PIN); // Set DRDY pin as input
-	GPIOIntTypeSet(GPIO_HMC5883L_DRDY_BASE, GPIO_HMC5883L_DRDY_PIN, GPIO_FALLING_EDGE); // Enable interrupt on falling
+    GPIOPinTypeGPIOInput(GPIO_HMC5883L_DRDY_BASE, GPIO_HMC5883L_DRDY_PIN); // Set DRDY pin as input
+    GPIOIntTypeSet(GPIO_HMC5883L_DRDY_BASE, GPIO_HMC5883L_DRDY_PIN, GPIO_FALLING_EDGE); // Enable interrupt on falling
 
-	IntPrioritySet(INT_GPIOF, 2); // Set interrupt priority to 2
-	GPIOIntEnable(GPIO_HMC5883L_DRDY_BASE, GPIO_HMC5883L_DRDY_PIN); // Enable interrupt
-	GPIOIntRegister(GPIO_HMC5883L_DRDY_BASE, drdyHandler); // Register interrupt handler
+    IntPrioritySet(INT_GPIOF, 2); // Set interrupt priority to 2
+    GPIOIntEnable(GPIO_HMC5883L_DRDY_BASE, GPIO_HMC5883L_DRDY_PIN); // Enable interrupt
+    GPIOIntRegister(GPIO_HMC5883L_DRDY_BASE, drdyHandler); // Register interrupt handler
 
     uint8_t buf[3]; // Buffer for I2C data
     i2cReadData(HMC5883L_ADDRESS, HMC5883L_ID_REG_A, buf, 3);
