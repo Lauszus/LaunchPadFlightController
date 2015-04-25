@@ -28,7 +28,7 @@
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
 
-static const uint32_t configVersion = 11; // Must be bumped every time config_t is changed
+static const uint32_t configVersion = 12; // Must be bumped every time config_t is changed
 config_t cfg;
 
 void initEEPROM(void) {
@@ -83,6 +83,7 @@ void setDefaultConfig(void) {
     resetPIDTerms();
 
     cfg.angleKp = 4.70f;
+    cfg.headKp = 0.00f;
     cfg.maxAngleInclination = 50.0f; // Max angle in self level mode
     cfg.stickScalingRollPitch = 4.69f;
     cfg.stickScalingYaw = 2.0f;

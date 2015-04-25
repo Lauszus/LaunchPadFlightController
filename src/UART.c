@@ -67,13 +67,14 @@ void printPIDValues(pid_values_t *pidValues) {
     UARTFlushTx(false);
 }
 
-#else
-
-#include "PID.h"
-
-void initUART(void) {
-}
-void printPIDValues(pid_values_t *pidValues) {
+void printSettings(void) {
+    UARTprintf("Settings: %d.%02u\t%d.%02u\t%u\t%d.%02u\t%d.%02u\n",
+                                            (int16_t)cfg.angleKp, (uint16_t)(abs(cfg.angleKp * 100.0f) % 100),
+                                            (int16_t)cfg.headKp, (uint16_t)(abs(cfg.headKp * 100.0f) % 100),
+                                            cfg.maxAngleInclination,
+                                            (int16_t)cfg.stickScalingRollPitch, (uint16_t)(abs(cfg.stickScalingRollPitch * 100.0f) % 100),
+                                            (int16_t)cfg.stickScalingYaw, (uint16_t)(abs(cfg.stickScalingYaw * 100.0f) % 100));
+    UARTFlushTx(false);
 }
 
 #endif

@@ -68,7 +68,7 @@ typedef struct {
 } __attribute__((packed)) pidBT_t;
 
 typedef struct {
-    uint16_t angleKp; // Value multiplied by 100
+    uint16_t angleKp, headKp; // Values multiplied by 100
     uint8_t maxAngleInclination; // Inclination angle in degrees
     uint16_t stickScalingRollPitch, stickScalingYaw; // Stick scaling values multiplied by 100
 } __attribute__((packed)) settings_t;
@@ -224,17 +224,14 @@ bool readBluetoothData(angle_t *angle) {
                     if (msg.length == sizeof(settings)) { // Make sure that it has the right length
                         if (getData((uint8_t*)&settings, sizeof(settings))) { // This will read the data and check the checksum
                             cfg.angleKp = settings.angleKp / 100.0f;
+                            cfg.headKp = settings.headKp / 100.0f;
                             cfg.maxAngleInclination = settings.maxAngleInclination;
                             cfg.stickScalingRollPitch = settings.stickScalingRollPitch / 100.0f;
                             cfg.stickScalingYaw = settings.stickScalingYaw / 100.0f;
                             updateConfig();
                             newValuesReceived = true;
 #if DEBUG_BLUETOOTH_PROTOCOL
-                            UARTprintf("Angle Kp: %d.%02u\n", (int16_t)cfg.angleKp, (uint16_t)(abs(cfg.angleKp * 100.0f) % 100));
-                            UARTprintf("Max angle incl: %u\n", cfg.maxAngleInclination);
-                            UARTprintf("Stick scaling: %d.%02u\t%d.%02u\n", (int16_t)cfg.stickScalingRollPitch, (uint16_t)(abs(cfg.stickScalingRollPitch * 100.0f) % 100),
-                                                             (int16_t)cfg.stickScalingYaw, (uint16_t)(abs(cfg.stickScalingYaw * 100.0f) % 100));
-                            UARTFlushTx(false);
+                            printSettings();
 #endif
                         }
 #if DEBUG_BLUETOOTH_PROTOCOL
@@ -253,6 +250,7 @@ bool readBluetoothData(angle_t *angle) {
                         msg.cmd = GET_SETTINGS;
                         msg.length = sizeof(settings);
                         settings.angleKp = cfg.angleKp * 100.0f;
+                        settings.headKp = cfg.headKp * 100.0f;
                         settings.maxAngleInclination = cfg.maxAngleInclination;
                         settings.stickScalingRollPitch = cfg.stickScalingRollPitch * 100.0f;
                         settings.stickScalingYaw = cfg.stickScalingYaw * 100.0f;

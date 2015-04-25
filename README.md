@@ -6,7 +6,7 @@ _________
 
 This is a flight controller used for a quadcopter in X-configuration.
 
-It is written for the [Tiva C Series TM4C123G LaunchPad](http://www.ti.com/tool/EK-TM4C123GXL).
+It is written for the [Tiva C Series TM4C123G LaunchPad](http://www.ti.com/tool/EK-TM4C123GXL) running at 80 MHz.
 
 In order to built this project you need to download Keil µVision IDE 5. Then open the [project file](LaunchPadFlightController.uvprojx).
 
@@ -35,7 +35,7 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
 * Gyro & accelerometer (MPU-6500)
 * Magnetometer (HMC5883L)
 * Ultrasound sensor aka sonar (HC-SR04)
-* Rate mode, Self level mode
+* Rate mode, self level mode and heading hold mode
 * [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid)
 * OneShot125 ESC support
 * Buzzer feedback
@@ -68,6 +68,7 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
 | PB0* |    UART1 RX    |
 | PB1* |    UART1 TX    |
 | PA5  |     Buzzer     |
+| PE4  |  HMC5883L DRDY |
 
 \* Not 5V tolerant
 

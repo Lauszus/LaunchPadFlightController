@@ -17,6 +17,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <Math.h>
 
 #include "Bluetooth.h"
 #include "Buzzer.h"
@@ -60,7 +61,9 @@ int main(void) {
     SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ); // Set clock to 80 MHz (400 MHz(PLL) / 2 / 2.5 = 80 MHz)
 
     initPID();
+#if UART_DEBUG
     initUART();
+#endif
     initTime();
     initBuzzer();
     initEEPROM();
@@ -102,8 +105,11 @@ int main(void) {
     UARTprintf("Calibrating ESCs on next power cycle\n");
 #endif
 
+#if UART_DEBUG
     printPIDValues(pidRoll.values); // Print PID Values
     printPIDValues(pidYaw.values);
+    printSettings(); // Print settings
+#endif
 
     while (!validRXData || getRXChannel(RX_AUX2_CHAN) > 0) {
         // Wait until we have valid data and safety aux channel is in safe position
@@ -141,14 +147,20 @@ int main(void) {
                 beepBuzzer(); // Indicate if new values were set
         }
 
-        static bool angleMode = false;
-        if (!angleMode && getRXChannel(RX_AUX1_CHAN) > -10) {
+        // Handle angle and heading mode
+        static bool angleMode = false, headMode = false;
+        if (getRXChannel(RX_AUX1_CHAN) > -10)
             angleMode = true;
-            GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED if in angle mode
-        } else if (angleMode) {
+        else
             angleMode = false;
-            GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED if in acro mode
-        }
+
+        if (angleMode && getRXChannel(RX_AUX1_CHAN) > 50) // Make sure we are in angle mode or heading mode does not make sense
+            headMode = true;
+        else
+            headMode = false;
+        
+        if (!armed)
+            GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED if not armed
 
         if (dataReadyMPU6500()) {
             uint32_t now = micros();
@@ -177,6 +189,24 @@ int main(void) {
                 float elevator = getRXChannel(RX_ELEVATOR_CHAN);
                 float rudder = getRXChannel(RX_RUDDER_CHAN);
                 //UARTprintf("%d\t%d\t%d\n", (int16_t)aileron, (int16_t)elevator, (int16_t)rudder);
+
+                static float magHold;
+                if (headMode && fabsf(rudder) < 5) { // Only use heading hold if user is not applying rudder
+                    static const uint8_t headMaxAngle = 25;
+                    if (fmaxf(fabsf(angle.roll), fabsf(angle.pitch)) < headMaxAngle) { // Check that we are not tilted too much
+                        float dif = angle.yaw - magHold;
+                        if (dif < -180.0f) // Convert range back to [-180:180]
+                            dif += 360.0f;
+                        if (dif > 180.0f)
+                            dif -= 360.0f;
+                        rudder -= dif * cfg.headKp;
+                        GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED
+                    } else
+                        GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED
+                } else {
+                    GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED
+                    magHold = angle.yaw;
+                }
 
                 float setPointRoll, setPointPitch; // Roll and pitch control can both be gyro or accelerometer based
                 const float setPointYaw = rudder * cfg.stickScalingYaw; // Yaw is always gyro controlled
@@ -258,6 +288,8 @@ int main(void) {
         // Self level angle trim
         // Calibrate magnetometer
         // Set magnetic declination
+        // Set acc_lpf_factor, gyro_cmpf_factor and gyro_cmpfm_factor + add explanation
+        // headMaxAngle
     // Add disarm timer
     // Remove safety AUX channel once 100% stable
     // Check that both buttons are held in while calibrating ESCs
