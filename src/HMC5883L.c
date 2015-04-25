@@ -120,7 +120,7 @@ void getHMC5883LData(hmc5883l_t *hmc5883l, bool calibrating) {
         hmc5883l->mag.data[axis] = (float)hmc5883l->magRaw.data[axis] * hmc5883l->magGain.data[axis]; // Apply gain
 
     hmc5883lBoardOrientation(&hmc5883l->mag); // Apply board orientation
-    
+
     if (!calibrating) { // If we are not calibrating, then subtract zero values
         for (uint8_t axis = 0; axis < 3; axis++)
             hmc5883l->mag.data[axis] -= cfg.magZero.data[axis]; // Subtract zero value stored in EEPROM
@@ -181,7 +181,7 @@ void intHMC5883L(hmc5883l_t *hmc5883l) {
 	GPIOIntRegister(GPIO_HMC5883L_DRDY_BASE, drdyHandler); // Register interrupt handler
 
     uint8_t buf[3]; // Buffer for I2C data
-    i2cReadData(HMC5883L_ADDRESS, 0x0A, buf, 3);
+    i2cReadData(HMC5883L_ADDRESS, HMC5883L_ID_REG_A, buf, 3);
     if (buf[0] == 'H' && buf[1] == '4' && buf[2] == '3') { // Read identification registers
 #if UART_DEBUG
         UARTprintf("HMC5883L found\n");
