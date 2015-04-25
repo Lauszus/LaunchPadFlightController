@@ -28,6 +28,7 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
 
 * Store PID values, calibration values etc. in EEPROM
 * Gyro & accelerometer calibration routine
+* Magnetometer calibration routine (turns on Blue LED when calibrating)
 * Arm/disarm using rudder
 * Status LEDs
 * Supports CPPM receivers

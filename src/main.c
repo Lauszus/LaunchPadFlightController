@@ -29,6 +29,7 @@
 #include "MPU6500.h"
 #include "PPM.h"
 #include "PID.h"
+#include "Pins.h"
 #include "RX.h"
 #include "Sonar.h"
 #include "Time.h"
@@ -41,12 +42,6 @@
 #if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
-
-#define SYSCTL_PERIPH_LED SYSCTL_PERIPH_GPIOF
-#define GPIO_LED_BASE     GPIO_PORTF_BASE
-#define GPIO_RED_LED      GPIO_PIN_1
-#define GPIO_BLUE_LED     GPIO_PIN_2
-#define GPIO_GREEN_LED    GPIO_PIN_3
 
 static angle_t angle; // Struct used to store angles
 static mpu6500_t mpu6500; // Gyro and accelerometer readings
