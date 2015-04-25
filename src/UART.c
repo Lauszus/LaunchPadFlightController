@@ -67,38 +67,11 @@ void printPIDValues(pid_values_t *pidValues) {
     UARTFlushTx(false);
 }
 
-static void setValues(char *input) {
-    if (input[0] == 'G' && input[1] == 'P') { // Send "GP;" to get the current PID Values
-        printPIDValues(pidRoll.values); // Print PID Values
-        printPIDValues(pidYaw.values);
-    }
-}
-
-static char dataInput[100]; // Use this buffer to store the incoming values
-
-void checkUARTData(void) {
-    if (UARTRxBytesAvail()) {
-        uint8_t i = 0;
-        while (1) {
-            dataInput[i] = UARTgetc(); // This is a blocking call
-            if (dataInput[i] == ';') // Keep reading until it reads a semicolon
-                break;
-            if (++i >= sizeof(dataInput) / sizeof(dataInput[0]) - 1) // String is too long
-                return;
-        }
-        dataInput[i + 1] = '\0'; // Add null-character
-        UARTprintf("%s\n", dataInput); // Echo message back
-        setValues(dataInput);
-    }
-}
-
 #else
 
 #include "PID.h"
 
 void initUART(void) {
-}
-void checkUARTData(void) {
 }
 void printPIDValues(pid_values_t *pidValues) {
 }

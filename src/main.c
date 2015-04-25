@@ -137,9 +137,6 @@ int main(void) {
         // Turn on red led if armed otherwise turn on green LED
         GPIOPinWrite(GPIO_LED_BASE, GPIO_RED_LED | GPIO_GREEN_LED, armed ? GPIO_RED_LED : GPIO_GREEN_LED);
 
-        if (!armed)
-            checkUARTData(); // Poll UART for incoming data if unarmed
-
         // Don't spin motors if the throttle is low
         bool runMotors = false;
         if (armed && getRXChannel(RX_THROTTLE_CHAN) > -95)
