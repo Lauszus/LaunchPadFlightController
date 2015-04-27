@@ -18,7 +18,7 @@ Android application is available at the following repository: <https://github.co
 
 # Video demonstrations
 
-Some video demonstrations of the flight controller can be seen at my [YouTube channel](https://www.youtube.com/user/kslauszus).
+Some video demonstrations of the flight controller can be seen at my [YouTube channel](https://www.youtube.com/playlist?list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg).
 
 # GUI
 
