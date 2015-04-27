@@ -84,4 +84,8 @@ It is a good idea to run the accelerometer, magnetometer and ESCs calibration ro
 
 __WARNING:__ Take propellers OFF when testing and calibrating ESCs!!
 
+# Credits
+
+A lot of the inspiration for this code came from (Cleanflight)[https://github.com/cleanflight/cleanflight] and other open source flight controller projects.
+
 For more information send me an email at <kristianl@tkjelectronics.dk>.
