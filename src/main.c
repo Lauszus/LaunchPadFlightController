@@ -50,12 +50,6 @@ static mpu6500_t mpu6500; // Gyro and accelerometer readings
 static hmc5883l_t hmc5883l; // Magnetometer readings
 #endif
 
-static uint32_t timer = 0; // Used to keep track of the time
-
-// Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
-static float motors[4] = { MIN_MOTOR_OUT, MIN_MOTOR_OUT, MIN_MOTOR_OUT, MIN_MOTOR_OUT };
-static bool armed = false;
-
 int main(void) {
     // Set the clocking to run directly from the external crystal/oscillator and use PLL to run at 80 MHz
     SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ); // Set clock to 80 MHz (400 MHz(PLL) / 2 / 2.5 = 80 MHz)
@@ -122,6 +116,7 @@ int main(void) {
 
     while (1) {
         // Make sure there is valid data and safety channel is in armed position
+        static bool armed = false;
         if (validRXData && getRXChannel(RX_AUX2_CHAN) > 0) {
             if (!armed && getRXChannel(RX_THROTTLE_CHAN) < -95 && getRXChannel(RX_RUDDER_CHAN) > 95) // Arm using throttle low and yaw right
                 armed = true;
@@ -148,22 +143,22 @@ int main(void) {
         }
 
         // Handle angle and heading mode
-        static bool angleMode = false, headMode = false;
+        bool angleMode = false;
         if (getRXChannel(RX_AUX1_CHAN) > -10)
             angleMode = true;
-        else
-            angleMode = false;
 
+#if USE_MAG
+        bool headMode = false;
         if (angleMode && getRXChannel(RX_AUX1_CHAN) > 50) // Make sure we are in angle mode or heading mode does not make sense
             headMode = true;
-        else
-            headMode = false;
-        
+
         if (!armed)
             GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED if not armed
+#endif
 
         if (dataReadyMPU6500()) {
             uint32_t now = micros();
+            static uint32_t timer = 0; // Used to keep track of the time
             float dt = (float)(now - timer) / 1000000.0f;
             //UARTprintf("%d\n", now - timer);
             timer = now;
@@ -190,6 +185,7 @@ int main(void) {
                 float rudder = getRXChannel(RX_RUDDER_CHAN);
                 //UARTprintf("%d\t%d\t%d\n", (int16_t)aileron, (int16_t)elevator, (int16_t)rudder);
 
+#if USE_MAG
                 static float magHold;
                 if (headMode && fabsf(rudder) < 5) { // Only use heading hold if user is not applying rudder
                     static const uint8_t headMaxAngle = 25;
@@ -207,6 +203,7 @@ int main(void) {
                     GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED
                     magHold = angle.yaw;
                 }
+#endif
 
                 float setPointRoll, setPointPitch; // Roll and pitch control can both be gyro or accelerometer based
                 const float setPointYaw = rudder * cfg.stickScalingYaw; // Yaw is always gyro controlled
@@ -227,6 +224,7 @@ int main(void) {
                 float pitchOut = updatePID(&pidPitch, setPointPitch, mpu6500.gyroRate.pitch, dt);
                 float yawOut = updatePID(&pidYaw, setPointYaw, -mpu6500.gyroRate.yaw, dt); // Gyro rate is inverted, so it works well with RC yaw control input
 
+                float motors[4]; // Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
                 float throttle = getRXChannel(RX_THROTTLE_CHAN);
                 for (uint8_t i = 0; i < 4; i++)
                     motors[i] = throttle;
