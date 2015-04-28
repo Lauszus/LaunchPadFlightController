@@ -22,24 +22,20 @@
 
 #include "Types.h"
 
-// Scale factor for +-2000deg/s and +-8g - see datasheet: http://www.invensense.com/mems/gyro/documents/PS-MPU-6500A-01.pdf at page 9-10
-#define MPU6500_GYRO_SCALE_FACTOR   16.4f
-#define MPU6500_ACC_SCALE_FACTOR    4096.0f
-
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 typedef struct {
-    sensorRaw_t acc; // Raw accelerometer readings
-    sensorRaw_t gyro; // Raw gyroscope readings
+    sensorRaw_t acc, gyro; // Raw accelerometer and gyroscope readings
+    float accScaleFactor, gyroScaleFactor; // Gyroscope and accelerometer scale factor
     angle_t gyroRate; // Gyroscope readings in deg/s
 } mpu6500_t;
 
-void initMPU6500(void);
+void initMPU6500(mpu6500_t *mpu6500);
 bool dataReadyMPU6500(void);
 void getMPU6500Data(mpu6500_t *mpu6500);
-bool calibrateAcc(void);
+bool calibrateAcc(mpu6500_t *mpu6500);
 
 #ifdef __cplusplus
 }

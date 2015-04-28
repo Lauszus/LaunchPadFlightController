@@ -128,7 +128,7 @@ void initBluetooth(void) {
     }
 }
 
-bool readBluetoothData(angle_t *angle) {
+bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
     bool newValuesReceived = false;
     if (UARTRxBytesAvail1() > strlen(commandHeader)) {
         if (findString(commandHeader)) {
@@ -331,7 +331,7 @@ bool readBluetoothData(angle_t *angle) {
 
                 case CAL_ACC:
                     if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
-                        while (calibrateAcc()) { // Get accelerometer zero values
+                        while (calibrateAcc(mpu6500)) { // Get accelerometer zero values
                             // Loop until calibration values are found
                         }
                         beepLongBuzzer();

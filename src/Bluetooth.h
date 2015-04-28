@@ -18,6 +18,7 @@
 #ifndef __bluetooth_h__
 #define __bluetooth_h__
 
+#include "MPU6500.h"
 #include "Types.h"
 
 #ifdef __cplusplus
@@ -25,7 +26,7 @@ extern "C" {
 #endif
 
 void initBluetooth(void);
-bool readBluetoothData(angle_t *angle);
+bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle);
 
 #ifdef __cplusplus
 }

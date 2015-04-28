@@ -52,11 +52,12 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
     for (uint8_t axis = 0; axis < 3; axis++) {
         gyro.data[axis] = mpu6500->gyroRate.data[axis] * DEG_TO_RAD; // Convert from deg/s to rad/s
         accLPF.data[axis] = accLPF.data[axis] * (1.0f - (1.0f / acc_lpf_factor)) + mpu6500->acc.data[axis] * (1.0f / acc_lpf_factor); // Apply low pass filter
-        accMagSquared += accLPF.data[axis] * accLPF.data[axis] / (MPU6500_ACC_SCALE_FACTOR * MPU6500_ACC_SCALE_FACTOR); // Convert readings to g's
+        accMagSquared += accLPF.data[axis] * accLPF.data[axis]; // Update magnitude
     }
 
     rotateV(&accFiltered, &gyro, dt); // Rotate accelerometer vector according to delta angle given by gyro reading
 
+    accMagSquared /= mpu6500->accScaleFactor * mpu6500->accScaleFactor; // Convert readings to g's
     if (0.72f < accMagSquared && accMagSquared < 1.32f) { // Check if < 0.85G or > 1.15G, if so we just skip new accelerometer readings
         for (uint8_t axis = 0; axis < 3; axis++)
             accFiltered.data[axis] = (accFiltered.data[axis] * gyro_cmpf_factor + accLPF.data[axis]) * invGyroComplimentaryFilterFactor; // Complimentary filter accelerometer gyro readings

@@ -71,7 +71,7 @@ int main(void) {
     initRX();
     initSonar();
     initI2C();
-    initMPU6500();
+    initMPU6500(&mpu6500);
 #if USE_MAG
     intHMC5883L(&hmc5883l);
 #endif
@@ -143,7 +143,7 @@ int main(void) {
         if (armed && getRXChannel(RX_THROTTLE_CHAN) > -95)
             runMotors = true;
         else {
-            if (readBluetoothData(&angle)) // Read Bluetooth data if motors are not spinning
+            if (readBluetoothData(&mpu6500, &angle)) // Read Bluetooth data if motors are not spinning
                 beepBuzzer(); // Indicate if new values were set
         }
 

@@ -30,19 +30,23 @@
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
 
-#define MPU6500_SMPLRT_DIV          0x19
-#define MPU6500_INT_PIN_CFG         0x37
-#define MPU6500_ACCEL_XOUT_H        0x3B
-#define MPU6500_GYRO_XOUT_H         0x43
-#define MPU6500_PWR_MGMT_1          0x6B
-#define MPU6500_WHO_AM_I            0x75
+#define MPU6500_SMPLRT_DIV                  0x19
+#define MPU6500_INT_PIN_CFG                 0x37
+#define MPU6500_ACCEL_XOUT_H                0x3B
+#define MPU6500_GYRO_XOUT_H                 0x43
+#define MPU6500_PWR_MGMT_1                  0x6B
+#define MPU6500_WHO_AM_I                    0x75
 
-#define MPU6500_ADDRESS             0x68
-#define MPU6500_WHO_AM_I_ID         0x70
+#define MPU6500_ADDRESS                     0x68
+#define MPU6500_WHO_AM_I_ID                 0x70
 
-#define GPIO_MPU_INT_PERIPH         SYSCTL_PERIPH_GPIOE
-#define GPIO_MPU_INT_BASE           GPIO_PORTE_BASE
-#define GPIO_MPU_INT_PIN            GPIO_PIN_3
+// Scale factor for +-2000deg/s and +-8g - see datasheet: http://www.invensense.com/mems/gyro/documents/PS-MPU-6500A-01.pdf at page 9-10
+#define MPU6500_GYRO_SCALE_FACTOR_2000      16.4f
+#define MPU6500_ACC_SCALE_FACTOR_8          4096.0f
+
+#define GPIO_MPU_INT_PERIPH                 SYSCTL_PERIPH_GPIOE
+#define GPIO_MPU_INT_BASE                   GPIO_PORTE_BASE
+#define GPIO_MPU_INT_PIN                    GPIO_PIN_3
 
 static sensorRaw_t gyroZero; // Gyroscope zero values are found at every power on
 
@@ -80,7 +84,7 @@ void getMPU6500Data(mpu6500_t *mpu6500) {
     for (uint8_t axis = 0; axis < 3; axis++) {
         mpu6500->acc.data[axis] -= cfg.accZero.data[axis]; // Subtract accelerometer zero values
         mpu6500->gyro.data[axis] -= gyroZero.data[axis]; // Subtract gyro zero values
-        mpu6500->gyroRate.data[axis] = ((float)mpu6500->gyro.data[axis]) / MPU6500_GYRO_SCALE_FACTOR; // Convert to deg/s
+        mpu6500->gyroRate.data[axis] = (float)mpu6500->gyro.data[axis] / mpu6500->gyroScaleFactor; // Convert to deg/s
     }
 }
 
@@ -96,7 +100,7 @@ static bool checkMinMax(int32_t *array, uint8_t length, int16_t maxDifference) {
 }
 
 static bool calibrateSensor(sensorRaw_t *zeroValues, uint8_t regAddr, int16_t maxDifference) {
-    const uint8_t bufLength = 25;
+    static const uint8_t bufLength = 25;
     static int32_t sensorBuffer[3][bufLength];
     uint8_t buf[6];
 
@@ -130,38 +134,35 @@ static bool calibrateSensor(sensorRaw_t *zeroValues, uint8_t regAddr, int16_t ma
 static bool calibrateGyro(void) {
     bool rcode = calibrateSensor(&gyroZero, MPU6500_GYRO_XOUT_H, 100); // 100 / 16.4 ~= 6.10 deg/s
 
-    if (!rcode) {
 #if UART_DEBUG
+    if (!rcode)
         UARTprintf("Gyro zero values: %d\t%d\t%d\n", gyroZero.X, gyroZero.Y, gyroZero.Z);
-#endif
-    } else {
-#if UART_DEBUG
+    else
         UARTprintf("Gyro calibration error\n");
 #endif
-    }
 
     return rcode;
 }
 
-bool calibrateAcc(void) {
+bool calibrateAcc(mpu6500_t *mpu6500) {
     bool rcode = calibrateSensor(&cfg.accZero, MPU6500_ACCEL_XOUT_H, 100); // 100 / 4096 ~= 0.02g
-    cfg.accZero.Z -= MPU6500_ACC_SCALE_FACTOR; // Z-axis is reading +1g when horizontal, so we subtract 1g from the value found
+    cfg.accZero.Z -= mpu6500->accScaleFactor; // Z-axis is reading +1g when horizontal, so we subtract 1g from the value found
 
     if (!rcode) {
 #if UART_DEBUG
         UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", cfg.accZero.X, cfg.accZero.Y, cfg.accZero.Z);
 #endif
         updateConfig(); // Write new values to EEPROM
-    } else {
+    }
 #if UART_DEBUG
+    else
         UARTprintf("Accelerometer calibration error\n");
 #endif
-    }
 
     return rcode; // No error
 }
 
-void initMPU6500(void) {
+void initMPU6500(mpu6500_t *mpu6500) {
     uint8_t i2cBuffer[5]; // Buffer for I2C data
 
     i2cBuffer[0] = i2cRead(MPU6500_ADDRESS, MPU6500_WHO_AM_I);
@@ -191,6 +192,10 @@ void initMPU6500(void) {
     i2cBuffer[4] = 0x03; // 41 Hz Acc filtering
     i2cWriteData(MPU6500_ADDRESS, MPU6500_SMPLRT_DIV, i2cBuffer, 5); // Write to all five registers at once
 
+    // Set accelerometer and gyroscope scale factor from datasheet
+    mpu6500->accScaleFactor = MPU6500_ACC_SCALE_FACTOR_8;
+    mpu6500->gyroScaleFactor = MPU6500_GYRO_SCALE_FACTOR_2000;
+
     /* Enable Raw Data Ready Interrupt on INT pin */
     i2cBuffer[0] = (1 << 5) | (1 << 4); // Enable LATCH_INT_EN and INT_ANYRD_2CLEAR
                                         // When this bit is equal to 1, the INT pin is held high until the interrupt is cleared
@@ -205,9 +210,7 @@ void initMPU6500(void) {
 
     delay(100); // Wait for sensor to stabilize
 
-    //printMPU6050Debug();
-
     while (calibrateGyro()) { // Get gyro zero values
-        // Loop until calibration is succesful
+        // Loop until calibration is successful
     }
 }
