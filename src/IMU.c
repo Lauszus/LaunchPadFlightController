@@ -32,9 +32,6 @@
 
 static float calculateHeading(angle_t *angle, sensor_t *mag);
 static void rotateV(sensor_t *v, sensor_t *gyroRate, float dt);
-#if !USE_MAG
-static void normalizeV(sensor_t *src, sensor_t *dest);
-#endif
 
 // Accelerometer readings can be in any scale, but gyro rate needs to be in deg/s
 // Make sure that roll increases when tilting quadcopter to the right, pitch increases
@@ -87,7 +84,6 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
     angle->yaw = calculateHeading(angle, &magFiltered); // Get heading in degrees
 #else
     rotateV(mag, &gyro, dt); // Rotate magnetometer vector according to delta angle given by the gyro reading
-    normalizeV(mag, mag); // Normalize magnetometer vector
     angle->yaw = calculateHeading(angle, mag); // Get heading in degrees
 #endif
 
@@ -165,14 +161,3 @@ static void rotateV(sensor_t *v, sensor_t *gyroRate, float dt) {
     v->Y = v_tmp.X * mat[0][1] + v_tmp.Y * mat[1][1] + v_tmp.Z * mat[2][1];
     v->Z = v_tmp.X * mat[0][2] + v_tmp.Y * mat[1][2] + v_tmp.Z * mat[2][2];
 }
-
-#if !USE_MAG
-static void normalizeV(sensor_t *src, sensor_t *dest) { // Normalize a vector
-    float magnitude = sqrtf(src->X * src->X + src->Y * src->Y + src->Z * src->Z);
-    if (magnitude != 0) {
-        dest->X = src->X / magnitude;
-        dest->Y = src->Y / magnitude;
-        dest->Z = src->Z / magnitude;
-    }
-}
-#endif
