@@ -179,6 +179,9 @@ int main(void) {
             UARTFlushTx(false);*/
 
             // Motors routine
+#if USE_MAG
+            static float magHold; // Heading using for heading hold
+#endif
             if (runMotors) {
                 float aileron = getRXChannel(RX_AILERON_CHAN);
                 float elevator = getRXChannel(RX_ELEVATOR_CHAN);
@@ -186,7 +189,6 @@ int main(void) {
                 //UARTprintf("%d\t%d\t%d\n", (int16_t)aileron, (int16_t)elevator, (int16_t)rudder);
 
 #if USE_MAG
-                static float magHold;
                 if (headMode && fabsf(rudder) < 5) { // Only use heading hold if user is not applying rudder
                     static const uint8_t headMaxAngle = 25;
                     if (fmaxf(fabsf(angle.roll), fabsf(angle.pitch)) < headMaxAngle) { // Check that we are not tilted too much
@@ -272,6 +274,9 @@ int main(void) {
             } else {
                 writePPMAllOff();
                 resetPIDTerms();
+#if USE_MAG
+                magHold = angle.yaw;
+#endif
             }
         }
 
