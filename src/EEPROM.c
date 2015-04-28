@@ -82,8 +82,8 @@ void setDefaultConfig(void) {
 
     resetPIDTerms();
 
-    cfg.angleKp = 4.70f;
     cfg.headKp = 0.00f;
+    cfg.angleKp = 4.50f;
     cfg.maxAngleInclination = 50.0f; // Max angle in self level mode
     cfg.stickScalingRollPitch = 4.69f;
     cfg.stickScalingYaw = 2.0f;
