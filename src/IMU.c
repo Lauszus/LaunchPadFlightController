@@ -121,7 +121,11 @@ static float calculateHeading(angle_t *angle, sensor_t *mag) {
 
     float Bfy = mag->Z * sinx - mag->Y * cosx;
     float Bfx = mag->X * cosy + mag->Y * siny * sinx + mag->Z * siny * cosx;
+#if USE_MAG
     float heading = -(atan2f(Bfy, Bfx) * RAD_TO_DEG + magneticDeclination); // Return heading
+#else
+    float heading = -(atan2f(Bfy, Bfx) * RAD_TO_DEG); // Return heading
+#endif
 
     if (heading < 0) // Convert heading range to 0-360
         heading += 360;
