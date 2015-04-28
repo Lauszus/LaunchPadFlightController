@@ -32,6 +32,11 @@
 //#include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
 
+#define SYSCTL_PERIPH_SONAR     SYSCTL_PERIPH_GPIOC
+#define GPIO_SONAR_BASE         GPIO_PORTC_BASE
+#define GPIO_SONAR_ECHO         GPIO_PIN_4
+#define GPIO_SONAR_TRIG         GPIO_PIN_5
+
 // Implemented based on: http://che126.che.caltech.edu/28015-PING-Sensor-Product-Guide-v2.0.pdf
 
 // TODO: Adjust this value based on the temperature
@@ -45,7 +50,7 @@ static void SonarHandler(void) {
 
     TimerIntClear(WTIMER0_BASE, TIMER_CAPA_EVENT); // Clear interrupt
     uint32_t curr = TimerValueGet(WTIMER0_BASE, TIMER_A); // Read capture value
-    bool edge = GPIOPinRead(GPIO_PORTC_BASE, GPIO_PIN_4); // Read the GPIO pin
+    bool edge = GPIOPinRead(GPIO_SONAR_BASE, GPIO_SONAR_ECHO); // Read the GPIO pin
 
     if (last_edge && !edge) { // Check that we are going from a positive to falling edge
         uint32_t diff = curr - prev; // Calculate diff
@@ -64,9 +69,9 @@ void triggerSonar(void) {
     uint32_t now = millis();
     if ((int32_t)(now - lastTrigger) > 25) { // Trigger every 25ms
         lastTrigger = now;
-        GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_5, GPIO_PIN_5); // Set pin high
+        GPIOPinWrite(GPIO_SONAR_BASE, GPIO_SONAR_TRIG, GPIO_SONAR_TRIG); // Set pin high
         delayMicroseconds(10); // Other sources wait 10us
-        GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_5, 0); // Set pin low
+        GPIOPinWrite(GPIO_SONAR_BASE, GPIO_SONAR_TRIG, 0); // Set pin low
         //UARTprintf("%d\n", getSonarDistance());
     }
 }
@@ -84,10 +89,10 @@ void initSonar(void) {
     SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER0); // Enable Wide Timer0 peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC); // Enable GPIOC peripheral
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_SONAR); // Enable GPIO peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
     GPIOPinConfigure(GPIO_PC4_WT0CCP0); // Use alternate function
-    GPIOPinTypeTimer(GPIO_PORTC_BASE, GPIO_PIN_4); // Use pin with timer peripheral
+    GPIOPinTypeTimer(GPIO_SONAR_BASE, GPIO_SONAR_ECHO); // Use pin with timer peripheral
 
     // Split timers and enable timer A event up-count timer
     TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_CAP_TIME_UP);
@@ -99,8 +104,8 @@ void initSonar(void) {
     IntPrioritySet(INT_WTIMER0A, 0); // Configure Wide Timer 0A interrupt priority as 0
     IntEnable(INT_WTIMER0A); // Enable Wide Timer 0A interrupt
 
-    GPIOPinTypeGPIOOutput(GPIO_PORTC_BASE, GPIO_PIN_5); // Set PC5 as output
-    GPIOPinWrite(GPIO_PORTC_BASE, GPIO_PIN_5, 0); // Set pin low
+    GPIOPinTypeGPIOOutput(GPIO_SONAR_BASE, GPIO_SONAR_TRIG); // Set pin as output
+    GPIOPinWrite(GPIO_SONAR_BASE, GPIO_SONAR_TRIG, 0); // Set pin low
 
     TimerEnable(WTIMER0_BASE, TIMER_A); // Enable Wide Timers 0A
 }
