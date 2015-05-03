@@ -14,7 +14,7 @@ More information can be found at the following blog post: <http://blog.tkjelectr
 
 # Android application
 
-Android application is available at the following repository: <https://github.com/Lauszus/LaunchPadFlightController>.
+Android application is available at the following repository: <https://github.com/Lauszus/LaunchPadFlightControllerAndroid>.
 
 # Video demonstrations
 
@@ -86,6 +86,6 @@ __WARNING:__ Take propellers OFF when testing and calibrating ESCs!!
 
 # Credits
 
-A lot of the inspiration for this code came from (Cleanflight)[https://github.com/cleanflight/cleanflight] and other open source flight controller projects.
+A lot of the inspiration for this code came from [Cleanflight](https://github.com/cleanflight/cleanflight) and other open source flight controller projects.
 
 For more information send me an email at <kristianl@tkjelectronics.dk>.
