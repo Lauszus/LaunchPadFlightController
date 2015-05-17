@@ -37,7 +37,8 @@ float updatePID(pid_t *pid, float setPoint, float input, float dt) {
     float pTerm = pid->values->Kp * error;
 
     // I-term
-    pid->iTerm += pid->values->Ki * error * dt; // Multiplication with Ki is done before integration limit, to make it independent from integration limit value
+    // Use Trapezoidal Integration, see: http://ecee.colorado.edu/shalom/Emulations.pdf
+    pid->iTerm += pid->values->Ki * (error + pid->lastError) / 2.0f * dt; // Multiplication with Ki is done before integration limit, to make it independent from integration limit value
     pid->iTerm = constrain(pid->iTerm, -pid->values->integrationLimit, pid->values->integrationLimit); // Limit the integrated error - prevents windup
 
     // D-term
