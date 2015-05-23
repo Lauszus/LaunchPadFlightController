@@ -101,18 +101,18 @@ static void drdyHandler(void) {
 // Z-axis should be facing upward
 static void hmc5883lBoardOrientation(sensor_t *sensor) {
     sensor_t sensorTemp = *sensor;
-    sensor->X = sensorTemp.X;
-    sensor->Y = sensorTemp.Y;
-    sensor->Z = sensorTemp.Z;
+    sensor->axis.X = sensorTemp.axis.X;
+    sensor->axis.Y = sensorTemp.axis.Y;
+    sensor->axis.Z = sensorTemp.axis.Z;
 }
 
 static void getHMC5883LDataRaw(sensorRaw_t *magRaw) {
     uint8_t buf[6];
     i2cReadData(HMC5883L_ADDRESS, HMC5883L_OUTPUT_REG_X_MSB, buf, 6); // Get magnetometer values
 
-    magRaw->X = (buf[0] << 8) | buf[1];
-    magRaw->Z = (buf[2] << 8) | buf[3];
-    magRaw->Y = (buf[4] << 8) | buf[5];
+    magRaw->axis.X = (buf[0] << 8) | buf[1];
+    magRaw->axis.Z = (buf[2] << 8) | buf[3];
+    magRaw->axis.Y = (buf[4] << 8) | buf[5];
 }
 
 void getHMC5883LData(hmc5883l_t *hmc5883l, bool calibrating) {
@@ -129,9 +129,9 @@ void getHMC5883LData(hmc5883l_t *hmc5883l, bool calibrating) {
 
 #if 0 && UART_DEBUG
     UARTprintf("%d.%03u\t%d.%03u\t%d.%03u\n",
-                                            (int16_t)hmc5883l->mag.X, (uint16_t)(abs(hmc5883l->mag.X * 1000.0f) % 1000),
-                                            (int16_t)hmc5883l->mag.Y, (uint16_t)(abs(hmc5883l->mag.Y * 1000.0f) % 1000),
-                                            (int16_t)hmc5883l->mag.Z, (uint16_t)(abs(hmc5883l->mag.Z * 1000.0f) % 1000));
+                                            (int16_t)hmc5883l->mag.axis.X, (uint16_t)(abs(hmc5883l->mag.axis.X * 1000.0f) % 1000),
+                                            (int16_t)hmc5883l->mag.axis.Y, (uint16_t)(abs(hmc5883l->mag.axis.Y * 1000.0f) % 1000),
+                                            (int16_t)hmc5883l->mag.axis.Z, (uint16_t)(abs(hmc5883l->mag.axis.Z * 1000.0f) % 1000));
     UARTFlushTx(false);
 #endif
 }
@@ -213,15 +213,15 @@ void intHMC5883L(hmc5883l_t *hmc5883l) {
 
     if (!checkLimit(hmc5883l->magRaw, LOW_LIMIT, HIGH_LIMIT)) {
 #if UART_DEBUG
-        UARTprintf("HMC5883L self test high limit failed: %d < %d %d %d < %d\n", LOW_LIMIT, hmc5883l->magRaw.X, hmc5883l->magRaw.Y, hmc5883l->magRaw.Z, HIGH_LIMIT);
+        UARTprintf("HMC5883L self test high limit failed: %d < %d %d %d < %d\n", LOW_LIMIT, hmc5883l->magRaw.axis.X, hmc5883l->magRaw.axis.Y, hmc5883l->magRaw.axis.Z, HIGH_LIMIT);
 #endif
         while (1);
     }
 
-    sensor_t mag_total;
-    mag_total.X += hmc5883l->magRaw.X;
-    mag_total.Y += hmc5883l->magRaw.Y;
-    mag_total.Z += hmc5883l->magRaw.Z;
+    sensor_t mag_total = { .data = { 0, 0, 0 } };
+    mag_total.axis.X += hmc5883l->magRaw.axis.X;
+    mag_total.axis.Y += hmc5883l->magRaw.axis.Y;
+    mag_total.axis.Z += hmc5883l->magRaw.axis.Z;
 
     i2cWrite(HMC5883L_ADDRESS, HMC5883L_CONF_REG_A, HMC5883L_CONF_REG_A_MA_8 | HMC5883L_CONF_REG_A_D0_15 | HMC5883L_CONF_REG_A_MS_NEG); // Set to 8 samples, update rate to 15 Hz (default) and negative bias configuration
     while (!dataReadyHMC5883L()); // Wait for data
@@ -232,19 +232,19 @@ void intHMC5883L(hmc5883l_t *hmc5883l) {
 
     if (!checkLimit(hmc5883l->magRaw, -HIGH_LIMIT, -LOW_LIMIT)) {
 #if UART_DEBUG
-        UARTprintf("HMC5883L self test low limit failed: %d < %d %d %d < %d\n", -HIGH_LIMIT, hmc5883l->magRaw.X, hmc5883l->magRaw.Y, hmc5883l->magRaw.Z, -LOW_LIMIT);
+        UARTprintf("HMC5883L self test low limit failed: %d < %d %d %d < %d\n", -HIGH_LIMIT, hmc5883l->magRaw.axis.X, hmc5883l->magRaw.axis.Y, hmc5883l->magRaw.axis.Z, -LOW_LIMIT);
 #endif
         while (1);
     }
 
-    mag_total.X -= hmc5883l->magRaw.X;
-    mag_total.Y -= hmc5883l->magRaw.Y;
-    mag_total.Z -= hmc5883l->magRaw.Z;
+    mag_total.axis.X -= hmc5883l->magRaw.axis.X;
+    mag_total.axis.Y -= hmc5883l->magRaw.axis.Y;
+    mag_total.axis.Z -= hmc5883l->magRaw.axis.Z;
 
     // Calculate gain
-    hmc5883l->magGain.X = GAIN_25_GA_LSB_GAIN * HMC5883L_X_SELF_TEST_GAUSS / (mag_total.X / 2.0f);
-    hmc5883l->magGain.Y = GAIN_25_GA_LSB_GAIN * HMC5883L_Y_SELF_TEST_GAUSS / (mag_total.Y / 2.0f);
-    hmc5883l->magGain.Z = GAIN_25_GA_LSB_GAIN * HMC5883L_Z_SELF_TEST_GAUSS / (mag_total.Z / 2.0f);
+    hmc5883l->magGain.axis.X = GAIN_25_GA_LSB_GAIN * HMC5883L_X_SELF_TEST_GAUSS / (mag_total.axis.X / 2.0f);
+    hmc5883l->magGain.axis.Y = GAIN_25_GA_LSB_GAIN * HMC5883L_Y_SELF_TEST_GAUSS / (mag_total.axis.Y / 2.0f);
+    hmc5883l->magGain.axis.Z = GAIN_25_GA_LSB_GAIN * HMC5883L_Z_SELF_TEST_GAUSS / (mag_total.axis.Z / 2.0f);
 
     i2cWrite(HMC5883L_ADDRESS, HMC5883L_CONF_REG_A, HMC5883L_CONF_REG_A_MA_8 | HMC5883L_CONF_REG_A_D0_15 | HMC5883L_CONF_REG_A_MS_NORM); // Set to 8 samples, update rate to 15 Hz (default) and normal measurement configuration
     i2cWrite(HMC5883L_ADDRESS, HMC5883L_CONF_REG_B, HMC5883L_CONF_REG_B_GN_13); // Set gain to 1.3 Ga (default)
@@ -252,11 +252,11 @@ void intHMC5883L(hmc5883l_t *hmc5883l) {
     getHMC5883LDataRaw(&hmc5883l->magRaw); // First values are discarded, as it is from previous gain
 
 #if UART_DEBUG
-    UARTprintf("Mag cal: %d\t%d\t%d\t", (int16_t)mag_total.X, (int16_t)mag_total.Y, (int16_t)mag_total.Z);
+    UARTprintf("Mag cal: %d\t%d\t%d\t", (int16_t)mag_total.axis.X, (int16_t)mag_total.axis.Y, (int16_t)mag_total.axis.Z);
     UARTprintf("Gain: %d.%03u\t%d.%03u\t%d.%03u\n",
-                                                    (int16_t)hmc5883l->magGain.X, (uint16_t)(abs(hmc5883l->magGain.X * 1000.0f) % 1000),
-                                                    (int16_t)hmc5883l->magGain.Y, (uint16_t)(abs(hmc5883l->magGain.Y * 1000.0f) % 1000),
-                                                    (int16_t)hmc5883l->magGain.Z, (uint16_t)(abs(hmc5883l->magGain.Z * 1000.0f) % 1000));
+                                                    (int16_t)hmc5883l->magGain.axis.X, (uint16_t)(abs(hmc5883l->magGain.axis.X * 1000.0f) % 1000),
+                                                    (int16_t)hmc5883l->magGain.axis.Y, (uint16_t)(abs(hmc5883l->magGain.axis.Y * 1000.0f) % 1000),
+                                                    (int16_t)hmc5883l->magGain.axis.Z, (uint16_t)(abs(hmc5883l->magGain.axis.Z * 1000.0f) % 1000));
     UARTFlushTx(false);
 #endif
 }

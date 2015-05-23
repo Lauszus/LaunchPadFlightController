@@ -77,7 +77,7 @@ int main(void) {
     GPIOPinTypeGPIOOutput(GPIO_LED_BASE, GPIO_RED_LED | GPIO_BLUE_LED | GPIO_GREEN_LED); // Set red, blue and green LEDs as outputs
 
 #if UART_DEBUG
-    UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", cfg.accZero.X, cfg.accZero.Y, cfg.accZero.Z);
+    UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", cfg.accZero.axis.X, cfg.accZero.axis.Y, cfg.accZero.axis.Z);
 #endif
 
 #if 0 && USE_MAG // Set this to 1 in order to run the magnetometer calibration routine
@@ -86,10 +86,10 @@ int main(void) {
 #endif
     calibrateMag(&hmc5883l);
 #if UART_DEBUG
-    UARTprintf("Finished magnetometer calibration: %d %d %d\n", (int16_t)cfg.magZero.X, (int16_t)cfg.magZero.Y, (int16_t)cfg.magZero.Z);
+    UARTprintf("Finished magnetometer calibration: %d %d %d\n", (int16_t)cfg.magZero.axis.X, (int16_t)cfg.magZero.axis.Y, (int16_t)cfg.magZero.axis.Z);
 #endif
 #elif UART_DEBUG && USE_MAG
-    UARTprintf("Magnetometer zero values: %d\t%d\t%d\n", (int16_t)cfg.magZero.X, (int16_t)cfg.magZero.Y, (int16_t)cfg.magZero.Z);
+    UARTprintf("Magnetometer zero values: %d\t%d\t%d\n", (int16_t)cfg.magZero.axis.X, (int16_t)cfg.magZero.axis.Y, (int16_t)cfg.magZero.axis.Z);
 #endif
 
 #if 0 // Set to 1 in order to run the ESC calibration routine at next power cycle
@@ -175,7 +175,7 @@ int main(void) {
             getAngles(&mpu6500, &mag, &angle, dt); // Calculate pitch, roll and yaw
 #endif
 
-            /*UARTprintf("%d\t%d\t%d\n", (int16_t)angle.roll, (int16_t)angle.pitch, (int16_t)angle.yaw);
+            /*UARTprintf("%d\t%d\t%d\n", (int16_t)angle.axis.roll, (int16_t)angle.axis.pitch, (int16_t)angle.axis.yaw);
             UARTFlushTx(false);*/
 
             // Motors routine
@@ -191,8 +191,8 @@ int main(void) {
 #if USE_MAG
                 if (headMode && fabsf(rudder) < 5) { // Only use heading hold if user is not applying rudder
                     static const uint8_t headMaxAngle = 25;
-                    if (fmaxf(fabsf(angle.roll), fabsf(angle.pitch)) < headMaxAngle) { // Check that we are not tilted too much
-                        float dif = angle.yaw - magHold;
+                    if (fmaxf(fabsf(angle.axis.roll), fabsf(angle.axis.pitch)) < headMaxAngle) { // Check that we are not tilted too much
+                        float dif = angle.axis.yaw - magHold;
                         if (dif < -180.0f) // Convert range back to [-180:180]
                             dif += 360.0f;
                         if (dif > 180.0f)
@@ -203,15 +203,15 @@ int main(void) {
                         GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED
                 } else {
                     GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED
-                    magHold = angle.yaw;
+                    magHold = angle.axis.yaw;
                 }
 #endif
 
                 float setPointRoll, setPointPitch; // Roll and pitch control can both be gyro or accelerometer based
                 const float setPointYaw = rudder * cfg.stickScalingYaw; // Yaw is always gyro controlled
                 if (angleMode) { // Angle mode
-                    setPointRoll = constrain(aileron, -cfg.maxAngleInclination, cfg.maxAngleInclination) - angle.roll;
-                    setPointPitch = constrain(elevator, -cfg.maxAngleInclination, cfg.maxAngleInclination) - angle.pitch;
+                    setPointRoll = constrain(aileron, -cfg.maxAngleInclination, cfg.maxAngleInclination) - angle.axis.roll;
+                    setPointPitch = constrain(elevator, -cfg.maxAngleInclination, cfg.maxAngleInclination) - angle.axis.pitch;
                     setPointRoll *= cfg.angleKp;
                     setPointPitch *= cfg.angleKp;
                 } else { // Acro mode
@@ -222,9 +222,9 @@ int main(void) {
                 /*UARTprintf("%d\t%d\n", (int16_t)setPointRoll, (int16_t)setPointPitch);
                 UARTFlushTx(false);*/
 
-                float rollOut = updatePID(&pidRoll, setPointRoll, mpu6500.gyroRate.roll, dt);
-                float pitchOut = updatePID(&pidPitch, setPointPitch, mpu6500.gyroRate.pitch, dt);
-                float yawOut = updatePID(&pidYaw, setPointYaw, -mpu6500.gyroRate.yaw, dt); // Gyro rate is inverted, so it works well with RC yaw control input
+                float rollOut = updatePID(&pidRoll, setPointRoll, mpu6500.gyroRate.axis.roll, dt);
+                float pitchOut = updatePID(&pidPitch, setPointPitch, mpu6500.gyroRate.axis.pitch, dt);
+                float yawOut = updatePID(&pidYaw, setPointYaw, -mpu6500.gyroRate.axis.yaw, dt); // Gyro rate is inverted, so it works well with RC yaw control input
 
                 float motors[4]; // Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
                 float throttle = getRXChannel(RX_THROTTLE_CHAN);
@@ -266,7 +266,7 @@ int main(void) {
 
                 //UARTprintf("%d\t%d\n", (int16_t)elevator, (int16_t)aileron);
 #if 0
-                UARTprintf("%d\t%d\t\t", (int16_t)angle.roll, (int16_t)angle.pitch);
+                UARTprintf("%d\t%d\t\t", (int16_t)angle.axis.roll, (int16_t)angle.axis.pitch);
                 UARTprintf("%d\t%d\t\t", (int16_t)rollOut, (int16_t)pitchOut);
                 UARTprintf("%d\t%d\t%d\t%d\n", (int16_t)motors[0], (int16_t)motors[1], (int16_t)motors[2], (int16_t)motors[3]);
                 UARTFlushTx(false);
@@ -275,7 +275,7 @@ int main(void) {
                 writePPMAllOff();
                 resetPIDTerms();
 #if USE_MAG
-                magHold = angle.yaw;
+                magHold = angle.axis.yaw;
 #endif
             }
         }
