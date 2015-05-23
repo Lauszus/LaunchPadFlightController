@@ -3,6 +3,7 @@
 
 The code is released under the GNU General Public License.
 _________
+[![Build Status](https://travis-ci.org/Lauszus/LaunchPadFlightController.svg)](https://travis-ci.org/Lauszus/LaunchPadFlightController)
 
 This is a flight controller used for a quadcopter in X-configuration.
 
