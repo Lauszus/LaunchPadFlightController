@@ -218,7 +218,7 @@ void intHMC5883L(hmc5883l_t *hmc5883l) {
         while (1);
     }
 
-    sensor_t mag_total;
+    sensor_t mag_total = { .X = 0, .Y = 0, .Z = 0 };
     mag_total.X += hmc5883l->magRaw.X;
     mag_total.Y += hmc5883l->magRaw.Y;
     mag_total.Z += hmc5883l->magRaw.Z;
