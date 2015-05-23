@@ -24,3 +24,5 @@
 *.uvopt
 *.uvoptx
 *.plg
+.pioenvs/
+.sconsign.dblite
