@@ -100,8 +100,8 @@ static bool checkMinMax(int32_t *array, uint8_t length, int16_t maxDifference) {
 }
 
 static bool calibrateSensor(sensorRaw_t *zeroValues, uint8_t regAddr, int16_t maxDifference) {
+    static int32_t sensorBuffer[3][25];
     static const uint8_t bufLength = 25;
-    static int32_t sensorBuffer[3][bufLength];
     uint8_t buf[6];
 
     for (uint8_t i = 0; i < bufLength; i++) {
