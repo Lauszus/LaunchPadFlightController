@@ -25,7 +25,7 @@
 #
 # Defines the part type that this project uses.
 #
-PART=TM4C123GH6PM
+PART ?= TM4C123GH6PM
 
 #
 # Set target name.
@@ -35,7 +35,7 @@ TARGET ?= LaunchPadFlightController
 #
 # The base directory for TivaWare.
 #
-ROOT=../lib
+ROOT = ../lib
 
 #
 # Include the common make definitions.
@@ -45,7 +45,7 @@ include ${ROOT}/makedefs
 #
 # Where to find header files that do not live in the source directory.
 #
-IPATH=${ROOT}
+IPATH = ${ROOT}
 
 #
 # The default rule, which causes the project to be built.
@@ -73,7 +73,7 @@ ${COMPILER}:
 #
 # Create a list of all object files.
 #
-TARGET_OBJS=$(addsuffix .o,$(addprefix ${COMPILER}/,$(basename $(notdir $(wildcard *.c)))))
+TARGET_OBJS = $(addsuffix .o,$(addprefix ${COMPILER}/,$(basename $(notdir $(wildcard *.c)))))
 
 #
 # Rules for building the project.
@@ -82,9 +82,9 @@ ${COMPILER}/${TARGET}.axf: ${TARGET_OBJS}
 ${COMPILER}/${TARGET}.axf: ${ROOT}/utils/uartstdio.o
 ${COMPILER}/${TARGET}.axf: ${ROOT}/driverlib/${COMPILER}/libdriver.a
 ${COMPILER}/${TARGET}.axf: ${TARGET}.ld
-SCATTERgcc_${TARGET}=${TARGET}.ld
-ENTRY_${TARGET}=ResetISR
 
+SCATTERgcc_${TARGET} = ${TARGET}.ld
+ENTRY_${TARGET} = ResetISR
 
 #
 # CFLAGS passed to the compiler.
