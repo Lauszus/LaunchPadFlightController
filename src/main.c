@@ -17,7 +17,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <Math.h>
+#include <math.h>
 
 #include "Bluetooth.h"
 #include "Buzzer.h"

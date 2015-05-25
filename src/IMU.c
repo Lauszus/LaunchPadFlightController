@@ -18,7 +18,7 @@
 // Inspired by: https://github.com/cleanflight/cleanflight/blob/78a4476506c06315d7296a010a2c7ba003146b44/src/main/flight/imu.c
 
 #include <stdint.h>
-#include <Math.h>
+#include <math.h>
 
 #include "IMU.h"
 #include "MPU6500.h"
