@@ -9,9 +9,31 @@ This is a flight controller used for a quadcopter in X-configuration.
 
 It is written for the [Tiva C Series TM4C123G LaunchPad](http://www.ti.com/tool/EK-TM4C123GXL) running at 80 MHz.
 
-In order to built this project you need to download Keil µVision IDE 5. Then open the [project file](LaunchPadFlightController.uvprojx).
-
 More information can be found at the following blog post: <http://blog.tkjelectronics.dk/2015/01/launchpad-flight-controller/>.
+
+# Build instructions
+
+In order to built this project you need to download Keil µVision IDE 5 or use [Make](http://www.gnu.org/software/make/).
+
+If you are using Keil µVision IDE 5, then simply open the [project file](LaunchPadFlightController.uvprojx).
+
+If you are using Make, then you will need to first download and install [gcc-arm-none-eabi](https://launchpad.net/gcc-arm-embedded/4.8/4.8-2014-q3-update) and then install [lm4tools](https://github.com/utzig/lm4tools).
+
+lm4tools can be installed like so:
+
+```bash
+$ git clone https://github.com/utzig/lm4tools.git
+$ cd lm4tools/lm4flash/ && make
+$ sudo cp lm4flash /usr/bin/
+```
+
+If you are on a Mac, I recommend installing gcc-arm-none-eabi using Homebrew like so:
+
+```bash
+brew tap PX4/homebrew-px4
+brew update
+brew install gcc-arm-none-eabi
+```
 
 # Android application
 
