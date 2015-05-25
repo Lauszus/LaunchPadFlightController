@@ -51,6 +51,8 @@ IPATH = $(ROOT)
 # The default rule, which causes the project to be built.
 #
 all: $(COMPILER) $(COMPILER)/$(TARGET).axf
+	@echo
+	$(PREFIX)-size $(COMPILER)/$(TARGET).axf
 
 #
 # The rule to clean out all the build products.
