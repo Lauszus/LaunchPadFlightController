@@ -24,3 +24,6 @@
 *.uvopt
 *.uvoptx
 *.plg
+src/.project
+src/.cproject
+src/.settings/
