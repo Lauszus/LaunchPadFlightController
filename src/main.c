@@ -298,7 +298,6 @@ int main(void) {
     // Add disarm timer
     // Remove safety AUX channel once 100% stable
     // Check that both buttons are held in while calibrating ESCs
-    // Remove Kalman filter
     // Magnetometer
         // Dynamically adjust gain when calibrating if limit is reached
         // Take average of several values for gain

@@ -20,7 +20,6 @@
 
 #include "Buzzer.h"
 #include "EEPROM.h"
-#include "Kalman.h"
 
 #include "driverlib/eeprom.h"
 #include "driverlib/sysctl.h"
@@ -58,13 +57,8 @@ void initEEPROM(void) {
     if (version != configVersion) {
         setDefaultConfig();
         beepLongBuzzer();
-    } else {
+    } else
         EEPROMRead((uint32_t*)&cfg, sizeof(configVersion), sizeof(config_t)); // Read config from EEPROM
-
-        /*kalmanRoll.Q_angle = kalmanPitch.Q_angle = cfg.Q_angle; // Set Kalman filter coefficients
-        kalmanRoll.Q_bias = kalmanPitch.Q_angle = cfg.Q_bias;
-        kalmanRoll.R_measure = kalmanPitch.Q_angle = cfg.R_measure;*/
-    }
 }
 
 void setDefaultConfig(void) {
@@ -87,10 +81,6 @@ void setDefaultConfig(void) {
     cfg.maxAngleInclination = 50.0f; // Max angle in self level mode
     cfg.stickScalingRollPitch = 4.69f;
     cfg.stickScalingYaw = 2.0f;
-
-    /*cfg.Q_angle = 0.001f; // Kalman filter coefficients default values
-    cfg.Q_bias = 0.003f;
-    cfg.R_measure = 0.03f;*/
 
     cfg.calibrateESCs = false;
 
@@ -116,9 +106,5 @@ void updateConfig(void) {
         UARTprintf("Error writing config to EEPROM: %u\n", rcode);
 #endif
         buzzer(true);
-    } else {
-        /*kalmanRoll.Q_angle = kalmanPitch.Q_angle = cfg.Q_angle; // Set Kalman filter coefficients
-        kalmanRoll.Q_bias = kalmanPitch.Q_angle = cfg.Q_bias;
-        kalmanRoll.R_measure = kalmanPitch.Q_angle = cfg.R_measure;*/
     }
 }

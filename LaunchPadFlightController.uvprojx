@@ -479,11 +479,6 @@
               <FilePath>.\src\EEPROM.c</FilePath>
             </File>
             <File>
-              <FileName>Kalman.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\src\Kalman.c</FilePath>
-            </File>
-            <File>
               <FileName>Bluetooth.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\Bluetooth.c</FilePath>

@@ -48,8 +48,6 @@ enum {
     GET_PID_YAW,
     SET_SETTINGS,
     GET_SETTINGS,
-    SET_KALMAN, // TODO: Remove
-    GET_KALMAN, // TODO: Remove
     SEND_ANGLES,
     SEND_INFO, // TODO: Remove
     CAL_ACC,
@@ -73,13 +71,8 @@ typedef struct {
     uint16_t stickScalingRollPitch, stickScalingYaw; // Stick scaling values multiplied by 100
 } __attribute__((packed)) settings_t;
 
-typedef struct {
-    uint16_t Q_angle, Q_bias, R_measure; // Kalman coefficients are multiplied by 10000
-} __attribute__((packed)) kalmanBT_t;
-
 static pidBT_t pidRollPitchBT, pidYawBT; // PID values
 static settings_t settings; // Settings
-//static kalmanBT_t kalmanCoefficients; // Kalman coefficients
 static uint8_t sendAngles; // Non-zero if values should be sent
 
 struct angles_t {
@@ -264,51 +257,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
                         UARTprintf("GET_SETTINGS error\n");
 #endif
                     break;
-/*
-                case SET_KALMAN:
-                    if (msg.length == sizeof(kalmanCoefficients)) { // Make sure that it has the right length
-                        if (getData((uint8_t*)&kalmanCoefficients, sizeof(kalmanCoefficients))) { // This will read the data and check the checksum
-                            cfg.Q_angle = kalmanCoefficients.Q_angle / 10000.0f;
-                            cfg.Q_bias = kalmanCoefficients.Q_bias / 10000.0f;
-                            cfg.R_measure = kalmanCoefficients.R_measure / 10000.0f;
-                            updateConfig();
-                            newValuesReceived = true;
-#if DEBUG_BLUETOOTH_PROTOCOL
-                            UARTprintf("Kalman: %d.%04u\t%d.%04u\t%d.%04u\n", (int16_t)cfg.Q_angle, (uint16_t)(abs(cfg.Q_angle * 10000.0f) % 10000),
-                                                                              (int16_t)cfg.Q_bias, (uint16_t)(abs(cfg.Q_bias * 10000.0f) % 10000),
-                                                                              (int16_t)cfg.R_measure, (uint16_t)(abs(cfg.R_measure * 10000.0f) % 10000));
-                            UARTFlushTx(false);
-#endif
-                        }
-#if DEBUG_BLUETOOTH_PROTOCOL
-                        else
-                            UARTprintf("SET_KALMAN checksum error\n");
-#endif
-                    }
-#if DEBUG_BLUETOOTH_PROTOCOL
-                    else
-                        UARTprintf("SET_KALMAN length error: %u\n", msg.length);
-#endif
-                    break;
 
-                case GET_KALMAN:
-                    if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
-                        msg.cmd = GET_KALMAN;
-                        msg.length = sizeof(kalmanCoefficients);
-                        kalmanCoefficients.Q_angle = cfg.Q_angle * 10000.0f;
-                        kalmanCoefficients.Q_bias = cfg.Q_bias * 10000.0f;
-                        kalmanCoefficients.R_measure = cfg.R_measure * 10000.0f;
-                        sendData((uint8_t*)&kalmanCoefficients, sizeof(kalmanCoefficients));
-#if DEBUG_BLUETOOTH_PROTOCOL
-                        UARTprintf("GET_KALMAN\n");
-#endif
-                    }
-#if DEBUG_BLUETOOTH_PROTOCOL
-                    else
-                        UARTprintf("GET_KALMAN error\n");
-#endif
-                    break;
-*/
                 case SEND_ANGLES:
                     if (msg.length == sizeof(sendAngles)) { // Make sure that it has the right length
                         if (getData((uint8_t*)&sendAngles, sizeof(sendAngles))) { // This will read the data and check the checksum

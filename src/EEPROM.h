@@ -32,7 +32,6 @@ typedef struct {
     float headKp; // Heading mode Kp value
     uint8_t maxAngleInclination; // Max angle in self level mode
     float stickScalingRollPitch, stickScalingYaw; // Stick scaling values
-    //float Q_angle, Q_bias, R_measure; // Kalman filter coefficients
 
     // Will be set by the microcontroller
     bool calibrateESCs; // Flag used to tell if it should calibrate ESCs at next power cycle
