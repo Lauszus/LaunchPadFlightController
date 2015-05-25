@@ -55,8 +55,7 @@ MACROS=-DUART_BUFFERED -DUART_BUFFERED1 -DUART_DEBUG=1 -DUSE_MAG=1 -DUSE_BARO=0
 #
 # The default rule, which causes the project to be built.
 #
-all: ${COMPILER}
-all: ${COMPILER}/LaunchPadFlightController.axf
+all: ${COMPILER} ${COMPILER}/LaunchPadFlightController.axf
 
 #
 # The rule to clean out all the build products.
