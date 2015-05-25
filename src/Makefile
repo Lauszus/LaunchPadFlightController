@@ -104,6 +104,12 @@ ENTRY_LaunchPadFlightController=ResetISR
 CFLAGSgcc=-DTARGET_IS_BLIZZARD_RB1
 
 #
+# Rebuild everything when makefile changes
+#
+TARGET_OBJS=$(addsuffix .o,$(addprefix $(COMPILER)/,$(basename $(notdir $(wildcard *.c)))))
+${TARGET_OBJS}: Makefile
+
+#
 # Include the automatically generated dependency files.
 #
 ifneq (${MAKECMDGOALS},clean)
