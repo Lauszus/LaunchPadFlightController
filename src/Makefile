@@ -62,7 +62,7 @@ clean:
 # The rule to clean out all the build products.
 #
 flash: all
-	lm4flash ${COMPILER}/LaunchPadFlightController.bin
+	lm4flash -v ${COMPILER}/LaunchPadFlightController.bin
 
 #
 # The rule to create the target directory.
