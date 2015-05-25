@@ -38,11 +38,6 @@ ROOT=../lib
 include ${ROOT}/makedefs
 
 #
-# Where to find source files that do not live in this directory.
-#
-VPATH=${ROOT}/utils
-
-#
 # Where to find header files that do not live in the source directory.
 #
 IPATH=${ROOT}
@@ -84,7 +79,7 @@ TARGET_OBJS=$(addsuffix .o,$(addprefix ${COMPILER}/,$(basename $(notdir $(wildca
 # Rules for building the project.
 #
 ${COMPILER}/LaunchPadFlightController.axf: ${TARGET_OBJS}
-${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/uartstdio.o
+${COMPILER}/LaunchPadFlightController.axf: ${ROOT}/utils/uartstdio.o
 ${COMPILER}/LaunchPadFlightController.axf: ${ROOT}/driverlib/${COMPILER}/libdriver.a
 ${COMPILER}/LaunchPadFlightController.axf: LaunchPadFlightController.ld
 SCATTERgcc_LaunchPadFlightController=LaunchPadFlightController.ld
