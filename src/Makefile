@@ -40,51 +40,51 @@ ROOT = ../lib
 #
 # Include the common make definitions.
 #
-include ${ROOT}/makedefs
+include $(ROOT)/makedefs
 
 #
 # Where to find header files that do not live in the source directory.
 #
-IPATH = ${ROOT}
+IPATH = $(ROOT)
 
 #
 # The default rule, which causes the project to be built.
 #
-all: ${COMPILER} ${COMPILER}/${TARGET}.axf
+all: $(COMPILER) $(COMPILER)/$(TARGET).axf
 
 #
 # The rule to clean out all the build products.
 #
 clean:
-	@rm -rf ${COMPILER} ${wildcard *~}
+	@rm -rf $(COMPILER) $(wildcard *~)
 
 #
 # The rule to clean out all the build products.
 #
 flash: all
-	lm4flash -v ${COMPILER}/${TARGET}.bin
+	lm4flash -v $(COMPILER)/$(TARGET).bin
 
 #
 # The rule to create the target directory.
 #
-${COMPILER}:
-	@mkdir -p ${COMPILER}
+$(COMPILER):
+	@mkdir -p $(COMPILER)
 
 #
 # Create a list of all object files.
 #
-TARGET_OBJS = $(addsuffix .o,$(addprefix ${COMPILER}/,$(basename $(notdir $(wildcard *.c)))))
+TARGET_OBJS = $(addsuffix .o,$(addprefix $(COMPILER)/,$(basename $(notdir $(wildcard *.c)))))
 
 #
 # Rules for building the project.
 #
-${COMPILER}/${TARGET}.axf: ${TARGET_OBJS}
-${COMPILER}/${TARGET}.axf: ${ROOT}/utils/uartstdio.o
-${COMPILER}/${TARGET}.axf: ${ROOT}/driverlib/${COMPILER}/libdriver.a
-${COMPILER}/${TARGET}.axf: ${TARGET}.ld
+$(COMPILER)/$(TARGET).axf: $(TARGET_OBJS)
+$(COMPILER)/$(TARGET).axf: $(ROOT)/utils/uartstdio.o
+$(COMPILER)/$(TARGET).axf: $(ROOT)/driverlib/$(COMPILER)/libdriver.a
+$(COMPILER)/$(TARGET).axf: $(TARGET).ld
 
-SCATTERgcc_${TARGET} = ${TARGET}.ld
-ENTRY_${TARGET} = ResetISR
+SCATTERgcc_$(TARGET) = $(TARGET).ld
+ENTRY_$(TARGET) = ResetISR
 
 #
 # CFLAGS passed to the compiler.
@@ -94,11 +94,11 @@ CFLAGSgcc = -DTARGET_IS_BLIZZARD_RB1 -DUART_BUFFERED -DUART_BUFFERED1 -DUART_DEB
 #
 # Rebuild everything when makefile changes.
 #
-${TARGET_OBJS}: Makefile
+$(TARGET_OBJS): Makefile
 
 #
 # Include the automatically generated dependency files.
 #
-ifneq (${MAKECMDGOALS},clean)
--include ${wildcard ${COMPILER}/*.d} __dummy__
+ifneq ($(MAKECMDGOALS),clean)
+-include $(wildcard $(COMPILER)/*.d) __dummy__
 endif
