@@ -19,6 +19,9 @@
 #include <stdbool.h>
 #include <math.h>
 
+#if USE_BARO
+#include "BMP180.h"
+#endif
 #include "Bluetooth.h"
 #include "Buzzer.h"
 #include "EEPROM.h"
@@ -48,6 +51,9 @@ static angle_t angle; // Struct used to store angles
 static mpu6500_t mpu6500; // Gyro and accelerometer readings
 #if USE_MAG
 static hmc5883l_t hmc5883l; // Magnetometer readings
+#endif
+#if USE_BARO
+static bmp180_t bmp180; // Barometer readings
 #endif
 
 int main(void) {

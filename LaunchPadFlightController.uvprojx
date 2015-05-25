@@ -363,7 +363,7 @@
             <useXO>0</useXO>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>rvmdk PART_TM4C123GH6PM UART_BUFFERED UART_BUFFERED1 UART_DEBUG=1 USE_MAG=1</Define>
+              <Define>rvmdk PART_TM4C123GH6PM UART_BUFFERED UART_BUFFERED1 UART_DEBUG=0 USE_MAG=1 USE_BARO=0</Define>
               <Undefine></Undefine>
               <IncludePath>.\lib</IncludePath>
             </VariousControls>
@@ -507,6 +507,11 @@
               <FileName>HMC5883L.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\HMC5883L.c</FilePath>
+            </File>
+            <File>
+              <FileName>BMP180.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\BMP180.c</FilePath>
             </File>
           </Files>
         </Group>

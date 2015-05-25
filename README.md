@@ -35,6 +35,7 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
 * Supports CPPM receivers
 * Gyro & accelerometer (MPU-6500)
 * Magnetometer (HMC5883L)
+* Barometer (BMP180)
 * Ultrasound sensor aka sonar (HC-SR04)
 * Rate mode, self level mode and heading hold mode
 * [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid)

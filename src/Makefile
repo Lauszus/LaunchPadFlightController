@@ -80,7 +80,7 @@ ${COMPILER}:
 # Rules for building the project.
 #
 ${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/main.o
-#${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/BMP180.o
+${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/BMP180.o
 ${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/Bluetooth.o
 ${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/Buzzer.o
 ${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/EEPROM.o
