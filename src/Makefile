@@ -48,11 +48,16 @@ include $(ROOT)/makedefs
 IPATH = $(ROOT)
 
 #
+# Path to project object file.
+#
+PROJECT_OBJ = $(COMPILER)/$(TARGET).axf
+
+#
 # The default rule, which causes the project to be built.
 #
-all: $(COMPILER) $(COMPILER)/$(TARGET).axf
+all: $(COMPILER) $(PROJECT_OBJ)
 	@echo
-	$(PREFIX)-size $(COMPILER)/$(TARGET).axf
+	$(PREFIX)-size $(PROJECT_OBJ)
 
 #
 # The rule to clean out all the build products.
@@ -80,10 +85,10 @@ TARGET_OBJS = $(addsuffix .o,$(addprefix $(COMPILER)/,$(basename $(notdir $(wild
 #
 # Rules for building the project.
 #
-$(COMPILER)/$(TARGET).axf: $(TARGET_OBJS)
-$(COMPILER)/$(TARGET).axf: $(ROOT)/utils/uartstdio.o
-$(COMPILER)/$(TARGET).axf: $(ROOT)/driverlib/$(COMPILER)/libdriver.a
-$(COMPILER)/$(TARGET).axf: $(TARGET).ld
+$(PROJECT_OBJ): $(TARGET_OBJS)
+$(PROJECT_OBJ): $(ROOT)/utils/uartstdio.o
+$(PROJECT_OBJ): $(ROOT)/driverlib/$(COMPILER)/libdriver.a
+$(PROJECT_OBJ): $(TARGET).ld
 
 SCATTERgcc_$(TARGET) = $(TARGET).ld
 ENTRY_$(TARGET) = ResetISR
