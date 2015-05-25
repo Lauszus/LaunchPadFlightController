@@ -28,6 +28,11 @@
 PART=TM4C123GH6PM
 
 #
+# Set target name.
+#
+TARGET ?= LaunchPadFlightController
+
+#
 # The base directory for TivaWare.
 #
 ROOT=../lib
@@ -50,7 +55,7 @@ MACROS=-DUART_BUFFERED -DUART_BUFFERED1 -DUART_DEBUG=1 -DUSE_MAG=1 -DUSE_BARO=0
 #
 # The default rule, which causes the project to be built.
 #
-all: ${COMPILER} ${COMPILER}/LaunchPadFlightController.axf
+all: ${COMPILER} ${COMPILER}/${TARGET}.axf
 
 #
 # The rule to clean out all the build products.
@@ -62,7 +67,7 @@ clean:
 # The rule to clean out all the build products.
 #
 flash: all
-	lm4flash -v ${COMPILER}/LaunchPadFlightController.bin
+	lm4flash -v ${COMPILER}/${TARGET}.bin
 
 #
 # The rule to create the target directory.
@@ -78,12 +83,12 @@ TARGET_OBJS=$(addsuffix .o,$(addprefix ${COMPILER}/,$(basename $(notdir $(wildca
 #
 # Rules for building the project.
 #
-${COMPILER}/LaunchPadFlightController.axf: ${TARGET_OBJS}
-${COMPILER}/LaunchPadFlightController.axf: ${ROOT}/utils/uartstdio.o
-${COMPILER}/LaunchPadFlightController.axf: ${ROOT}/driverlib/${COMPILER}/libdriver.a
-${COMPILER}/LaunchPadFlightController.axf: LaunchPadFlightController.ld
-SCATTERgcc_LaunchPadFlightController=LaunchPadFlightController.ld
-ENTRY_LaunchPadFlightController=ResetISR
+${COMPILER}/${TARGET}.axf: ${TARGET_OBJS}
+${COMPILER}/${TARGET}.axf: ${ROOT}/utils/uartstdio.o
+${COMPILER}/${TARGET}.axf: ${ROOT}/driverlib/${COMPILER}/libdriver.a
+${COMPILER}/${TARGET}.axf: ${TARGET}.ld
+SCATTERgcc_${TARGET}=${TARGET}.ld
+ENTRY_${TARGET}=ResetISR
 CFLAGSgcc=-DTARGET_IS_BLIZZARD_RB1
 
 #
