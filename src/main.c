@@ -154,10 +154,6 @@ int main(void) {
             angleMode = true;
 
 #if USE_MAG
-        bool headMode = false;
-        if (angleMode && getRXChannel(RX_AUX1_CHAN) > 50) // Make sure we are in angle mode or heading mode does not make sense
-            headMode = true;
-
         if (!armed)
             GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED if not armed
 #endif
@@ -195,7 +191,7 @@ int main(void) {
                 //UARTprintf("%d\t%d\t%d\n", (int16_t)aileron, (int16_t)elevator, (int16_t)rudder);
 
 #if USE_MAG
-                if (headMode && fabsf(rudder) < 5) { // Only use heading hold if user is not applying rudder
+                if (angleMode && getRXChannel(RX_AUX1_CHAN) > 50 && fabsf(rudder) < 5) { // Only use heading hold if user is not applying rudder and in angle mode
                     static const uint8_t headMaxAngle = 25;
                     if (fmaxf(fabsf(angle.axis.roll), fabsf(angle.axis.pitch)) < headMaxAngle) { // Check that we are not tilted too much
                         float dif = angle.axis.yaw - magHold;
