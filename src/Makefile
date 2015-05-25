@@ -76,37 +76,24 @@ ${COMPILER}:
 	@mkdir -p ${COMPILER}
 
 #
+# Create a list of all object files.
+#
+TARGET_OBJS=$(addsuffix .o,$(addprefix ${COMPILER}/,$(basename $(notdir $(wildcard *.c)))))
+
+#
 # Rules for building the project.
 #
-${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/main.o
-${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/BMP180.o
-${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/Bluetooth.o
-${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/Buzzer.o
-${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/EEPROM.o
-${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/HMC5883L.o
-${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/I2C.o
-${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/IMU.o
-${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/MPU6500.o
-${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/PID.o
-${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/PPM.o
-${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/RX.o
-${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/Sonar.o
-${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/Time.o
-${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/UART.o
-${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/uartstdio1.o
-
+${COMPILER}/LaunchPadFlightController.axf: ${TARGET_OBJS}
 ${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/uartstdio.o
 ${COMPILER}/LaunchPadFlightController.axf: ${ROOT}/driverlib/${COMPILER}/libdriver.a
-${COMPILER}/LaunchPadFlightController.axf: ${COMPILER}/startup_${COMPILER}.o
 ${COMPILER}/LaunchPadFlightController.axf: LaunchPadFlightController.ld
 SCATTERgcc_LaunchPadFlightController=LaunchPadFlightController.ld
 ENTRY_LaunchPadFlightController=ResetISR
 CFLAGSgcc=-DTARGET_IS_BLIZZARD_RB1
 
 #
-# Rebuild everything when makefile changes
+# Rebuild everything when makefile changes.
 #
-TARGET_OBJS=$(addsuffix .o,$(addprefix $(COMPILER)/,$(basename $(notdir $(wildcard *.c)))))
 ${TARGET_OBJS}: Makefile
 
 #
