@@ -373,9 +373,9 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
         angleTimer = millis();
         msg.cmd = SEND_ANGLES;
         msg.length = sizeof(angles);
-        angles.roll = angle->roll * 100.0f;
-        angles.pitch = angle->pitch * 100.0f;
-        angles.yaw = angle->yaw * 100.0f;
+        angles.roll = angle->axis.roll * 100.0f;
+        angles.pitch = angle->axis.pitch * 100.0f;
+        angles.yaw = angle->axis.yaw * 100.0f;
         sendData((uint8_t*)&angles, sizeof(angles));
 
 #if 0 && DEBUG_BLUETOOTH_PROTOCOL

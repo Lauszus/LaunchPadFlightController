@@ -32,7 +32,6 @@
 #include "driverlib/sysctl.h"
 #include "driverlib/uart.h"
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
-#include "utils/ustdlib.h"
 
 void initUART(void) {
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA); // Enable the GPIO port containing the pins that will be used.

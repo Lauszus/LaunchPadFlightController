@@ -60,9 +60,9 @@ bool dataReadyMPU6500(void) {
 // Z-axis should be facing upward
 static void mpu6500BoardOrientation(sensorRaw_t *sensorRaw) {
     sensorRaw_t sensorRawTemp = *sensorRaw;
-    sensorRaw->X = sensorRawTemp.Y;
-    sensorRaw->Y = sensorRawTemp.X;
-    sensorRaw->Z = -sensorRawTemp.Z;
+    sensorRaw->axis.X = sensorRawTemp.axis.Y;
+    sensorRaw->axis.Y = sensorRawTemp.axis.X;
+    sensorRaw->axis.Z = -sensorRawTemp.axis.Z;
 }
 
 // Returns accelerometer and gyro data with zero values subtracted
@@ -70,13 +70,13 @@ void getMPU6500Data(mpu6500_t *mpu6500) {
     uint8_t buf[14];
     i2cReadData(MPU6500_ADDRESS, MPU6500_ACCEL_XOUT_H, buf, 14); // Note that we can't write directly into mpu6500_t, because of endian conflict. So it has to be done manually
 
-    mpu6500->acc.X = (buf[0] << 8) | buf[1];
-    mpu6500->acc.Y = (buf[2] << 8) | buf[3];
-    mpu6500->acc.Z = (buf[4] << 8) | buf[5];
+    mpu6500->acc.axis.X = (buf[0] << 8) | buf[1];
+    mpu6500->acc.axis.Y = (buf[2] << 8) | buf[3];
+    mpu6500->acc.axis.Z = (buf[4] << 8) | buf[5];
 
-    mpu6500->gyro.X = (buf[8] << 8) | buf[9];
-    mpu6500->gyro.Y = (buf[10] << 8) | buf[11];
-    mpu6500->gyro.Z = (buf[12] << 8) | buf[13];
+    mpu6500->gyro.axis.X = (buf[8] << 8) | buf[9];
+    mpu6500->gyro.axis.Y = (buf[10] << 8) | buf[11];
+    mpu6500->gyro.axis.Z = (buf[12] << 8) | buf[13];
 
     mpu6500BoardOrientation(&mpu6500->acc); // Apply board orientation
     mpu6500BoardOrientation(&mpu6500->gyro);
@@ -100,8 +100,8 @@ static bool checkMinMax(int32_t *array, uint8_t length, int16_t maxDifference) {
 }
 
 static bool calibrateSensor(sensorRaw_t *zeroValues, uint8_t regAddr, int16_t maxDifference) {
+    static int32_t sensorBuffer[3][25];
     static const uint8_t bufLength = 25;
-    static int32_t sensorBuffer[3][bufLength];
     uint8_t buf[6];
 
     for (uint8_t i = 0; i < bufLength; i++) {
@@ -136,7 +136,7 @@ static bool calibrateGyro(void) {
 
 #if UART_DEBUG
     if (!rcode)
-        UARTprintf("Gyro zero values: %d\t%d\t%d\n", gyroZero.X, gyroZero.Y, gyroZero.Z);
+        UARTprintf("Gyro zero values: %d\t%d\t%d\n", gyroZero.axis.X, gyroZero.axis.Y, gyroZero.axis.Z);
     else
         UARTprintf("Gyro calibration error\n");
 #endif
@@ -146,11 +146,11 @@ static bool calibrateGyro(void) {
 
 bool calibrateAcc(mpu6500_t *mpu6500) {
     bool rcode = calibrateSensor(&cfg.accZero, MPU6500_ACCEL_XOUT_H, 100); // 100 / 4096 ~= 0.02g
-    cfg.accZero.Z -= mpu6500->accScaleFactor; // Z-axis is reading +1g when horizontal, so we subtract 1g from the value found
+    cfg.accZero.axis.Z -= mpu6500->accScaleFactor; // Z-axis is reading +1g when horizontal, so we subtract 1g from the value found
 
     if (!rcode) {
 #if UART_DEBUG
-        UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", cfg.accZero.X, cfg.accZero.Y, cfg.accZero.Z);
+        UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", cfg.accZero.axis.X, cfg.accZero.axis.Y, cfg.accZero.axis.Z);
 #endif
         updateConfig(); // Write new values to EEPROM
     }

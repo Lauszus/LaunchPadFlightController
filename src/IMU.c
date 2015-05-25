@@ -18,7 +18,7 @@
 // Inspired by: https://github.com/cleanflight/cleanflight/blob/78a4476506c06315d7296a010a2c7ba003146b44/src/main/flight/imu.c
 
 #include <stdint.h>
-#include <Math.h>
+#include <math.h>
 
 #include "IMU.h"
 #include "MPU6500.h"
@@ -65,12 +65,12 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
     // It is then converted from radians to degrees
 #if 0 // Set to 0 to restrict roll to ±90deg instead - please read: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf
     // Eq. 25 and 26
-    angle->roll = atan2f(accFiltered.Y, accFiltered.Z);
-    angle->pitch  = atan2f(-accFiltered.X, sqrtf(accFiltered.Y * accFiltered.Y + accFiltered.Z * accFiltered.Z)); // Use atan2 here anyway, to prevent division by 0
+    angle->axis.roll = atan2f(accFiltered.axis.Y, accFiltered.axis.Z);
+    angle->axis.pitch  = atan2f(-accFiltered.axis.X, sqrtf(accFiltered.axis.Y * accFiltered.axis.Y + accFiltered.axis.Z * accFiltered.axis.Z)); // Use atan2 here anyway, to prevent division by 0
 #else
     // Eq. 28 and 29
-    angle->roll = atan2f(accFiltered.Y, sqrtf(accFiltered.X * accFiltered.X + accFiltered.Z * accFiltered.Z)); // Use atan2 here anyway, to prevent division by 0
-    angle->pitch  = atan2f(-accFiltered.X, accFiltered.Z);
+    angle->axis.roll = atan2f(accFiltered.axis.Y, sqrtf(accFiltered.axis.X * accFiltered.axis.X + accFiltered.axis.Z * accFiltered.axis.Z)); // Use atan2 here anyway, to prevent division by 0
+    angle->axis.pitch  = atan2f(-accFiltered.axis.X, accFiltered.axis.Z);
 #endif
 
 #if USE_MAG
@@ -79,17 +79,17 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
     static sensor_t magFiltered; // Filtered magnetometer vector
 
     rotateV(&magFiltered, &gyro, dt); // Rotate magnetometer vector according to delta angle given by the gyro reading
-    for (uint8_t axis = 0; axis < 3; axis++)
+    for (uint8_t axis = 0; axis < 3; axis++) // TODO: Should this only be done when there is actual new magnetometer data?
         magFiltered.data[axis] = (magFiltered.data[axis] * gyro_cmpfm_factor + mag->data[axis]) * invGyroComplimentaryFilter_M_Factor; // Use complimentary filter on magnetometer values
-    angle->yaw = calculateHeading(angle, &magFiltered); // Get heading in degrees
+    angle->axis.yaw = calculateHeading(angle, &magFiltered); // Get heading in degrees
 #else
     rotateV(mag, &gyro, dt); // Rotate magnetometer vector according to delta angle given by the gyro reading
-    angle->yaw = calculateHeading(angle, mag); // Get heading in degrees
+    angle->axis.yaw = calculateHeading(angle, mag); // Get heading in degrees
 #endif
 
     // Convert readings to degrees
-    angle->roll *= RAD_TO_DEG;
-    angle->pitch *= RAD_TO_DEG;
+    angle->axis.roll *= RAD_TO_DEG;
+    angle->axis.pitch *= RAD_TO_DEG;
 
 #if 0 && UART_DEBUG
     static angle_t gyroAngle;
@@ -114,13 +114,13 @@ static float calculateHeading(angle_t *angle, sensor_t *mag) {
     static const float magneticDeclination = (deg + ((float)min * (1.0f / 60.0f)));
 #endif
 
-    float cosx = cosf(angle->roll);
-    float sinx = sinf(angle->roll);
-    float cosy = cosf(angle->pitch);
-    float siny = sinf(angle->pitch);
+    float cosx = cosf(angle->axis.roll);
+    float sinx = sinf(angle->axis.roll);
+    float cosy = cosf(angle->axis.pitch);
+    float siny = sinf(angle->axis.pitch);
 
-    float Bfy = mag->Z * sinx - mag->Y * cosx;
-    float Bfx = mag->X * cosy + mag->Y * siny * sinx + mag->Z * siny * cosx;
+    float Bfy = mag->axis.Z * sinx - mag->axis.Y * cosx;
+    float Bfx = mag->axis.X * cosy + mag->axis.Y * siny * sinx + mag->axis.Z * siny * cosx;
 #if USE_MAG
     float heading = -(atan2f(Bfy, Bfx) * RAD_TO_DEG + magneticDeclination); // Return heading
 #else
@@ -136,14 +136,14 @@ static float calculateHeading(angle_t *angle, sensor_t *mag) {
 // See: http://inside.mines.edu/fs_home/gmurray/ArbitraryAxisRotation
 static void rotateV(sensor_t *v, sensor_t *gyroRate, float dt) {
     sensor_t v_tmp = *v;
-    angle_t deltaAngle = { .data = { gyroRate->X * dt, gyroRate->Y * dt, gyroRate->Z * dt } };
+    angle_t deltaAngle = { .data = { gyroRate->axis.X * dt, gyroRate->axis.Y * dt, gyroRate->axis.Z * dt } };
 
-    float cosx = cosf(deltaAngle.roll);
-    float sinx = sinf(deltaAngle.roll);
-    float cosy = cosf(deltaAngle.pitch);
-    float siny = sinf(deltaAngle.pitch);
-    float cosz = cosf(deltaAngle.yaw);
-    float sinz = sinf(deltaAngle.yaw);
+    float cosx = cosf(deltaAngle.axis.roll);
+    float sinx = sinf(deltaAngle.axis.roll);
+    float cosy = cosf(deltaAngle.axis.pitch);
+    float siny = sinf(deltaAngle.axis.pitch);
+    float cosz = cosf(deltaAngle.axis.yaw);
+    float sinz = sinf(deltaAngle.axis.yaw);
 
     float coszcosx = cosz * cosx;
     float sinzcosx = sinz * cosx;
@@ -161,7 +161,7 @@ static void rotateV(sensor_t *v, sensor_t *gyroRate, float dt) {
     mat[2][1] = (coszsinx) + (sinzcosx * siny);
     mat[2][2] = cosy * cosx;
 
-    v->X = v_tmp.X * mat[0][0] + v_tmp.Y * mat[1][0] + v_tmp.Z * mat[2][0];
-    v->Y = v_tmp.X * mat[0][1] + v_tmp.Y * mat[1][1] + v_tmp.Z * mat[2][1];
-    v->Z = v_tmp.X * mat[0][2] + v_tmp.Y * mat[1][2] + v_tmp.Z * mat[2][2];
+    v->axis.X = v_tmp.axis.X * mat[0][0] + v_tmp.axis.Y * mat[1][0] + v_tmp.axis.Z * mat[2][0];
+    v->axis.Y = v_tmp.axis.X * mat[0][1] + v_tmp.axis.Y * mat[1][1] + v_tmp.axis.Z * mat[2][1];
+    v->axis.Z = v_tmp.axis.X * mat[0][2] + v_tmp.axis.Y * mat[1][2] + v_tmp.axis.Z * mat[2][2];
 }

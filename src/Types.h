@@ -18,8 +18,6 @@
 #ifndef __types_h__
 #define __types_h__
 
-#pragma anon_unions
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -27,21 +25,21 @@ extern "C" {
 typedef union {
 	struct {
 		int16_t X, Y, Z;
-	} __attribute__((packed));
+	} __attribute__((packed)) axis;
 	int16_t data[3];
 } sensorRaw_t;
 
 typedef union {
 	struct {
 		float X, Y, Z;
-	} __attribute__((packed));
+	} __attribute__((packed)) axis;
 	float data[3];
 } sensor_t;
 
 typedef union {
     struct {
         float roll, pitch, yaw;
-    } __attribute__((packed));
+    } __attribute__((packed)) axis;
     float data[3];
 } angle_t;
 
