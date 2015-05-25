@@ -48,11 +48,6 @@ include ${ROOT}/makedefs
 IPATH=${ROOT}
 
 #
-# Macros passed to the preprocessor.
-#
-MACROS=-DUART_BUFFERED -DUART_BUFFERED1 -DUART_DEBUG=1 -DUSE_MAG=1 -DUSE_BARO=0
-
-#
 # The default rule, which causes the project to be built.
 #
 all: ${COMPILER} ${COMPILER}/${TARGET}.axf
@@ -89,7 +84,12 @@ ${COMPILER}/${TARGET}.axf: ${ROOT}/driverlib/${COMPILER}/libdriver.a
 ${COMPILER}/${TARGET}.axf: ${TARGET}.ld
 SCATTERgcc_${TARGET}=${TARGET}.ld
 ENTRY_${TARGET}=ResetISR
-CFLAGSgcc=-DTARGET_IS_BLIZZARD_RB1
+
+
+#
+# CFLAGS passed to the compiler.
+#
+CFLAGSgcc = -DTARGET_IS_BLIZZARD_RB1 -DUART_BUFFERED -DUART_BUFFERED1 -DUART_DEBUG=1 -DUSE_MAG=1 -DUSE_BARO=0
 
 #
 # Rebuild everything when makefile changes.

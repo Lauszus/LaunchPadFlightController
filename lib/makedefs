@@ -108,7 +108,6 @@ CFLAGS=-mthumb             \
        -Wall               \
        -pedantic           \
        -DPART_${PART}      \
-       ${MACROS}           \
        -c
 
 #
