@@ -1,9 +1,13 @@
 language: c
 
 env:
-    - UART_DEBUG=1 DEBUG=1
-    - UART_DEBUG=1
-    - UART_DEBUG=0
+    global:
+        - UART_DEBUG=1 DEBUG=1
+        - UART_DEBUG=1
+        - UART_DEBUG=0
+    matrix:
+        - USE_MAG = 0 USE_BARO = 0
+        - USE_MAG = 1 USE_BARO = 1
 
 compiler:
     - clang
