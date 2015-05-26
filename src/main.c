@@ -112,7 +112,7 @@ int main(void) {
 #endif
 
     while (!validRXData || getRXChannel(RX_AUX2_CHAN) > 0) {
-        // Wait until we have valid data and safety aux channel is in safe position
+        // Wait until we have valid data and safety AUX channel is in safe position
     }
 
 #if UART_DEBUG
