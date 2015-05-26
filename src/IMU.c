@@ -39,7 +39,11 @@ static void rotateV(sensor_t *v, sensor_t *gyroRate, float dt);
 void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
     static const float acc_lpf_factor = 4.0f;
     static const float gyro_cmpf_factor = 600.0f;
+#ifdef DEBUG
+    const float invGyroComplimentaryFilterFactor = (1.0f / (gyro_cmpf_factor + 1.0f));
+#else
     static const float invGyroComplimentaryFilterFactor = (1.0f / (gyro_cmpf_factor + 1.0f));
+#endif
 
     static sensor_t accLPF; // Accelerometer values after low pass filter
     static sensor_t accFiltered; // Filtered accelerometer vector
@@ -75,7 +79,12 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
 
 #if USE_MAG
     static const float gyro_cmpfm_factor = 250.0f;
+#ifdef DEBUG
+    const float invGyroComplimentaryFilter_M_Factor = (1.0f / (gyro_cmpfm_factor + 1.0f));
+#else
     static const float invGyroComplimentaryFilter_M_Factor = (1.0f / (gyro_cmpfm_factor + 1.0f));
+#endif
+
     static sensor_t magFiltered; // Filtered magnetometer vector
 
     rotateV(&magFiltered, &gyro, dt); // Rotate magnetometer vector according to delta angle given by the gyro reading
@@ -107,11 +116,15 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
 // Note heading is inverted, so it increases when rotating clockwise. This is done so it works well with the RC yaw control input
 static float calculateHeading(angle_t *angle, sensor_t *mag) {
 #if USE_MAG
-    // Calculate magnetic declination
-    static const int16_t magDeclinationFromConfig = -317; // Get your local magnetic declination here: http://magnetic-declination.com (Mine was +3 deg 17')
-    static const int16_t deg = magDeclinationFromConfig / 100;
-    static const int16_t min = magDeclinationFromConfig % 100;
-    static const float magneticDeclination = (deg + ((float)min * (1.0f / 60.0f)));
+    #ifndef DEBUG
+        // Calculate magnetic declination
+        static const int16_t magDeclinationFromConfig = -317; // Get your local magnetic declination here: http://magnetic-declination.com (Mine was +3 deg 17')
+        static const int16_t deg = magDeclinationFromConfig / 100;
+        static const int16_t min = magDeclinationFromConfig % 100;
+        static const float magneticDeclination = (deg + ((float)min * (1.0f / 60.0f)));
+    #else
+        static const float magneticDeclination = -3.28f;
+    #endif
 #endif
 
     float cosx = cosf(angle->axis.roll);

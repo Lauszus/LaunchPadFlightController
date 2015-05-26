@@ -1,5 +1,10 @@
 language: c
 
+env:
+    - UART_DEBUG=1 DEBUG=1
+    - UART_DEBUG=1
+    - UART_DEBUG=0
+
 compiler:
     - clang
     - gcc
