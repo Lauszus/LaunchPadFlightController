@@ -58,12 +58,10 @@
 #define BMP185_READ_TEMP_CMD        	0x2E
 #define BMP185_READ_PRESSURE_CMD    	0x34
 
-
 enum {
-	writeTemp = 0,
-	readTemp,
-	writePressure,
-	readPressure,
+	START_TEMP = 0,
+	READ_TEMP,
+	READ_PRESSURE,
 } bmp180State;
 
 // See the datasheet: http://www.adafruit.com/datasheets/BST-BMP180-DS000-09.pdf
@@ -73,37 +71,34 @@ bool getBMP180Data(bmp180_t *bmp180) {
 	static int32_t UT; // Temperature measurement
 	static int32_t UP; // Pressure measurement
 
-	switch((uint8_t) bmp180State) {
-		case writeTemp:
-			i2cWrite(BMP180_ADDRESS, BMP185_CONTROL, BMP185_READ_TEMP_CMD);
+	switch(bmp180State) {
+		case START_TEMP:
+			i2cWrite(BMP180_ADDRESS, BMP185_CONTROL, BMP185_READ_TEMP_CMD); // Start temperature measurements
 			stateTimer = micros();
-			bmp180State = readTemp;
+			bmp180State = READ_TEMP;
 			break;
 
-		case readTemp:
+		case READ_TEMP:
 			if ((int32_t)(micros() - stateTimer) > 4500) { // Wait 4.5 ms before reading data
 				uint8_t buf[2];
 				i2cReadData(BMP180_ADDRESS, BMP185_MEASUREMENT, buf, 2); // Get uncompensated temperature value
 				UT = (buf[0] << 8) | buf[1];
-				bmp180State = writePressure;
+
+				i2cWrite(BMP180_ADDRESS, BMP185_CONTROL, BMP185_READ_PRESSURE_CMD + (bmp180->mode << 6)); // Start pressure measurements
+				if (bmp180->mode == BMP185_CONTROL_LOW_POWER)
+					stateDelay = 4500; // Wait 4.5 ms between readings when in ultra low power mode
+				else if (bmp180->mode == BMP185_CONTROL_STANDARD_MODE)
+					stateDelay = 7500; // Wait 7.5 ms between readings when in standard mode
+				else if (bmp180->mode == BMP185_CONTROL_HIGH_RES)
+					stateDelay = 13500; // Wait 13.5 ms between readings when in high resolution mode
+				else
+					stateDelay = 25500; // Wait 25.5 ms between readings when in ultra high resolution mode
+				stateTimer = micros();
+				bmp180State = READ_PRESSURE;
 			}
 			break;
 
-		case writePressure:
-			i2cWrite(BMP180_ADDRESS, BMP185_CONTROL, BMP185_READ_PRESSURE_CMD + (bmp180->mode << 6));
-			if (bmp180->mode == BMP185_CONTROL_LOW_POWER)
-				stateDelay = 4500; // Wait 4.5 ms between readings when in ultra low power mode
-			else if (bmp180->mode == BMP185_CONTROL_STANDARD_MODE)
-				stateDelay = 7500; // Wait 7.5 ms between readings when in standard mode
-			else if (bmp180->mode == BMP185_CONTROL_HIGH_RES)
-				stateDelay = 13500; // Wait 13.5 ms between readings when in high resolution mode
-			else
-				stateDelay = 25500; // Wait 25.5 ms between readings when in ultra high resolution mode
-			stateTimer = micros();
-			bmp180State = readPressure;
-			break;
-
-		case readPressure:
+		case READ_PRESSURE:
 			if ((int32_t)(micros() - stateTimer) > stateDelay) {
 				uint8_t buf[3];
 				i2cReadData(BMP180_ADDRESS, BMP185_MEASUREMENT, buf, 3); // Get uncompensated pressure value
@@ -167,13 +162,13 @@ bool getBMP180Data(bmp180_t *bmp180) {
 				while (1);
 #endif
 
-				bmp180State = writeTemp;
+				bmp180State = START_TEMP;
 				return true;
 			}
 			break;
 
 		default:
-			bmp180State = writeTemp;
+			bmp180State = START_TEMP;
 			break;
 	}
 
@@ -216,7 +211,7 @@ void intBMP180(bmp180_t *bmp180) {
     bmp180->cal.MC  = (buf[18] << 8) | buf[19];
     bmp180->cal.MD  = (buf[20] << 8) | buf[21];
 
-    bmp180State = writeTemp; // Reset state machine
+    bmp180State = START_TEMP; // Reset state machine
 
     while (!getBMP180Data(bmp180)) {
     	// Wait until measurement is complete
