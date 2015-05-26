@@ -48,7 +48,7 @@ typedef struct {
 } bmp180_t;
 
 void intBMP180(bmp180_t *bmp180);
-void getBMP180Data(bmp180_t *bmp180);
+bool getBMP180Data(bmp180_t *bmp180);
 
 #ifdef __cplusplus
 }

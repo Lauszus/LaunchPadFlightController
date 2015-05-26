@@ -58,93 +58,123 @@
 #define BMP185_READ_TEMP_CMD        	0x2E
 #define BMP185_READ_PRESSURE_CMD    	0x34
 
+
+enum {
+	writeTemp = 0,
+	readTemp,
+	writePressure,
+	readPressure,
+} bmp180State;
+
 // See the datasheet: http://www.adafruit.com/datasheets/BST-BMP180-DS000-09.pdf
-static int32_t getRawTemperature(void) {
-	i2cWrite(BMP180_ADDRESS, BMP185_CONTROL, BMP185_READ_TEMP_CMD);
-	delayMicroseconds(4500); // 4.5 ms
-	uint8_t buf[2];
-	i2cReadData(BMP180_ADDRESS, BMP185_MEASUREMENT, buf, 2); // Get uncompensated temperature value
-	return (buf[0] << 8) | buf[1];
-}
+bool getBMP180Data(bmp180_t *bmp180) {
+	static uint32_t stateTimer; // Used for time keeping
+	static uint16_t stateDelay; // Used for delay between measurements
+	static int32_t UT; // Temperature measurement
+	static int32_t UP; // Pressure measurement
 
-static int32_t getRawPressure(bmp180_t *bmp180) {
-	i2cWrite(BMP180_ADDRESS, BMP185_CONTROL, BMP185_READ_PRESSURE_CMD + (bmp180->mode << 6));
-	if (bmp180->mode == BMP185_CONTROL_LOW_POWER)
-		delayMicroseconds(4500); // Wait 4.5 ms between readings when in ultra low power mode
-	else if (bmp180->mode == BMP185_CONTROL_STANDARD_MODE)
-		delayMicroseconds(7500); // Wait 7.5 ms between readings when in standard mode
-	else if (bmp180->mode == BMP185_CONTROL_HIGH_RES)
-		delayMicroseconds(13500); // Wait 13.5 ms between readings when in high resolution mode
-	else
-		delayMicroseconds(25500); // Wait 25.5 ms between readings when in ultra high resolution mode
-
-	uint8_t buf[3];
-	i2cReadData(BMP180_ADDRESS, BMP185_MEASUREMENT, buf, 3); // Get uncompensated pressure value
-	return (((uint32_t)buf[0] << 16) | (buf[1] << 8) | buf[2]) >> (8 - bmp180->mode);
-}
-
-void getBMP180Data(bmp180_t *bmp180) {
-	int32_t UT = getRawTemperature();
-	int32_t UP = getRawPressure(bmp180);
-
-#if BMP085_DEBUG
-	// Use datasheet numbers!
-	bmp180->cal.AC1 = 408;
-	bmp180->cal.AC2 = -72;
-	bmp180->cal.AC3 = -14383;
-	bmp180->cal.AC4 = 32741;
-	bmp180->cal.AC5 = 32757;
-	bmp180->cal.AC6 = 23153;
-
-	bmp180->cal.B1 = 6190;
-	bmp180->cal.B2 = 4;
-
-	bmp180->cal.MB = -32768;
-	bmp180->cal.MC = -8711;
-	bmp180->cal.MD = 2868;
-
-	UT = 27898;
-	bmp180->mode = 0;
-	UP = 23843;
-#endif
-
-	// Calculate true temperature
-	int32_t X1 = (UT - (int32_t)bmp180->cal.AC6) * ((int32_t)bmp180->cal.AC5) >> 15;
-	int32_t X2 = ((int32_t)bmp180->cal.MC << 11) / (X1 + (int32_t)bmp180->cal.MD);
-	int32_t B5 = X1 + X2;
-	bmp180->temperature = (B5 + 8) >> 4;
-
-	// Calculate true pressure
-	int32_t B6 = B5 - 4000;
-
-	X1 = ((int32_t)bmp180->cal.B2 * (B6 * B6 >> 12)) >> 11;
-	X2 = ((int32_t)bmp180->cal.AC2 * B6) >> 11;
-	int32_t X3 = X1 + X2;
-	int32_t B3 = ((((int32_t)bmp180->cal.AC1 * 4 + X3) << bmp180->mode) + 2) >> 2;
-
-	X1 = ((int32_t)bmp180->cal.AC3 * B6) >> 13;
-	X2 = ((int32_t)bmp180->cal.B1 * ((B6 * B6) >> 12)) >> 16;
-	X3 = ((X1 + X2) + 2) >> 2;
-	uint32_t B4 = ((int32_t)bmp180->cal.AC4 * (uint32_t)(X3 + 0x8000UL)) >> 15;
-
-	uint32_t B7 = ((uint32_t)UP - B3) * (50000UL >> bmp180->mode);
-	if (B7 < (1UL << 31))
-		bmp180->pressure = (B7 << 1) / B4;
-	else
-		bmp180->pressure = (B7 / B4) << 1;
-
-	X1 = (bmp180->pressure >> 8) * (bmp180->pressure >> 8);
-	X1 = (X1 * 3038L) >> 16;
-	X2 = (-7357L * bmp180->pressure) >> 16;
-	bmp180->pressure += (X1 + X2 + 3791L) >> 4;
-
-	static const int32_t p0 = 101325; // Pressure at sea level
-	bmp180->absoluteAltitude = 44330.0f * (1.0f - powf((float)bmp180->pressure / (float)p0, 1.0f / 5.255f)) * 100.0f; // Get altitude in cm
+	switch((uint8_t) bmp180State) {
+		case writeTemp:
+			i2cWrite(BMP180_ADDRESS, BMP185_CONTROL, BMP185_READ_TEMP_CMD);
+			stateTimer = micros();
+			bmp180State = readTemp;
+			break;
+		case readTemp:
+			if ((int32_t)(micros() - stateTimer) > 4500) { // Wait 4.5 ms before reading data
+				uint8_t buf[2];
+				i2cReadData(BMP180_ADDRESS, BMP185_MEASUREMENT, buf, 2); // Get uncompensated temperature value
+				UT = (buf[0] << 8) | buf[1];
+				bmp180State = writePressure;
+			}
+			break;
+		case writePressure:
+			i2cWrite(BMP180_ADDRESS, BMP185_CONTROL, BMP185_READ_PRESSURE_CMD + (bmp180->mode << 6));
+			if (bmp180->mode == BMP185_CONTROL_LOW_POWER)
+				stateDelay = 4500; // Wait 4.5 ms between readings when in ultra low power mode
+			else if (bmp180->mode == BMP185_CONTROL_STANDARD_MODE)
+				stateDelay = 7500; // Wait 7.5 ms between readings when in standard mode
+			else if (bmp180->mode == BMP185_CONTROL_HIGH_RES)
+				stateDelay = 13500; // Wait 13.5 ms between readings when in high resolution mode
+			else
+				stateDelay = 25500; // Wait 25.5 ms between readings when in ultra high resolution mode
+			stateTimer = micros();
+			bmp180State = readPressure;
+			break;
+		case readPressure:
+			if ((int32_t)(micros() - stateTimer) > stateDelay) {
+				uint8_t buf[3];
+				i2cReadData(BMP180_ADDRESS, BMP185_MEASUREMENT, buf, 3); // Get uncompensated pressure value
+				UP = (((uint32_t)buf[0] << 16) | (buf[1] << 8) | buf[2]) >> (8 - bmp180->mode);
 
 #if BMP085_DEBUG
-	UARTprintf("%d == 150\t%d == 69964\t%d == 3016\n", bmp180->temperature, bmp180->pressure, (int32_t)bmp180->altitude);
-	while (1);
+				// Use datasheet numbers!
+				bmp180->cal.AC1 = 408;
+				bmp180->cal.AC2 = -72;
+				bmp180->cal.AC3 = -14383;
+				bmp180->cal.AC4 = 32741;
+				bmp180->cal.AC5 = 32757;
+				bmp180->cal.AC6 = 23153;
+
+				bmp180->cal.B1 = 6190;
+				bmp180->cal.B2 = 4;
+
+				bmp180->cal.MB = -32768;
+				bmp180->cal.MC = -8711;
+				bmp180->cal.MD = 2868;
+
+				UT = 27898;
+				bmp180->mode = 0;
+				UP = 23843;
 #endif
+
+				// Calculate true temperature
+				int32_t X1 = (UT - (int32_t)bmp180->cal.AC6) * ((int32_t)bmp180->cal.AC5) >> 15;
+				int32_t X2 = ((int32_t)bmp180->cal.MC << 11) / (X1 + (int32_t)bmp180->cal.MD);
+				int32_t B5 = X1 + X2;
+				bmp180->temperature = (B5 + 8) >> 4;
+
+				// Calculate true pressure
+				int32_t B6 = B5 - 4000;
+
+				X1 = ((int32_t)bmp180->cal.B2 * (B6 * B6 >> 12)) >> 11;
+				X2 = ((int32_t)bmp180->cal.AC2 * B6) >> 11;
+				int32_t X3 = X1 + X2;
+				int32_t B3 = ((((int32_t)bmp180->cal.AC1 * 4 + X3) << bmp180->mode) + 2) >> 2;
+
+				X1 = ((int32_t)bmp180->cal.AC3 * B6) >> 13;
+				X2 = ((int32_t)bmp180->cal.B1 * ((B6 * B6) >> 12)) >> 16;
+				X3 = ((X1 + X2) + 2) >> 2;
+				uint32_t B4 = ((int32_t)bmp180->cal.AC4 * (uint32_t)(X3 + 0x8000UL)) >> 15;
+
+				uint32_t B7 = ((uint32_t)UP - B3) * (50000UL >> bmp180->mode);
+				if (B7 < (1UL << 31))
+					bmp180->pressure = (B7 << 1) / B4;
+				else
+					bmp180->pressure = (B7 / B4) << 1;
+
+				X1 = (bmp180->pressure >> 8) * (bmp180->pressure >> 8);
+				X1 = (X1 * 3038L) >> 16;
+				X2 = (-7357L * bmp180->pressure) >> 16;
+				bmp180->pressure += (X1 + X2 + 3791L) >> 4;
+
+				static const int32_t p0 = 101325; // Pressure at sea level
+				bmp180->absoluteAltitude = 44330.0f * (1.0f - powf((float)bmp180->pressure / (float)p0, 1.0f / 5.255f)) * 100.0f; // Get altitude in cm
+
+#if BMP085_DEBUG
+				UARTprintf("%d == 150\t%d == 69964\t%d == 301666\n", bmp180->temperature, bmp180->pressure, (int32_t)bmp180->absoluteAltitude);
+				while (1);
+#endif
+
+				bmp180State = writeTemp;
+				return true;
+			}
+			break;
+		default:
+			bmp180State = writeTemp;
+			break;
+	}
+
+	return false;
 }
 
 void intBMP180(bmp180_t *bmp180) {
@@ -183,7 +213,11 @@ void intBMP180(bmp180_t *bmp180) {
     bmp180->cal.MC  = (buf[18] << 8) | buf[19];
     bmp180->cal.MD  = (buf[20] << 8) | buf[21];
 
-    getBMP180Data(bmp180);
+    bmp180State = writeTemp; // Reset state machine
+
+    while (!getBMP180Data(bmp180)) {
+    	// Wait until measurement is complete
+    }
     bmp180->groundAltitude = bmp180->absoluteAltitude; // Get initial altitude
 }
 
