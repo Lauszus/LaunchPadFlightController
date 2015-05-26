@@ -29,7 +29,7 @@
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
 
-#define BMP185_DEBUG 0
+#define BMP185_DEBUG 0 // Set this to 1 to check temperature and pressure calculation
 
 // Inspired by: https://code.google.com/p/open-headtracker, https://github.com/cleanflight/cleanflight/blob/master/src/main/drivers/compass_hmc5883l.c and https://github.com/adafruit/Adafruit-BMP085-Library/blob/master/Adafruit_BMP085.cpp
 #define BMP180_ADDRESS              	0x77 // Address of barometer
@@ -79,6 +79,7 @@ bool getBMP180Data(bmp180_t *bmp180) {
 			stateTimer = micros();
 			bmp180State = readTemp;
 			break;
+
 		case readTemp:
 			if ((int32_t)(micros() - stateTimer) > 4500) { // Wait 4.5 ms before reading data
 				uint8_t buf[2];
@@ -87,6 +88,7 @@ bool getBMP180Data(bmp180_t *bmp180) {
 				bmp180State = writePressure;
 			}
 			break;
+
 		case writePressure:
 			i2cWrite(BMP180_ADDRESS, BMP185_CONTROL, BMP185_READ_PRESSURE_CMD + (bmp180->mode << 6));
 			if (bmp180->mode == BMP185_CONTROL_LOW_POWER)
@@ -100,6 +102,7 @@ bool getBMP180Data(bmp180_t *bmp180) {
 			stateTimer = micros();
 			bmp180State = readPressure;
 			break;
+
 		case readPressure:
 			if ((int32_t)(micros() - stateTimer) > stateDelay) {
 				uint8_t buf[3];
@@ -168,6 +171,7 @@ bool getBMP180Data(bmp180_t *bmp180) {
 				return true;
 			}
 			break;
+
 		default:
 			bmp180State = writeTemp;
 			break;
