@@ -118,7 +118,6 @@ bool getBMP180Data(bmp180_t *bmp180) {
 				bmp180->cal.B1 = 6190;
 				bmp180->cal.B2 = 4;
 
-				bmp180->cal.MB = -32768;
 				bmp180->cal.MC = -8711;
 				bmp180->cal.MD = 2868;
 
@@ -209,7 +208,7 @@ void intBMP180(bmp180_t *bmp180) {
     bmp180->cal.B1  = (buf[12] << 8) | buf[13];
     bmp180->cal.B2  = (buf[14] << 8) | buf[15];
 
-    bmp180->cal.MB  = (buf[16] << 8) | buf[17];
+    // The MB calibration value is newer used
     bmp180->cal.MC  = (buf[18] << 8) | buf[19];
     bmp180->cal.MD  = (buf[20] << 8) | buf[21];
 

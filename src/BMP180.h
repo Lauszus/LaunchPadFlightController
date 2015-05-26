@@ -25,17 +25,17 @@ extern "C" {
 #endif
 
 typedef struct {
-    int16_t AC1; // The AC1 calibration from the BMP180
-    int16_t AC2; // The AC2 calibration from the BMP180
-    int16_t AC3; // The AC3 calibration from the BMP180
-    uint16_t AC4; // The AC4 calibration from the BMP180
-    uint16_t AC5; // The AC5 calibration from the BMP180
-    uint16_t AC6; // The AC6 calibration from the BMP180
-    int16_t B1; // The B1 calibration from the BMP180
-    int16_t B2; // The B2 calibration from the BMP180
-    int16_t MB; // The MB calibration from the BMP180
-    int16_t MC; // The MC calibration from the BMP180
-    int16_t MD; // The MD calibration from the BMP180
+    int16_t AC1;
+    int16_t AC2;
+    int16_t AC3;
+    uint16_t AC4;
+    uint16_t AC5;
+    uint16_t AC6;
+    int16_t B1;
+    int16_t B2;
+    // The MB calibration value is never used
+    int16_t MC;
+    int16_t MD;
 } bmp180_cal_t;
 
 typedef struct {
