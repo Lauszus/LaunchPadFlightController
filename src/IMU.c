@@ -67,7 +67,7 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
     // Source: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf eq. 25 and eq. 26
     // atan2 outputs the value of -p to p (radians) - see http://en.wikipedia.org/wiki/Atan2
     // It is then converted from radians to degrees
-#if 0 // Set to 0 to restrict roll to ±90deg instead - please read: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf
+#if 0 // Set to 0 to restrict roll to +-90deg instead - please read: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf
     // Eq. 25 and 26
     angle->axis.roll = atan2f(accFiltered.axis.Y, accFiltered.axis.Z);
     angle->axis.pitch  = atan2f(-accFiltered.axis.X, sqrtf(accFiltered.axis.Y * accFiltered.axis.Y + accFiltered.axis.Z * accFiltered.axis.Z)); // Use atan2 here anyway, to prevent division by 0
