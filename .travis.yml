@@ -21,6 +21,6 @@ install:
 before_script: arm-none-eabi-gcc --version
 
 script:
-    - cd src/ && make
+    - cd src/ && make -j2
 
 cache: apt
