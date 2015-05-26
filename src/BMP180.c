@@ -29,7 +29,7 @@
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
 
-#define BMP085_DEBUG 0
+#define BMP185_DEBUG 0
 
 // Inspired by: https://code.google.com/p/open-headtracker, https://github.com/cleanflight/cleanflight/blob/master/src/main/drivers/compass_hmc5883l.c and https://github.com/adafruit/Adafruit-BMP085-Library/blob/master/Adafruit_BMP085.cpp
 #define BMP180_ADDRESS              	0x77 // Address of barometer
@@ -106,7 +106,7 @@ bool getBMP180Data(bmp180_t *bmp180) {
 				i2cReadData(BMP180_ADDRESS, BMP185_MEASUREMENT, buf, 3); // Get uncompensated pressure value
 				UP = (((uint32_t)buf[0] << 16) | (buf[1] << 8) | buf[2]) >> (8 - bmp180->mode);
 
-#if BMP085_DEBUG
+#if BMP185_DEBUG
 				// Use datasheet numbers!
 				bmp180->cal.AC1 = 408;
 				bmp180->cal.AC2 = -72;
@@ -159,7 +159,7 @@ bool getBMP180Data(bmp180_t *bmp180) {
 				static const int32_t p0 = 101325; // Pressure at sea level
 				bmp180->absoluteAltitude = 44330.0f * (1.0f - powf((float)bmp180->pressure / (float)p0, 1.0f / 5.255f)) * 100.0f; // Get altitude in cm
 
-#if BMP085_DEBUG
+#if BMP185_DEBUG && UART_DEBUG
 				UARTprintf("%d == 150\t%d == 69964\t%d == 301666\n", bmp180->temperature, bmp180->pressure, (int32_t)bmp180->absoluteAltitude);
 				while (1);
 #endif
