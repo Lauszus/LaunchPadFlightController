@@ -23,8 +23,12 @@ lm4tools can be installed like so:
 
 ```bash
 $ git clone https://github.com/utzig/lm4tools.git
-$ cd lm4tools/lm4flash/ && make
+$ cd lm4tools/
+$ cd lm4flash/ && make
 $ sudo cp lm4flash /usr/bin/
+$ cd ..
+$ cd lmicdiusb/ && make
+$ sudo cp lmicdi /usr/bin/
 ```
 
 If you are on a Mac, I recommend installing gcc-arm-none-eabi using Homebrew like so:
