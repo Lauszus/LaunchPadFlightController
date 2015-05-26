@@ -163,7 +163,7 @@ bool getBMP180Data(bmp180_t *bmp180) {
 #endif
 
 				bmp180State = START_TEMP;
-				return true;
+				return true; // Indicate that new values has been calculated
 			}
 			break;
 
@@ -179,7 +179,7 @@ void intBMP180(bmp180_t *bmp180) {
     uint8_t buf[BMP185_CAL_LENGTH]; // Buffer for I2C data
 
     buf[0] = i2cRead(BMP180_ADDRESS, BMP185_CHIP_ID);
-    if (buf[0] == BMP185_CHIP_ID_VALUE) { // Read "WHO_AM_I" register
+    if (buf[0] == BMP185_CHIP_ID_VALUE) { // Read Chip ID
 #if UART_DEBUG
         UARTprintf("BMP180 found\n");
 #endif
