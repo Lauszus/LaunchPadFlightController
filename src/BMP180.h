@@ -25,25 +25,30 @@ extern "C" {
 #endif
 
 typedef struct {
-    float presure;
-    uint8_t ui8Mode; // The sampling mode to be used by the BMP180
-    uint8_t ui8NewMode; // The new sampling mode, which is used when a register write succeeds
-    int16_t i16AC1; // The AC1 calibration from the BMP180
-    int16_t i16AC2; // The AC2 calibration from the BMP180
-    int16_t i16AC3; // The AC3 calibration from the BMP180
-    uint16_t ui16AC4; // The AC4 calibration from the BMP180
-    uint16_t ui16AC5; // The AC5 calibration from the BMP180
-    uint16_t ui16AC6; // The AC6 calibration from the BMP180
-    int16_t i16B1; // The B1 calibration from the BMP180
-    int16_t i16B2; // The B2 calibration from the BMP180
-    int16_t i16MC; // The MC calibration from the BMP180
-    int16_t i16MD; // The MD calibration from the BMP180
+    int16_t AC1; // The AC1 calibration from the BMP180
+    int16_t AC2; // The AC2 calibration from the BMP180
+    int16_t AC3; // The AC3 calibration from the BMP180
+    uint16_t AC4; // The AC4 calibration from the BMP180
+    uint16_t AC5; // The AC5 calibration from the BMP180
+    uint16_t AC6; // The AC6 calibration from the BMP180
+    int16_t B1; // The B1 calibration from the BMP180
+    int16_t B2; // The B2 calibration from the BMP180
+    int16_t MB; // The MB calibration from the BMP180
+    int16_t MC; // The MC calibration from the BMP180
+    int16_t MD; // The MD calibration from the BMP180
+} bmp180_cal_t;
+
+typedef struct {
+    int32_t pressure; // Pressure in Pa
+    int32_t temperature; // Temperature in 0.1 C
+    float absoluteAltitude; // Absolute altitude in cm
+    float groundAltitude; // Ground altitude in cm
+    uint8_t mode; // The oversampling mode to be used by the BMP180
+    bmp180_cal_t cal; // Calibration data
 } bmp180_t;
 
 void intBMP180(bmp180_t *bmp180);
-bool dataReadyBMP180(void);
-void getBMP180Data(bmp180_t *bmp180, bool calibrating);
-void calibrateBaro(bmp180_t *bmp180);
+void getBMP180Data(bmp180_t *bmp180);
 
 #ifdef __cplusplus
 }

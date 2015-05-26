@@ -75,6 +75,9 @@ int main(void) {
 #if USE_MAG
     intHMC5883L(&hmc5883l);
 #endif
+#if USE_BARO
+    intBMP180(&bmp180);
+#endif
     initBluetooth();
     IntMasterEnable(); // Enable all interrupts
 
