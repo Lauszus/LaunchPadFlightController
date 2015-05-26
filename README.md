@@ -34,9 +34,9 @@ $ sudo cp lmicdi /usr/bin/
 If you are on a Mac, I recommend installing gcc-arm-none-eabi using Homebrew like so:
 
 ```bash
-brew tap PX4/homebrew-px4
-brew update
-brew install gcc-arm-none-eabi
+$ brew tap PX4/homebrew-px4
+$ brew update
+$ brew install gcc-arm-none-eabi
 ```
 
 OpenOCD can be installed via Homebrew as well:
