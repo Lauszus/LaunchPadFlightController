@@ -39,6 +39,12 @@ brew update
 brew install gcc-arm-none-eabi
 ```
 
+OpenOCD can be installed via Homebrew as well:
+
+```bash
+$ brew install openocd
+```
+
 # Android application
 
 Android application is available at the following repository: <https://github.com/Lauszus/LaunchPadFlightControllerAndroid>.
