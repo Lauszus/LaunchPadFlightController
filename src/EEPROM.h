@@ -26,7 +26,7 @@ extern "C" {
 #endif
 
 typedef struct {
-	// Can be set by the user
+    // Can be set by the user
     pid_values_t pidRollValues, pidPitchValues, pidYawValues; // PID values
     float angleKp; // Self level mode Kp value
     float headKp; // Heading mode Kp value

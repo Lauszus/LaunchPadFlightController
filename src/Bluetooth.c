@@ -353,7 +353,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
 // Carriage return and line feed ("\r\n")
 
 static bool findString(const char* string) {
-	int nbytes = UARTRxBytesAvail1();
+    int nbytes = UARTRxBytesAvail1();
     int pos = UARTPeek1(*string); // Look for the first character
     if (pos == -1) { // String was not found
         while (nbytes--)

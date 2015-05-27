@@ -23,17 +23,17 @@ extern "C" {
 #endif
 
 typedef union {
-	struct {
-		int16_t X, Y, Z;
-	} __attribute__((packed)) axis;
-	int16_t data[3];
+    struct {
+        int16_t X, Y, Z;
+    } __attribute__((packed)) axis;
+    int16_t data[3];
 } sensorRaw_t;
 
 typedef union {
-	struct {
-		float X, Y, Z;
-	} __attribute__((packed)) axis;
-	float data[3];
+    struct {
+        float X, Y, Z;
+    } __attribute__((packed)) axis;
+    float data[3];
 } sensor_t;
 
 typedef union {
