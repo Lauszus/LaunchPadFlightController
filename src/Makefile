@@ -100,6 +100,7 @@ UART_DEBUG ?= 1
 USE_MAG ?= 1
 USE_BARO ?= 1
 CFLAGSgcc = -DTARGET_IS_BLIZZARD_RB1 -DUART_BUFFERED -DUART_BUFFERED1 -DUART_DEBUG=$(UART_DEBUG) -DUSE_MAG=$(USE_MAG) -DUSE_BARO=$(USE_BARO)
+CFLAGSgcc += -Wdouble-promotion -Wunsafe-loop-optimizations
 
 #
 # Rebuild everything when makefile changes.
