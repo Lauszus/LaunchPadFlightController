@@ -100,6 +100,9 @@ int main(void) {
 #elif UART_DEBUG && USE_MAG
     UARTprintf("Magnetometer zero values: %d\t%d\t%d\n", (int16_t)cfg.magZero.axis.X, (int16_t)cfg.magZero.axis.Y, (int16_t)cfg.magZero.axis.Z);
 #endif
+#if UART_DEBUG && USE_BARO
+	UARTprintf("Barometer values: %d\t%d\t%d\n", bmp180.pressure, bmp180.temperature, (int32_t)bmp180.groundAltitude);
+#endif
 
 #if 0 // Set to 1 in order to run the ESC calibration routine at next power cycle
     // WARNING: Do this with propellers off!!
