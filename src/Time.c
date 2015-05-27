@@ -30,7 +30,7 @@ static void SycTickHandler(void) {
 }
 
 void initTime(void) {
-    SysTickPeriodSet(SysCtlClockGet() / 1000000UL); // 1000 for miliseconds & 1000000 for microseconds
+    SysTickPeriodSet(SysCtlClockGet() / 1000000UL); // 1000 for milliseconds & 1000000 for microseconds
     SysTickIntRegister(SycTickHandler);
     SysTickIntEnable();
     SysTickEnable();
