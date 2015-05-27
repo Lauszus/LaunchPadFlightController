@@ -244,7 +244,7 @@ int main(void) {
                 if (angleMode && getRXChannel(RX_AUX2_CHAN) > 0) { // Altitude hold
                     const float altHoldSetPoint = 1500; // 1.5m
 #if USE_BARO
-                    int16_t distance = getSonarDistance(&bmp180, &angle);
+                    int16_t distance = getSonarDistance(&angle, &bmp180);
 #else
                     int16_t distance = getSonarDistance(&angle);
 #endif

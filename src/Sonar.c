@@ -91,7 +91,7 @@ bool triggerSonar(void) {
 
 // Returns the distance in mm. Range is 0-300 cm or -1 if the value is invalid.
 #if USE_BARO
-int16_t getSonarDistance(bmp180_t *bmp180, angle_t *angle) {
+int16_t getSonarDistance(angle_t *angle, bmp180_t *bmp180) {
     const float US_ROUNDTRIP_CM = 1.0f / (3315.0f + (0.6f * bmp180->temperature)) * 2.0f * 1e5f; // Taken from the datasheet - note that temperature is in 0.1 C units
 #else
 #define US_ROUNDTRIP_CM 57 // Microseconds (uS) it takes sound to travel round-trip 1cm (2cm total), uses integer to save compiled code space. Default=57
