@@ -62,8 +62,10 @@ static void SonarHandler(void) {
 
     if (last_edge && !edge) { // Check that we are going from a positive to falling edge
         uint32_t diff = curr - prev; // Calculate diff
-        sonarDistanceUs = 1000000UL / (SysCtlClockGet() / diff); // Convert to us
-        //UARTprintf("%u %u\n", sonarDistanceUs, sonarDistanceUs / US_ROUNDTRIP_CM);
+        int16_t sonarDistanceUsTmp = 1000000UL / (SysCtlClockGet() / diff); // Convert to us
+        if (sonarDistanceUsTmp > 0) // Only use valid values, minimum should be 2 cm according to datasheet
+            sonarDistanceUs = sonarDistanceUsTmp;  // TODO: Figure out if full width can be used or just use Wide Timer
+        //UARTprintf("%u %d %d\n", diff, sonarDistanceUs, sonarDistanceUs / 57);
         // TODO: Take average of several measurements using DMA
     }
 
