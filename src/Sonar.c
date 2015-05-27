@@ -61,12 +61,11 @@ static void SonarHandler(void) {
     bool edge = GPIOPinRead(GPIO_SONAR_ECHO_BASE, GPIO_SONAR_ECHO); // Read the GPIO pin
 
     if (last_edge && !edge) { // Check that we are going from a positive to falling edge
-        uint32_t diff = curr - prev; // Calculate diff
-        int32_t sonarDistanceDeciUsTmp = 10000000UL / (SysCtlClockGet() / diff); // Convert to deci-us
-        if (sonarDistanceDeciUsTmp > 0) // Only use valid values, minimum should be 2 cm according to datasheet
-            sonarDistanceDeciUs = sonarDistanceDeciUsTmp;  // TODO: Figure out if full width can be used or just use Wide Timer
-        //UARTprintf("%u %d %d\n", diff, sonarDistanceDeciUs, sonarDistanceDeciUs / 57);
-        // TODO: Take average of several measurements using DMA
+        if (curr > prev) { // Take care of timer overflow
+            uint32_t diff = curr - prev; // Calculate diff
+            sonarDistanceDeciUs = 10000000UL / (SysCtlClockGet() / diff); // Convert to deci-us
+            //UARTprintf("%u %d %d\n", diff, sonarDistanceDeciUs, sonarDistanceDeciUs / 57);
+        }
     }
 
     prev = curr; // Store previous value
