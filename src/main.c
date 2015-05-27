@@ -305,10 +305,18 @@ int main(void) {
             }
 
 #if USE_SONAR
-            triggerSonar(); // Trigger sonar
+            if (triggerSonar()) { // Trigger sonar
+#if 0 // Set to 1 to debug sonar sensor
+    #if USE_BARO
+                    int16_t distance = getSonarDistance(&angle, &bmp180);
+    #else
+                    int16_t distance = getSonarDistance(&angle);
+    #endif
+                    UARTprintf("Distance: %d\n", distance);
+#endif
+            }
 #endif
         }
-#endif
     }
 }
 
