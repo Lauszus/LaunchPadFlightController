@@ -50,7 +50,7 @@
 
 // Implemented based on: http://che126.che.caltech.edu/28015-PING-Sensor-Product-Guide-v2.0.pdf
 
-static volatile int16_t sonarDistanceUs;
+static volatile int32_t sonarDistanceDeciUs;
 
 static void SonarHandler(void) {
     static uint32_t prev = 0;
@@ -62,10 +62,10 @@ static void SonarHandler(void) {
 
     if (last_edge && !edge) { // Check that we are going from a positive to falling edge
         uint32_t diff = curr - prev; // Calculate diff
-        int16_t sonarDistanceUsTmp = 1000000UL / (SysCtlClockGet() / diff); // Convert to us
-        if (sonarDistanceUsTmp > 0) // Only use valid values, minimum should be 2 cm according to datasheet
-            sonarDistanceUs = sonarDistanceUsTmp;  // TODO: Figure out if full width can be used or just use Wide Timer
-        //UARTprintf("%u %d %d\n", diff, sonarDistanceUs, sonarDistanceUs / 57);
+        int32_t sonarDistanceDeciUsTmp = 10000000UL / (SysCtlClockGet() / diff); // Convert to deci-us
+        if (sonarDistanceDeciUsTmp > 0) // Only use valid values, minimum should be 2 cm according to datasheet
+            sonarDistanceDeciUs = sonarDistanceDeciUsTmp;  // TODO: Figure out if full width can be used or just use Wide Timer
+        //UARTprintf("%u %d %d\n", diff, sonarDistanceDeciUs, sonarDistanceDeciUs / 57);
         // TODO: Take average of several measurements using DMA
     }
 
@@ -88,7 +88,7 @@ bool triggerSonar(void) {
     return false;
 }
 
-// Returns the distance in cm. Range is 0-300 cm.
+// Returns the distance in mm. Range is 0-300 cm.
 #if USE_BARO
 int16_t getSonarDistance(bmp180_t *bmp180) {
     const float US_ROUNDTRIP_CM = 1.0f / (3315.0f + (0.6f * bmp180->temperature)) * 2.0f * 1e5f; // Taken from the datasheet - note that temperature is in 0.1 C units
@@ -97,8 +97,8 @@ int16_t getSonarDistance(bmp180_t *bmp180) {
 int16_t getSonarDistance(void) {
 #endif
 
-    int16_t distance = sonarDistanceUs / US_ROUNDTRIP_CM;
-    if (distance > 300) // Datasheet says 3m is maximum
+    int16_t distance = sonarDistanceDeciUs / US_ROUNDTRIP_CM; // The output will actually be in mm, as the it is in deci-us
+    if (distance > 3000) // Datasheet says 3m is maximum
         distance = -1;
     return distance;
 }
