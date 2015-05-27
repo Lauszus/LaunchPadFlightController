@@ -72,7 +72,7 @@ static void SonarHandler(void) {
     last_edge = edge; // Store last edge
 }
 
-void triggerSonar(void) {
+bool triggerSonar(void) {
     static uint32_t lastTrigger = 0;
 
     uint32_t now = millis();
@@ -82,7 +82,9 @@ void triggerSonar(void) {
         delayMicroseconds(10); // Other sources wait 10us
         GPIOPinWrite(GPIO_SONAR_TRIG_BASE, GPIO_SONAR_TRIG, 0); // Set pin low
         //UARTprintf("%d\n", getSonarDistance());
+        return true;
     }
+    return false;
 }
 
 // Returns the distance in cm. Range is 0-300 cm.

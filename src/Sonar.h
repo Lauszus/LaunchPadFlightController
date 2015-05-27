@@ -23,7 +23,7 @@ extern "C" {
 #endif
 
 void initSonar(void);
-void triggerSonar(void);
+bool triggerSonar(void);
 int16_t getSonarDistance(void);
 
 #ifdef __cplusplus
