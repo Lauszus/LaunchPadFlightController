@@ -40,7 +40,7 @@ void initPID(void);
 float updatePID(pid_t *pid, float setPoint, float input, float dt);
 void resetPIDTerms(void);
 
-extern pid_t pidRoll, pidPitch, pidYaw;
+extern pid_t pidRoll, pidPitch, pidYaw, pidAltHold;
 
 #ifdef __cplusplus
 }

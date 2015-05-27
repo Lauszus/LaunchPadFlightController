@@ -118,11 +118,12 @@ int main(void) {
 #if UART_DEBUG
     printPIDValues(pidRoll.values); // Print PID Values
     printPIDValues(pidYaw.values);
+    printPIDValues(pidAltHold.values);
     printSettings(); // Print settings
 #endif
 
-    while (!validRXData || getRXChannel(RX_AUX2_CHAN) > 0) {
-        // Wait until we have valid data and safety AUX channel is in safe position
+    while (!validRXData) {
+        // Wait until we have valid data
     }
 
 #if UART_DEBUG
@@ -133,7 +134,7 @@ int main(void) {
     while (1) {
         // Make sure there is valid data and safety channel is in armed position
         static bool armed = false;
-        if (validRXData && getRXChannel(RX_AUX2_CHAN) > 0) {
+        if (validRXData) {
             if (!armed && getRXChannel(RX_THROTTLE_CHAN) < -95 && getRXChannel(RX_RUDDER_CHAN) > 95) // Arm using throttle low and yaw right
                 armed = true;
             else if (armed && getRXChannel(RX_THROTTLE_CHAN) < -95 && getRXChannel(RX_RUDDER_CHAN) < -95) // Disarm using throttle low and yaw left
@@ -240,6 +241,25 @@ int main(void) {
 
                 float motors[4]; // Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
                 float throttle = getRXChannel(RX_THROTTLE_CHAN);
+
+#if USE_SONAR
+                if (angleMode && getRXChannel(RX_AUX2_CHAN) > 0) { // Altitude hold
+                    const float altHoldSetPoint = 150; // 1.5m
+#if USE_BARO
+                    int16_t distance = getSonarDistance(&bmp180);
+#else
+                    int16_t distance = getSonarDistance();
+#endif
+                    if (distance < 0) // TODO: Use barometer if we get close to 3m instead
+                        distance = 300;
+                    float altHoldOut = updatePID(&pidAltHold, altHoldSetPoint, distance, dt);
+                    if (fabsf(altHoldOut) > 10) {
+                        altHoldOut += altHoldOut > 0 ? -10 : 10; // Subtract deadband
+                        throttle = constrain(throttle + altHoldOut, -100.0f, 100.0f);
+                    }
+                }
+#endif
+
                 for (uint8_t i = 0; i < 4; i++)
                     motors[i] = throttle;
 
@@ -308,9 +328,11 @@ int main(void) {
         // Set acc_lpf_factor, gyro_cmpf_factor and gyro_cmpfm_factor + add explanation
         // headMaxAngle
     // Add disarm timer
-    // Remove safety AUX channel once 100% stable
     // Check that both buttons are held in while calibrating ESCs
     // Magnetometer
         // Dynamically adjust gain when calibrating if limit is reached
         // Take average of several values for gain
         // Board orientation
+    // Simplify the way PID values are set via Bluetooth
+        // Can just set a point to the struct
+    // Do not hardcode altitude hold value

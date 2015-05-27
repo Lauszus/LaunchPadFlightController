@@ -27,7 +27,7 @@
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
 
-static const uint32_t configVersion = 12; // Must be bumped every time config_t is changed
+static const uint32_t configVersion = 13; // Must be bumped every time config_t is changed
 config_t cfg;
 
 void initEEPROM(void) {
@@ -73,6 +73,11 @@ void setDefaultConfig(void) {
     cfg.pidYawValues.Ki = 6.00f;
     cfg.pidYawValues.Kd = 0.00040f;
     cfg.pidYawValues.integrationLimit = 10.0f; // Prevent windup
+
+    cfg.pidAltHoldValues.Kp = 0;
+    cfg.pidAltHoldValues.Ki = 0;
+    cfg.pidAltHoldValues.Kd = 0;
+    cfg.pidAltHoldValues.integrationLimit = 10.0f; // Prevent windup
 
     resetPIDTerms();
 

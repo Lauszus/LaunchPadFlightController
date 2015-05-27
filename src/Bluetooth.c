@@ -17,7 +17,6 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "Bluetooth.h"
@@ -46,6 +45,8 @@ enum {
     GET_PID_ROLL_PITCH,
     SET_PID_YAW,
     GET_PID_YAW,
+    SET_PID_ALT_HOLD,
+    GET_PID_ALT_HOLD,
     SET_SETTINGS,
     GET_SETTINGS,
     SEND_ANGLES,
@@ -71,7 +72,7 @@ typedef struct {
     uint16_t stickScalingRollPitch, stickScalingYaw; // Stick scaling values multiplied by 100
 } __attribute__((packed)) settings_t;
 
-static pidBT_t pidRollPitchBT, pidYawBT; // PID values
+static pidBT_t pidRollPitchBT, pidYawBT, pidAltHoldBT; // PID values
 static settings_t settings; // Settings
 static uint8_t sendAngles; // Non-zero if values should be sent
 
@@ -210,6 +211,49 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
 #if DEBUG_BLUETOOTH_PROTOCOL
                     else
                         UARTprintf("GET_PID_YAW error\n");
+#endif
+                    break;
+
+                case SET_PID_ALT_HOLD:
+                    if (msg.length == sizeof(pidAltHoldBT)) { // Make sure that it has the right length
+                        if (getData((uint8_t*)&pidAltHoldBT, sizeof(pidAltHoldBT))) { // This will read the data and check the checksum
+                            pidAltHold.values->Kp = pidAltHoldBT.Kp / 1000.0f;
+                            pidAltHold.values->Ki = pidAltHoldBT.Ki / 100.0f;
+                            pidAltHold.values->Kd = pidAltHoldBT.Kd / 100000.0f;
+                            pidAltHold.values->integrationLimit = pidAltHoldBT.integrationLimit / 100.0f;
+                            updateConfig();
+                            newValuesReceived = true;
+#if DEBUG_BLUETOOTH_PROTOCOL
+                            printPIDValues(pidAltHold.values); // Print PID Values
+#endif
+                        }
+#if DEBUG_BLUETOOTH_PROTOCOL
+                        else
+                            UARTprintf("SET_PID_ALT_HOLD checksum error\n");
+#endif
+                    }
+#if DEBUG_BLUETOOTH_PROTOCOL
+                    else
+                        UARTprintf("SET_PID_ALT_HOLD length error: %u\n", msg.length);
+#endif
+                    break;
+
+                case GET_PID_ALT_HOLD:
+                    if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
+                        msg.cmd = GET_PID_ALT_HOLD;
+                        msg.length = sizeof(pidAltHoldBT);
+                        pidAltHoldBT.Kp = pidAltHold.values->Kp * 1000.0f;
+                        pidAltHoldBT.Ki = pidAltHold.values->Ki * 100.0f;
+                        pidAltHoldBT.Kd = pidAltHold.values->Kd * 100000.0f;
+                        pidAltHoldBT.integrationLimit = pidAltHold.values->integrationLimit * 100.0f;
+                        sendData((uint8_t*)&pidAltHoldBT, sizeof(pidAltHoldBT));
+#if DEBUG_BLUETOOTH_PROTOCOL
+                        UARTprintf("GET_PID_ALT_HOLD\n");
+#endif
+                    }
+#if DEBUG_BLUETOOTH_PROTOCOL
+                    else
+                        UARTprintf("GET_PID_ALT_HOLD error\n");
 #endif
                     break;
 

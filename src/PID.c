@@ -21,13 +21,14 @@
 #include "EEPROM.h"
 #include "PID.h"
 
-pid_t pidRoll, pidPitch, pidYaw;
+pid_t pidRoll, pidPitch, pidYaw, pidAltHold;
 
 void initPID(void) {
     // Set PID values to point at values read from EEPROM
     pidRoll.values = &cfg.pidPitchValues;
     pidPitch.values = &cfg.pidRollValues;
     pidYaw.values = &cfg.pidYawValues;
+    pidAltHold.values = &cfg.pidAltHoldValues;
 }
 
 float updatePID(pid_t *pid, float setPoint, float input, float dt) {
@@ -57,4 +58,5 @@ void resetPIDTerms(void) {
     pidRoll.iTerm = pidRoll.lastError = pidRoll.deltaError1 = pidRoll.deltaError2 = 0.0f;
     pidPitch.iTerm = pidPitch.lastError = pidPitch.deltaError1 = pidPitch.deltaError2 = 0.0f;
     pidYaw.iTerm = pidYaw.lastError = pidYaw.deltaError1 = pidYaw.deltaError2 = 0.0f;
+    pidAltHold.iTerm = pidAltHold.lastError = pidAltHold.deltaError1 = pidAltHold.deltaError2 = 0.0f;
 }
