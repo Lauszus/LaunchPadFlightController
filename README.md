@@ -97,8 +97,8 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
 | PA6  |      SCL       |
 | PA7  |      SDA       |
 | PE3  |  MPU-6500 INT  |
-| PC4  |   Sonar echo   |
-| PC5  |  Sonar trigger |
+| PB2  |   Sonar echo   |
+| PE0  |  Sonar trigger |
 | PB0* |    UART1 RX    |
 | PB1* |    UART1 TX    |
 | PA5  |     Buzzer     |

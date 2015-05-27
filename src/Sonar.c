@@ -32,10 +32,19 @@
 //#include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
 
-#define SYSCTL_PERIPH_SONAR     SYSCTL_PERIPH_GPIOC
-#define GPIO_SONAR_BASE         GPIO_PORTC_BASE
-#define GPIO_SONAR_ECHO         GPIO_PIN_4
-#define GPIO_SONAR_TRIG         GPIO_PIN_5
+#define SYSCTL_PERIPH_TRIG          SYSCTL_PERIPH_GPIOE
+#define GPIO_SONAR_TRIG_BASE        GPIO_PORTE_BASE
+#define GPIO_SONAR_TRIG             GPIO_PIN_0
+
+#define SYSCTL_PERIPH_ECHO          SYSCTL_PERIPH_GPIOB
+#define GPIO_SONAR_ECHO_BASE        GPIO_PORTB_BASE
+#define GPIO_SONAR_ECHO             GPIO_PIN_2
+
+// Timer used to measure the width of the sonar echo pulse
+#define SYSCTL_PERIPH_SONAR_TIMER   SYSCTL_PERIPH_TIMER3
+#define GPIO_SONAR_ALTERNATE        GPIO_PB2_T3CCP0
+#define SONAR_TIMER_BASE            TIMER3_BASE
+#define SONAR_TIMER_INT             INT_TIMER3A
 
 // Implemented based on: http://che126.che.caltech.edu/28015-PING-Sensor-Product-Guide-v2.0.pdf
 
@@ -48,9 +57,9 @@ static void SonarHandler(void) {
     static uint32_t prev = 0;
     static bool last_edge = false;
 
-    TimerIntClear(WTIMER0_BASE, TIMER_CAPA_EVENT); // Clear interrupt
-    uint32_t curr = TimerValueGet(WTIMER0_BASE, TIMER_A); // Read capture value
-    bool edge = GPIOPinRead(GPIO_SONAR_BASE, GPIO_SONAR_ECHO); // Read the GPIO pin
+    TimerIntClear(SONAR_TIMER_BASE, TIMER_CAPA_EVENT); // Clear interrupt
+    uint32_t curr = TimerValueGet(SONAR_TIMER_BASE, TIMER_A); // Read capture value
+    bool edge = GPIOPinRead(GPIO_SONAR_ECHO_BASE, GPIO_SONAR_ECHO); // Read the GPIO pin
 
     if (last_edge && !edge) { // Check that we are going from a positive to falling edge
         uint32_t diff = curr - prev; // Calculate diff
@@ -69,9 +78,9 @@ void triggerSonar(void) {
     uint32_t now = millis();
     if ((int32_t)(now - lastTrigger) > 25) { // Trigger every 25ms
         lastTrigger = now;
-        GPIOPinWrite(GPIO_SONAR_BASE, GPIO_SONAR_TRIG, GPIO_SONAR_TRIG); // Set pin high
+        GPIOPinWrite(GPIO_SONAR_TRIG_BASE, GPIO_SONAR_TRIG, GPIO_SONAR_TRIG); // Set pin high
         delayMicroseconds(10); // Other sources wait 10us
-        GPIOPinWrite(GPIO_SONAR_BASE, GPIO_SONAR_TRIG, 0); // Set pin low
+        GPIOPinWrite(GPIO_SONAR_TRIG_BASE, GPIO_SONAR_TRIG, 0); // Set pin low
         //UARTprintf("%d\n", getSonarDistance());
     }
 }
@@ -84,28 +93,26 @@ int16_t getSonarDistance(void) {
     return distance;
 }
 
-// WTimer0A is used to measure the width of the sonar echo pulse
 void initSonar(void) {
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER0); // Enable Wide Timer0 peripheral
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_SONAR_TIMER); // Enable Timer peripheral
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_ECHO); // Enable GPIO peripheral
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_TRIG); // Enable GPIO peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
-
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_SONAR); // Enable GPIO peripheral
-    SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
-    GPIOPinConfigure(GPIO_PC4_WT0CCP0); // Use alternate function
-    GPIOPinTypeTimer(GPIO_SONAR_BASE, GPIO_SONAR_ECHO); // Use pin with timer peripheral
+    GPIOPinConfigure(GPIO_SONAR_ALTERNATE); // Use alternate function
+    GPIOPinTypeTimer(GPIO_SONAR_ECHO_BASE, GPIO_SONAR_ECHO); // Use pin with timer peripheral
 
     // Split timers and enable timer A event up-count timer
-    TimerConfigure(WTIMER0_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_CAP_TIME_UP);
+    TimerConfigure(SONAR_TIMER_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_CAP_TIME_UP);
 
-    // Configure WTimer0A
-    TimerControlEvent(WTIMER0_BASE, TIMER_A, TIMER_EVENT_BOTH_EDGES); // Interrupt on both edges
-    TimerIntRegister(WTIMER0_BASE, TIMER_A, SonarHandler); // Register interrupt handler
-    TimerIntEnable(WTIMER0_BASE, TIMER_CAPA_EVENT); // Enable timer capture A event interrupt
-    IntPrioritySet(INT_WTIMER0A, 0); // Configure Wide Timer 0A interrupt priority as 0
-    IntEnable(INT_WTIMER0A); // Enable Wide Timer 0A interrupt
+    // Configure the Timer A
+    TimerControlEvent(SONAR_TIMER_BASE, TIMER_A, TIMER_EVENT_BOTH_EDGES); // Interrupt on both edges
+    TimerIntRegister(SONAR_TIMER_BASE, TIMER_A, SonarHandler); // Register interrupt handler
+    TimerIntEnable(SONAR_TIMER_BASE, TIMER_CAPA_EVENT); // Enable timer capture A event interrupt
+    IntPrioritySet(SONAR_TIMER_INT, 0); // Configure Timer interrupt priority as 0
+    IntEnable(SONAR_TIMER_INT); // Enable Timer interrupt
 
-    GPIOPinTypeGPIOOutput(GPIO_SONAR_BASE, GPIO_SONAR_TRIG); // Set pin as output
-    GPIOPinWrite(GPIO_SONAR_BASE, GPIO_SONAR_TRIG, 0); // Set pin low
+    GPIOPinTypeGPIOOutput(GPIO_SONAR_TRIG_BASE, GPIO_SONAR_TRIG); // Set pin as output
+    GPIOPinWrite(GPIO_SONAR_TRIG_BASE, GPIO_SONAR_TRIG, 0); // Set pin low
 
-    TimerEnable(WTIMER0_BASE, TIMER_A); // Enable Wide Timers 0A
+    TimerEnable(SONAR_TIMER_BASE, TIMER_A); // Enable Timer A
 }
