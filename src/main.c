@@ -306,10 +306,11 @@ int main(void) {
                 writePPMAllOff();
                 resetPIDRollPitchYaw();
             }
-        }
 
 #if USE_SONAR
-        triggerSonar(); // Trigger sonar
+            triggerSonar(); // Trigger sonar
+#endif
+        }
 #endif
     }
 }
