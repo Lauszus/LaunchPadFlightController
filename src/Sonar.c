@@ -15,6 +15,8 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 
+#if USE_SONAR
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -122,3 +124,5 @@ void initSonar(void) {
 
     TimerEnable(SONAR_TIMER_BASE, TIMER_A); // Enable Timer A
 }
+
+#endif // USE_SONAR

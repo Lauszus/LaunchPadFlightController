@@ -35,7 +35,9 @@
 #include "PID.h"
 #include "Pins.h"
 #include "RX.h"
+#if USE_SONAR
 #include "Sonar.h"
+#endif
 #include "Time.h"
 #include "UART.h"
 
@@ -69,7 +71,9 @@ int main(void) {
     initEEPROM();
     initPPM();
     initRX();
+#if USE_SONAR
     initSonar();
+#endif
     initI2C();
     initMPU6500(&mpu6500);
 #if USE_MAG
@@ -288,7 +292,9 @@ int main(void) {
             }
         }
 
+#if USE_SONAR
         triggerSonar(); // Trigger sonar
+#endif
     }
 }
 

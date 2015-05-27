@@ -15,7 +15,7 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 
-#ifndef __sonar_h__
+#if !defined(__sonar_h__) && USE_SONAR
 #define __sonar_h__
 
 #ifdef __cplusplus
