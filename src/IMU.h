@@ -20,6 +20,9 @@
 
 #include "MPU6500.h"
 
+#define DEG_TO_RAD  0.017453292519943295769236907684886f
+#define RAD_TO_DEG  57.295779513082320876798154814105f
+
 #ifdef __cplusplus
 extern "C" {
 #endif

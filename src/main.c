@@ -244,9 +244,9 @@ int main(void) {
                 if (angleMode && getRXChannel(RX_AUX2_CHAN) > 0) { // Altitude hold
                     const float altHoldSetPoint = 1500; // 1.5m
 #if USE_BARO
-                    int16_t distance = getSonarDistance(&bmp180);
+                    int16_t distance = getSonarDistance(&bmp180, &angle);
 #else
-                    int16_t distance = getSonarDistance();
+                    int16_t distance = getSonarDistance(&angle);
 #endif
                     if (distance < 0) // TODO: Use barometer if we get close to 3m instead
                         distance = 300;
@@ -313,7 +313,7 @@ int main(void) {
 }
 
 // TODO:
-    // Sonar - compensate for tilt angle: https://github.com/cleanflight/cleanflight/blob/55cac2bdeb5a80676b06054aa72250b9d42b6099/src/main/sensors/sonar.c#L90-L99
+    // Sonar - apply deadband to error value
     // Android App
         // Self level angle trim
         // Calibrate magnetometer
