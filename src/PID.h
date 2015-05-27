@@ -15,8 +15,8 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 
-#ifndef __pid_h__
-#define __pid_h__
+#ifndef __PID_h__
+#define __PID_h__
 
 #ifdef __cplusplus
 extern "C" {
