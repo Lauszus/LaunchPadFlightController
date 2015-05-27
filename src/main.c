@@ -315,8 +315,7 @@ int main(void) {
 }
 
 // TODO:
-    // Use sonar distance for something usefull - see: https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/altitudehold.c
-        // https://github.com/cleanflight/cleanflight/blob/master/src/main/sensors/sonar.c#L90-L99
+    // Sonar - compensate for tilt angle: https://github.com/cleanflight/cleanflight/blob/55cac2bdeb5a80676b06054aa72250b9d42b6099/src/main/sensors/sonar.c#L90-L99
     // Android App
         // Self level angle trim
         // Calibrate magnetometer
@@ -327,8 +326,6 @@ int main(void) {
     // Check that both buttons are held in while calibrating ESCs
     // Magnetometer
         // Dynamically adjust gain when calibrating if limit is reached
-        // Take average of several values for gain
-        // Board orientation
     // Simplify the way PID values are set via Bluetooth
         // Can just set a point to the struct
     // Do not hardcode altitude hold value
