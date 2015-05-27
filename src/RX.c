@@ -86,7 +86,9 @@ static void TimeoutHandler(void) {
     TimerIntClear(WTIMER1_BASE, TIMER_TIMB_TIMEOUT); // Clear interrupt
     writePPMAllOff(); // Turn all motors off
     validRXData = false; // Indicate that connection was lost
+#ifndef DEBUG
     buzzer(true); // Turn on buzzer
+#endif
 }
 
 // WTimer1A is used to measure the width of the pulses
