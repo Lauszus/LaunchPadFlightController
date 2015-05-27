@@ -237,13 +237,13 @@ int main(void) {
                 float pitchOut = updatePID(&pidPitch, setPointPitch, mpu6500.gyroRate.axis.pitch, dt);
                 float yawOut = updatePID(&pidYaw, setPointYaw, -mpu6500.gyroRate.axis.yaw, dt); // Gyro rate is inverted, so it works well with RC yaw control input
 
-                float motors[4]; // Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
                 float throttle = getRXChannel(RX_THROTTLE_CHAN);
 
 #if USE_SONAR
                 static bool altHoldActive;
                 if (angleMode && getRXChannel(RX_AUX2_CHAN) > 0) { // Altitude hold
-                    static float altHoldThrottle, altHoldSetPoint; // Throttle when altitude was activated and altitude set pont
+                    static float altHoldThrottle; // Throttle when altitude hold was activated
+                    static int16_t altHoldSetPoint; // Altitude hold set point
     #if USE_BARO
                     int16_t distance = getSonarDistance(&angle, &bmp180);
     #else
@@ -261,12 +261,13 @@ int main(void) {
 
                         float altHoldOut = updatePID(&pidAltHold, altHoldSetPoint, distance, dt);
                         //UARTprintf1("%d %d\n", distance, (int32_t)altHoldOut); // TODO: Remove
-                        throttle = constrain(altHoldThrottle + altHoldOut, -100.0f, 100.0f);
+                        throttle = constrain(altHoldThrottle + altHoldOut, -100.0f, 100.0f); // Throttle value is set to throttle when altitude hold were first activated plus output from PID controller
                     }
                 } else
                     altHoldActive = false;
 #endif
 
+                float motors[4]; // Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
                 for (uint8_t i = 0; i < 4; i++)
                     motors[i] = throttle;
 
