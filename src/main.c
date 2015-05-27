@@ -255,7 +255,8 @@ int main(void) {
                         altHoldOut += altHoldOut > 0 ? -10 : 10; // Subtract deadband
                         throttle = constrain(throttle + altHoldOut, -100.0f, 100.0f);
                     }
-                }
+                } else
+                    resetPIDAltHold();
 #endif
 
                 for (uint8_t i = 0; i < 4; i++)
@@ -303,7 +304,7 @@ int main(void) {
 #endif
             } else {
                 writePPMAllOff();
-                resetPIDTerms();
+                resetPIDRollPitchYaw();
             }
         }
 

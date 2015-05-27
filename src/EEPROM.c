@@ -79,7 +79,8 @@ void setDefaultConfig(void) {
     cfg.pidAltHoldValues.Kd = 0;
     cfg.pidAltHoldValues.integrationLimit = 10.0f; // Prevent windup
 
-    resetPIDTerms();
+    resetPIDRollPitchYaw();
+    resetPIDAltHold();
 
     cfg.angleKp = 4.50f;
     cfg.headKp = 0.65f;

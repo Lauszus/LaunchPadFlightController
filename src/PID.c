@@ -54,9 +54,12 @@ float updatePID(pid_t *pid, float setPoint, float input, float dt) {
     return pTerm + pid->iTerm + dTerm; // Return sum
 }
 
-void resetPIDTerms(void) {
+void resetPIDRollPitchYaw(void) {
     pidRoll.iTerm = pidRoll.lastError = pidRoll.deltaError1 = pidRoll.deltaError2 = 0.0f;
     pidPitch.iTerm = pidPitch.lastError = pidPitch.deltaError1 = pidPitch.deltaError2 = 0.0f;
     pidYaw.iTerm = pidYaw.lastError = pidYaw.deltaError1 = pidYaw.deltaError2 = 0.0f;
+}
+
+void resetPIDAltHold(void) {
     pidAltHold.iTerm = pidAltHold.lastError = pidAltHold.deltaError1 = pidAltHold.deltaError2 = 0.0f;
 }

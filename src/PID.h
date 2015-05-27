@@ -38,7 +38,8 @@ typedef struct {
 
 void initPID(void);
 float updatePID(pid_t *pid, float setPoint, float input, float dt);
-void resetPIDTerms(void);
+void resetPIDRollPitchYaw(void);
+void resetPIDAltHold(void);
 
 extern pid_t pidRoll, pidPitch, pidYaw, pidAltHold;
 
