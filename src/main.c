@@ -241,19 +241,30 @@ int main(void) {
                 float throttle = getRXChannel(RX_THROTTLE_CHAN);
 
 #if USE_SONAR
+                static bool altHoldActive;
                 if (angleMode && getRXChannel(RX_AUX2_CHAN) > 0) { // Altitude hold
-                    const float altHoldSetPoint = 1500; // 1.5m
-#if USE_BARO
+                    static float altHoldThrottle, altHoldSetPoint; // Throttle when altitude was activated and altitude set pont
+    #if USE_BARO
                     int16_t distance = getSonarDistance(&angle, &bmp180);
-#else
+    #else
                     int16_t distance = getSonarDistance(&angle);
-#endif
-                    if (distance < 0) // TODO: Use barometer if we get close to 3m instead
-                        distance = 300;
-                    float altHoldOut = updatePID(&pidAltHold, altHoldSetPoint, distance, dt);
-                    throttle = constrain(throttle + altHoldOut, -100.0f, 100.0f);
+    #endif
+
+                    // TODO: Use barometer when it exceeds 3m
+                    if (distance >= 0) { // Make sure the distance is valid
+                        if (!altHoldActive) { // We just went from deactivated to active
+                            altHoldActive = true;
+                            resetPIDAltHold();
+                            altHoldThrottle = throttle; // Save current throttle
+                            altHoldSetPoint = distance; // Set new altitude hold set point
+                        }
+
+                        float altHoldOut = updatePID(&pidAltHold, altHoldSetPoint, distance, dt);
+                        //UARTprintf1("%d %d\n", distance, (int32_t)altHoldOut); // TODO: Remove
+                        throttle = constrain(altHoldThrottle + altHoldOut, -100.0f, 100.0f);
+                    }
                 } else
-                    resetPIDAltHold();
+                    altHoldActive = false;
 #endif
 
                 for (uint8_t i = 0; i < 4; i++)
@@ -321,7 +332,10 @@ int main(void) {
 }
 
 // TODO:
-    // Sonar - apply deadband to error value
+    // Altitude hold
+        // Apply deadband to error value for sonar
+        // Use sonar distance to find offset of barometer
+        // Update altitude set-point if throttle is moved
     // Android App
         // Self level angle trim
         // Calibrate magnetometer
