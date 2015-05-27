@@ -251,10 +251,7 @@ int main(void) {
                     if (distance < 0) // TODO: Use barometer if we get close to 3m instead
                         distance = 300;
                     float altHoldOut = updatePID(&pidAltHold, altHoldSetPoint, distance, dt);
-                    if (fabsf(altHoldOut) > 10) {
-                        altHoldOut += altHoldOut > 0 ? -10 : 10; // Subtract deadband
-                        throttle = constrain(throttle + altHoldOut, -100.0f, 100.0f);
-                    }
+                    throttle = constrain(throttle + altHoldOut, -100.0f, 100.0f);
                 } else
                     resetPIDAltHold();
 #endif
