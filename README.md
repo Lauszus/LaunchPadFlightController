@@ -60,9 +60,14 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
 # Features
 
 * Rate mode, self level mode, heading hold and altitude hold
+    - __AUX1:__ Use 3-POS switch for self level and heading hold. At first position both are off, at second position self level is on and at third position both are on
+    - __AUX2:__ Use a 2-POS switch for altitude hold. Activated when switch is high. Note that self level mode must be activated for altitude hold to work
 * Store PID values, calibration values etc. in EEPROM
 * Gyro & accelerometer calibration routine
+    - Gyro is calibrated at startup
+    - Accelerometer calibration routine can be activated in the code or by using the Android app
 * Magnetometer calibration routine (turns on Blue LED when calibrating)
+    - Magnetometer calibration routine can only be activated in the code for now
 * Arm/disarm using rudder
 * Status LEDs
 * Supports CPPM receivers
@@ -70,6 +75,7 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
 * Magnetometer (HMC5883L)
 * Barometer (BMP180)
 * Ultrasound sensor aka sonar (HC-SR04)
+    - Take off sequence if AUX2 is high when armed
 * [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid)
 * OneShot125 ESC support
 * Buzzer feedback
@@ -104,13 +110,11 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
 | PA5  |     Buzzer     |
 | PE4  |  HMC5883L DRDY |
 
-\* Not 5V tolerant
-
-UART1 is connected to a HC-06 Bluetooth module running at a baudrate of 115200.
+\* UART1 is connected to a HC-06 Bluetooth module running at a baudrate of 115200. __Not 5V tolerant!__, so make sure your Bluetooth module outputs 3.3 voltage level or use logic level converter.
 
 # Notes
 
-Note that the motor layout follow the Naze32 in x-configuration i.e. motor 1 is bottom right, motor 2 is top right, motor 3 is bottom left and motor 4 is top left when looking from the back.
+Note that the motor layout follows the Naze32 in x-configuration i.e. motor 1 is bottom right, motor 2 is top right, motor 3 is bottom left and motor 4 is top left when looking from the back.
 
 Make sure that roll increases when tilting quadcopter to the right, pitch increases when pitching quadcopter downward and yaw increases when rotation quadcopter clockwise.
 
