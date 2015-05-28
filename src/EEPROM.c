@@ -74,9 +74,9 @@ void setDefaultConfig(void) {
     cfg.pidYawValues.Kd = 0.00040f;
     cfg.pidYawValues.integrationLimit = 10.0f; // Prevent windup
 
-    cfg.pidAltHoldValues.Kp = 0;
-    cfg.pidAltHoldValues.Ki = 0;
-    cfg.pidAltHoldValues.Kd = 0;
+    cfg.pidAltHoldValues.Kp = 0.030f;
+    cfg.pidAltHoldValues.Ki = 0.01f;
+    cfg.pidAltHoldValues.Kd = 0.00200f;
     cfg.pidAltHoldValues.integrationLimit = 10.0f; // Prevent windup
 
     resetPIDRollPitchYaw();
