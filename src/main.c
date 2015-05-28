@@ -134,19 +134,10 @@ int main(void) {
     while (1) {
         // Make sure there is valid data and safety channel is in armed position
         static bool armed = false;
-#if USE_SONAR
-        static bool takeOffSequence; // Used to make the quadcopter take off and stay at 1m
-#endif
         if (validRXData) {
-            if (!armed && getRXChannel(RX_THROTTLE_CHAN) < -95 && getRXChannel(RX_RUDDER_CHAN) > 95) { // Arm using throttle low and yaw right
+            if (!armed && getRXChannel(RX_THROTTLE_CHAN) < -95 && getRXChannel(RX_RUDDER_CHAN) > 95) // Arm using throttle low and yaw right
                 armed = true;
-#if USE_SONAR
-                if (getRXChannel(RX_AUX2_CHAN) > 0) // Make take off sequence
-                    takeOffSequence = true;
-                else
-                    takeOffSequence = false;
-#endif
-            } else if (armed && getRXChannel(RX_THROTTLE_CHAN) < -95 && getRXChannel(RX_RUDDER_CHAN) < -95) // Disarm using throttle low and yaw left
+            else if (armed && getRXChannel(RX_THROTTLE_CHAN) < -95 && getRXChannel(RX_RUDDER_CHAN) < -95) // Disarm using throttle low and yaw left
                 armed = false;
         } else
             armed = false;
@@ -159,19 +150,19 @@ int main(void) {
         // Turn on red led if armed otherwise turn on green LED
         GPIOPinWrite(GPIO_LED_BASE, GPIO_RED_LED | GPIO_GREEN_LED, armed ? GPIO_RED_LED : GPIO_GREEN_LED);
 
+        // Handle the different modes
+        bool angleMode = getRXChannel(RX_AUX1_CHAN) > -10;
+        bool headMode = angleMode && getRXChannel(RX_AUX1_CHAN) > 50; // Make sure angle mode is activated in heading hold mode
+        bool altitudeMode = angleMode && getRXChannel(RX_AUX2_CHAN) > 0; // Make sure angle mode is activated in altitude hold mode
+
         // Don't spin motors if the throttle is low
         bool runMotors = false;
-        if (armed && getRXChannel(RX_THROTTLE_CHAN) > -95)
+        if (armed && (getRXChannel(RX_THROTTLE_CHAN) > -95 || altitudeMode)) // If in altitude mode, keep motors spinning anyway
             runMotors = true;
         else {
             if (readBluetoothData(&mpu6500, &angle)) // Read Bluetooth data if motors are not spinning
                 beepBuzzer(); // Indicate if new values were set
         }
-
-        // Handle angle and heading mode
-        bool angleMode = false;
-        if (getRXChannel(RX_AUX1_CHAN) > -10)
-            angleMode = true;
 
 #if USE_MAG
         if (!armed)
@@ -209,7 +200,7 @@ int main(void) {
 
 #if USE_MAG
                 static float magHold; // Heading using for heading hold
-                if (angleMode && getRXChannel(RX_AUX1_CHAN) > 50 && fabsf(rudder) < 5) { // Only use heading hold if user is not applying rudder and in angle mode
+                if (headMode && fabsf(rudder) < 5) { // Only use heading hold if user is not applying rudder
                     static const uint8_t headMaxAngle = 25;
                     if (fmaxf(fabsf(angle.axis.roll), fabsf(angle.axis.pitch)) < headMaxAngle) { // Check that we are not tilted too much
                         float dif = angle.axis.yaw - magHold;
@@ -223,7 +214,7 @@ int main(void) {
                         GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED
                 } else {
                     GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED
-                    magHold = angle.axis.yaw;
+                    magHold = angle.axis.yaw; // Reset heading hold value
                 }
 #endif
 
@@ -250,40 +241,46 @@ int main(void) {
 
 #if USE_SONAR
                 static bool altHoldActive;
-                if (angleMode && getRXChannel(RX_AUX2_CHAN) > 0) { // Altitude hold
-                    static float altHoldThrottle; // Throttle when altitude hold was activated
+                if (altitudeMode) {
+                    static const float throttle_noise_lpf = 1000.0f; // TODO: Set via app
+                    static float altHoldThrottle; // Low pass filtered throttle input
+                    static float altHoldInitialThrottle; // Throttle when altitude hold was activated
                     static int16_t altHoldSetPoint; // Altitude hold set point
     #if USE_BARO
                     int16_t distance = getSonarDistance(&angle, &bmp180);
     #else
                     int16_t distance = getSonarDistance(&angle);
     #endif
-
                     // TODO: Use barometer when it exceeds 3m
                     if (distance >= 0) { // Make sure the distance is valid
                         if (!altHoldActive) { // We just went from deactivated to active
                             altHoldActive = true;
                             resetPIDAltHold();
-                            if (takeOffSequence) {
-                                takeOffSequence = false;
-                                altHoldSetPoint = 1000; // Set height to 1m
-                                altHoldThrottle = -30.0f; // Set throttle to middle value - TODO: Adjust this via the app
-                            } else {
-                                altHoldSetPoint = distance; // Set new altitude hold set point
-                                altHoldThrottle = throttle; // Save current throttle
+                            altHoldThrottle = throttle; // Set low pass filtered throttle value
+                            altHoldSetPoint = distance; // Set new altitude hold set point
+                            altHoldInitialThrottle = throttle; // Save current throttle
+                            if (altHoldInitialThrottle < -0.95f) {
+                                // TODO: Don't hardcode these values
+                                altHoldSetPoint = 1000; // Set to 1m
+                                altHoldInitialThrottle = -30.0f; // Set the throttle value to where is approximately hovers
                             }
                         }
 
-                        float altHoldOut = updatePID(&pidAltHold, altHoldSetPoint, distance, dt);
+                        altHoldThrottle = altHoldThrottle * (1.0f - (1.0f / throttle_noise_lpf)) + throttle * (1.0f / throttle_noise_lpf); // LPF throttle input
+
+                        float setPoint;
+                        if (altHoldThrottle < altHoldInitialThrottle)
+                            setPoint = mapf(altHoldThrottle, -100.0f, altHoldInitialThrottle, 50.0f, altHoldSetPoint); // Limit minimum value to 5cm
+                        else
+                            setPoint = mapf(altHoldThrottle, altHoldInitialThrottle, 100.0f, altHoldSetPoint, 1500.0f); // Limit maximum altitude to 1.5m which is in practice the limit of the sonar
+
+                        float altHoldOut = updatePID(&pidAltHold, setPoint, distance, dt);
                         //UARTprintf1("%d %d\n", distance, (int32_t)altHoldOut); // TODO: Remove
                         // Throttle value is set to throttle when altitude hold were first activated plus output from PID controller
                         // Set minimum to -90, so the motors are never completely shut off
-                        throttle = constrain(altHoldThrottle + altHoldOut, -90.0f, 100.0f);
+                        throttle = constrain(altHoldInitialThrottle + altHoldOut, -90.0f, 100.0f);
                     }
-                } else {
-                    takeOffSequence = false; // Cancel take off sequence if not in angle mode or if AUX2 is not high
                     altHoldActive = false;
-                }
 #endif
 
                 float motors[4]; // Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
@@ -356,11 +353,13 @@ int main(void) {
         // Apply deadband to error value for sonar
         // Use sonar distance to find offset of barometer
         // Update altitude set-point if throttle is moved
+        // Check if it returns -1 while flying
+        // Redo take off sequence
     // Android App
         // Self level angle trim
         // Calibrate magnetometer
         // Set magnetic declination
-        // Set acc_lpf_factor, gyro_cmpf_factor and gyro_cmpfm_factor + add explanation
+        // Set acc_lpf_factor, gyro_cmpf_factor, gyro_cmpfm_factor, baro_noise_lpf and throttle_noise_lpf + add explanation
         // headMaxAngle
     // Add disarm timer
     // Check that both buttons are held in while calibrating ESCs

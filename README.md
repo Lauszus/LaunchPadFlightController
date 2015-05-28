@@ -75,7 +75,6 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
 * Magnetometer (HMC5883L)
 * Barometer (BMP180)
 * Ultrasound sensor aka sonar (HC-SR04)
-    - Take off sequence if AUX2 is high when armed
 * [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid)
 * OneShot125 ESC support
 * Buzzer feedback
