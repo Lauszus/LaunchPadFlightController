@@ -134,10 +134,19 @@ int main(void) {
     while (1) {
         // Make sure there is valid data and safety channel is in armed position
         static bool armed = false;
+#if USE_SONAR
+        static bool takeOffSequence; // Used to make the quadcopter take off and stay at 1m
+#endif
         if (validRXData) {
-            if (!armed && getRXChannel(RX_THROTTLE_CHAN) < -95 && getRXChannel(RX_RUDDER_CHAN) > 95) // Arm using throttle low and yaw right
+            if (!armed && getRXChannel(RX_THROTTLE_CHAN) < -95 && getRXChannel(RX_RUDDER_CHAN) > 95) { // Arm using throttle low and yaw right
                 armed = true;
-            else if (armed && getRXChannel(RX_THROTTLE_CHAN) < -95 && getRXChannel(RX_RUDDER_CHAN) < -95) // Disarm using throttle low and yaw left
+#if USE_SONAR
+                if (getRXChannel(RX_AUX2_CHAN) > 0) // Make take off sequence
+                    takeOffSequence = true;
+                else
+                    takeOffSequence = false;
+#endif
+            } else if (armed && getRXChannel(RX_THROTTLE_CHAN) < -95 && getRXChannel(RX_RUDDER_CHAN) < -95) // Disarm using throttle low and yaw left
                 armed = false;
         } else
             armed = false;
@@ -255,8 +264,14 @@ int main(void) {
                         if (!altHoldActive) { // We just went from deactivated to active
                             altHoldActive = true;
                             resetPIDAltHold();
-                            altHoldThrottle = throttle; // Save current throttle
-                            altHoldSetPoint = distance; // Set new altitude hold set point
+                            if (takeOffSequence) {
+                                takeOffSequence = false;
+                                altHoldSetPoint = 1000; // Set height to 1m
+                                altHoldThrottle = -30.0f; // Set throttle to middle value - TODO: Adjust this via the app
+                            } else {
+                                altHoldSetPoint = distance; // Set new altitude hold set point
+                                altHoldThrottle = throttle; // Save current throttle
+                            }
                         }
 
                         float altHoldOut = updatePID(&pidAltHold, altHoldSetPoint, distance, dt);
@@ -265,8 +280,10 @@ int main(void) {
                         // Set minimum to -90, so the motors are never completely shut off
                         throttle = constrain(altHoldThrottle + altHoldOut, -90.0f, 100.0f);
                     }
-                } else
+                } else {
+                    takeOffSequence = false; // Cancel take off sequence if not in angle mode or if AUX2 is not high
                     altHoldActive = false;
+                }
 #endif
 
                 float motors[4]; // Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
