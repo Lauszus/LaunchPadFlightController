@@ -246,6 +246,7 @@ int main(void) {
                     static float altHoldThrottle; // Low pass filtered throttle input
                     static float altHoldInitialThrottle; // Throttle when altitude hold was activated
                     static int16_t altHoldSetPoint; // Altitude hold set point
+                    static float oldThrottle; // Old throttle output
     #if USE_BARO
                     int16_t distance = getSonarDistance(&angle, &bmp180);
     #else
@@ -279,7 +280,10 @@ int main(void) {
                         // Throttle value is set to throttle when altitude hold were first activated plus output from PID controller
                         // Set minimum to -90, so the motors are never completely shut off
                         throttle = constrain(altHoldInitialThrottle + altHoldOut, -90.0f, 100.0f);
-                    }
+                        oldThrottle = throttle; // Save throttle output
+                    } else
+                        throttle = oldThrottle; // Set to old throttle output in case sonar sensor return an error
+                } else
                     altHoldActive = false;
 #endif
 
