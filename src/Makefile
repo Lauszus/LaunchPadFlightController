@@ -56,8 +56,7 @@ PROJECT_OBJ = $(COMPILER)/$(TARGET).axf
 # The default rule, which causes the project to be built.
 #
 all: $(COMPILER) $(PROJECT_OBJ)
-	@echo
-	$(PREFIX)-size $(PROJECT_OBJ)
+	@$(PREFIX)-size $(PROJECT_OBJ)
 
 #
 # The rule to clean out all the build products.
@@ -69,7 +68,7 @@ clean:
 # The rule to clean out all the build products.
 #
 flash: all
-	lm4flash -v $(COMPILER)/$(TARGET).bin
+	@lm4flash -v $(COMPILER)/$(TARGET).bin
 
 #
 # The rule to create the target directory.
