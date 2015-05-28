@@ -261,7 +261,9 @@ int main(void) {
 
                         float altHoldOut = updatePID(&pidAltHold, altHoldSetPoint, distance, dt);
                         //UARTprintf1("%d %d\n", distance, (int32_t)altHoldOut); // TODO: Remove
-                        throttle = constrain(altHoldThrottle + altHoldOut, -100.0f, 100.0f); // Throttle value is set to throttle when altitude hold were first activated plus output from PID controller
+                        // Throttle value is set to throttle when altitude hold were first activated plus output from PID controller
+                        // Set minimum to -90, so the motors are never completely shut off
+                        throttle = constrain(altHoldThrottle + altHoldOut, -90.0f, 100.0f);
                     }
                 } else
                     altHoldActive = false;
