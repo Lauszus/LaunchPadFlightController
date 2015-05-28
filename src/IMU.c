@@ -49,7 +49,7 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
 
     for (uint8_t axis = 0; axis < 3; axis++) {
         gyro.data[axis] = mpu6500->gyroRate.data[axis] * DEG_TO_RAD; // Convert from deg/s to rad/s
-        accLPF.data[axis] = accLPF.data[axis] * (1.0f - (1.0f / acc_lpf_factor)) + mpu6500->acc.data[axis] * (1.0f / acc_lpf_factor); // Apply low pass filter
+        accLPF.data[axis] = accLPF.data[axis] * (1.0f - (1.0f / acc_lpf_factor)) + (float)mpu6500->acc.data[axis] * (1.0f / acc_lpf_factor); // Apply low pass filter
         accMagSquared += accLPF.data[axis] * accLPF.data[axis]; // Update magnitude
     }
 
