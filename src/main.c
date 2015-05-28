@@ -161,7 +161,12 @@ int main(void) {
 
         // Don't spin motors if the throttle is low
         bool runMotors = false;
-        if (armed && (getRXChannel(RX_THROTTLE_CHAN) > CHANNEL_MIN_CHECK || altitudeMode)) // If in altitude mode, keep motors spinning anyway
+        if (armed &&
+#if USE_SONAR
+                (getRXChannel(RX_THROTTLE_CHAN) > CHANNEL_MIN_CHECK || altitudeMode)) // If in altitude mode, keep motors spinning anyway
+#else
+                getRXChannel(RX_THROTTLE_CHAN) > CHANNEL_MIN_CHECK)
+#endif
             runMotors = true;
         else {
             if (readBluetoothData(&mpu6500, &angle)) // Read Bluetooth data if motors are not spinning
