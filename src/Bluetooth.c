@@ -56,7 +56,7 @@ enum {
     RESTORE_DEFAULTS,
 };
 
-struct msg_t {
+static struct msg_t {
     uint8_t cmd;
     uint8_t length;
 } __attribute__((packed)) msg;
@@ -66,17 +66,16 @@ typedef struct {
     uint16_t integrationLimit; // Integration limit multiplied by 100
 } __attribute__((packed)) pidBT_t;
 
-typedef struct {
+static struct settings_t {
     uint16_t angleKp, headKp; // Values multiplied by 100
     uint8_t maxAngleInclination; // Inclination angle in degrees
     uint16_t stickScalingRollPitch, stickScalingYaw; // Stick scaling values multiplied by 100
-} __attribute__((packed)) settings_t;
+} __attribute__((packed)) settings;
 
 static pidBT_t pidRollPitchBT, pidYawBT, pidAltHoldBT; // PID values
-static settings_t settings; // Settings
 static uint8_t sendAngles; // Non-zero if values should be sent
 
-struct angles_t {
+static struct angles_t {
     int16_t roll, pitch; // Roll and pitch are in the range [-180:180]
     uint16_t yaw; // Yaw is in the range [0:360]
 } __attribute__((packed)) angles;
