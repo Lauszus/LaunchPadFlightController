@@ -22,6 +22,10 @@
 extern "C" {
 #endif
 
+// Used to check for min and max value of a specific channel
+#define CHANNEL_MIN_CHECK (-95.0f)
+#define CHANNEL_MAX_CHECK (95.0f)
+
 typedef enum {
     RX_AILERON_CHAN = 0,
     RX_ELEVATOR_CHAN,

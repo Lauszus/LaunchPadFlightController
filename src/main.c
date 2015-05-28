@@ -135,9 +135,9 @@ int main(void) {
         // Make sure there is valid data and safety channel is in armed position
         static bool armed = false;
         if (validRXData) {
-            if (!armed && getRXChannel(RX_THROTTLE_CHAN) < -95 && getRXChannel(RX_RUDDER_CHAN) > 95) // Arm using throttle low and yaw right
+            if (!armed && getRXChannel(RX_THROTTLE_CHAN) < CHANNEL_MIN_CHECK && getRXChannel(RX_RUDDER_CHAN) > CHANNEL_MAX_CHECK) // Arm using throttle low and yaw right
                 armed = true;
-            else if (armed && getRXChannel(RX_THROTTLE_CHAN) < -95 && getRXChannel(RX_RUDDER_CHAN) < -95) // Disarm using throttle low and yaw left
+            else if (armed && getRXChannel(RX_THROTTLE_CHAN) < CHANNEL_MIN_CHECK && getRXChannel(RX_RUDDER_CHAN) < CHANNEL_MIN_CHECK) // Disarm using throttle low and yaw left
                 armed = false;
         } else
             armed = false;
@@ -161,7 +161,7 @@ int main(void) {
 
         // Don't spin motors if the throttle is low
         bool runMotors = false;
-        if (armed && (getRXChannel(RX_THROTTLE_CHAN) > -95 || altitudeMode)) // If in altitude mode, keep motors spinning anyway
+        if (armed && (getRXChannel(RX_THROTTLE_CHAN) > CHANNEL_MIN_CHECK || altitudeMode)) // If in altitude mode, keep motors spinning anyway
             runMotors = true;
         else {
             if (readBluetoothData(&mpu6500, &angle)) // Read Bluetooth data if motors are not spinning
@@ -264,7 +264,7 @@ int main(void) {
                             altHoldThrottle = throttle; // Set low pass filtered throttle value
                             altHoldSetPoint = distance; // Set new altitude hold set point
                             altHoldInitialThrottle = throttle; // Save current throttle
-                            if (altHoldInitialThrottle < -0.95f) {
+                            if (altHoldInitialThrottle < CHANNEL_MIN_CHECK) { // If throttle is very low, just set an initial value, so it still works
                                 // TODO: Don't hardcode these values
                                 altHoldSetPoint = 1000; // Set to 1m
                                 altHoldInitialThrottle = -30.0f; // Set the throttle value to where is approximately hovers
@@ -358,21 +358,22 @@ int main(void) {
 
 // TODO:
     // Altitude hold
-        // Apply deadband to error value for sonar
         // Use sonar distance to find offset of barometer
-        // Update altitude set-point if throttle is moved
         // Check if it returns -1 while flying
         // Redo take off sequence
+        // Use deadband for throttle value
     // Android App
         // Self level angle trim
         // Calibrate magnetometer
         // Set magnetic declination
         // Set acc_lpf_factor, gyro_cmpf_factor, gyro_cmpfm_factor, baro_noise_lpf and throttle_noise_lpf + add explanation
-        // headMaxAngle
+        // Set headMaxAngle
+        // Set altHoldSetPoint and altHoldInitialThrottle for altitude hold mode
+        // Control drone using virtual joystick
+            // Auto take off and land in altitude hold mode
     // Add disarm timer
     // Check that both buttons are held in while calibrating ESCs
     // Magnetometer
         // Dynamically adjust gain when calibrating if limit is reached
     // Simplify the way PID values are set via Bluetooth
         // Can just set a point to the struct
-    // Do not hardcode altitude hold value
