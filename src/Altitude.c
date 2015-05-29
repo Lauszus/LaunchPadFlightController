@@ -33,6 +33,8 @@
 #include "RX.h"
 #include "Sonar.h"
 
+#include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
+
 // TODO: Use sonar to estimate baro offset, for smooth transaction
 
 #if USE_BARO
@@ -62,6 +64,14 @@ void getAltitudeHold(void) {
         int16_t distance = getSonarDistance(&angle);
     #endif
         UARTprintf("Distance: %d\n", distance);
+#endif
+    }
+#endif
+
+#if USE_BARO
+    if (getBMP180Data(&bmp180)) {
+#if 0
+        UARTprintf("BMP180: %d %d %d\n", bmp180.pressure, bmp180.temperature, (int32_t)(bmp180.absoluteAltitude - bmp180.groundAltitude));
 #endif
     }
 #endif
