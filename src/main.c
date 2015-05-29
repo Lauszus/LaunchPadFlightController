@@ -316,7 +316,6 @@ int main(void) {
         // Set altHoldSetPoint and altHoldInitialThrottle for altitude hold mode
         // Control drone using virtual joystick
             // Auto take off and land in altitude hold mode
-        // Set maxAngleInclinationSonar
     // Add disarm timer
     // Check that both buttons are held in while calibrating ESCs
     // Magnetometer
