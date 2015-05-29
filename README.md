@@ -1,7 +1,5 @@
 # LaunchPad Flight Controller
 #### Developed by Kristian Lauszus, 2015
-
-The code is released under the GNU General Public License.
 _________
 [![Build Status](https://travis-ci.org/Lauszus/LaunchPadFlightController.svg)](https://travis-ci.org/Lauszus/LaunchPadFlightController)
 
