@@ -78,15 +78,7 @@ int main(void) {
     UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", cfg.accZero.axis.X, cfg.accZero.axis.Y, cfg.accZero.axis.Z);
 #endif
 
-#if 0 && USE_MAG // Set this to 1 in order to run the magnetometer calibration routine
-#if UART_DEBUG
-    UARTprintf("Starting magnetometer calibration\n");
-#endif
-    calibrateMag(&hmc5883l);
-#if UART_DEBUG
-    UARTprintf("Finished magnetometer calibration: %d %d %d\n", (int16_t)cfg.magZero.axis.X, (int16_t)cfg.magZero.axis.Y, (int16_t)cfg.magZero.axis.Z);
-#endif
-#elif UART_DEBUG && USE_MAG
+#if UART_DEBUG && USE_MAG
     UARTprintf("Magnetometer zero values: %d\t%d\t%d\n", (int16_t)cfg.magZero.axis.X, (int16_t)cfg.magZero.axis.Y, (int16_t)cfg.magZero.axis.Z);
 #endif
 
@@ -151,7 +143,7 @@ int main(void) {
 #endif
             runMotors = true;
         else {
-            if (readBluetoothData(&mpu6500, &angle)) // Read Bluetooth data if motors are not spinning
+            if (readBluetoothData(&mpu6500, &hmc5883l, &angle)) // Read Bluetooth data if motors are not spinning
                 beepBuzzer(); // Indicate if new values were set
         }
 
@@ -304,12 +296,9 @@ int main(void) {
 // TODO:
     // Altitude hold
         // Use sonar distance to find offset of barometer
-        // Check if it returns -1 while flying
         // Redo take off sequence
-        // Use deadband for throttle value
     // Android App
         // Self level angle trim
-        // Calibrate magnetometer
         // Set magnetic declination
         // Set acc_lpf_factor, gyro_cmpf_factor, gyro_cmpfm_factor, baro_noise_lpf and throttle_noise_lpf + add explanation
         // Set headMaxAngle
@@ -318,7 +307,5 @@ int main(void) {
             // Auto take off and land in altitude hold mode
     // Add disarm timer
     // Check that both buttons are held in while calibrating ESCs
-    // Magnetometer
-        // Dynamically adjust gain when calibrating if limit is reached
     // Simplify the way PID values are set via Bluetooth
         // Can just set a point to the struct
