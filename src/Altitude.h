@@ -26,7 +26,7 @@ extern "C" {
 
 void initAltitudeHold(void);
 void getAltitudeHold(void);
-float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, uint8_t maxAngleInclinationSonar, float throttle, float dt);
+float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, float throttle, float dt);
 void resetAltitudeHold(void);
 
 #ifdef __cplusplus

@@ -32,6 +32,7 @@ typedef struct {
     float angleKp; // Self level mode Kp value
     float headKp; // Heading mode Kp value
     uint8_t maxAngleInclination; // Max angle in self level mode
+    uint8_t maxAngleInclinationSonar; // Max angle when using sonar in altitude hold mode
     float stickScalingRollPitch, stickScalingYaw; // Stick scaling values
 
     // Will be set by the microcontroller

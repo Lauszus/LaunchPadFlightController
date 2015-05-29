@@ -137,7 +137,7 @@ int main(void) {
 #if USE_MAG
         bool headMode = angleMode && getRXChannel(RX_AUX1_CHAN) > 50; // Make sure angle mode is activated in heading hold mode
 #endif
-#if USE_SONAR
+#if USE_SONAR || USE_BARO
         bool altitudeMode = angleMode && getRXChannel(RX_AUX2_CHAN) > 0; // Make sure angle mode is activated in altitude hold mode
 #endif
 
@@ -187,9 +187,6 @@ int main(void) {
             UARTFlushTx(false);*/
 
             // Motors routine
-#if USE_SONAR
-            static const uint8_t maxAngleInclinationSonar = 25; // Limit max inclination angle to only 25 degrees when using sonar in altitude mode
-#endif
             if (runMotors) {
                 float aileron = getRXChannel(RX_AILERON_CHAN);
                 float elevator = getRXChannel(RX_ELEVATOR_CHAN);
@@ -221,7 +218,7 @@ int main(void) {
                 if (angleMode) { // Angle mode
                     const uint8_t maxAngleInclination =
 #if USE_SONAR
-                            altitudeMode ? maxAngleInclinationSonar :
+                            altitudeMode ? cfg.maxAngleInclinationSonar :
 #endif
                             cfg.maxAngleInclination; // If in altitude mode the angle has to be limited to the capability of the sonar
                     setPointRoll = constrain(aileron, -maxAngleInclination, maxAngleInclination) - angle.axis.roll;
@@ -244,7 +241,7 @@ int main(void) {
 
 #if USE_SONAR || USE_BARO
                 if (altitudeMode)
-                    throttle = updateAltitudeHold(&angle, &mpu6500, maxAngleInclinationSonar, throttle, dt);
+                    throttle = updateAltitudeHold(&angle, &mpu6500, throttle, dt);
                 else
                     resetAltitudeHold();
 #endif

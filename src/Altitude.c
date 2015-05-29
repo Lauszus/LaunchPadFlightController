@@ -27,6 +27,7 @@
 #include "Altitude.h"
 #include "BMP180.h"
 #include "Buzzer.h"
+#include "EEPROM.h"
 #include "MPU6500.h"
 #include "PID.h"
 #include "PPM.h"
@@ -44,7 +45,9 @@ static bmp180_t bmp180; // Barometer readings
 static bool altHoldActive;
 
 void initAltitudeHold(void) {
+#if USE_SONAR
     initSonar();
+#endif
 #if USE_BARO
     intBMP180(&bmp180);
 #endif
@@ -78,16 +81,17 @@ void getAltitudeHold(void) {
 }
 
 // TODO: Use MPU-6500 values for barometer altitude hold code
-float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, uint8_t maxAngleInclinationSonar, float throttle, float dt) {
+float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, float throttle, float dt) {
+#if USE_SONAR
     static const float throttle_noise_lpf = 1000.0f; // TODO: Set via app
     static float altHoldThrottle; // Low pass filtered throttle input
     static float altHoldInitialThrottle; // Throttle when altitude hold was activated
     static int16_t altHoldSetPoint; // Altitude hold set point
 
 #if USE_BARO
-    int16_t distance = getSonarDistance(angle, &bmp180, maxAngleInclinationSonar);
+    int16_t distance = getSonarDistance(angle, &bmp180, cfg.maxAngleInclinationSonar);
 #else
-    int16_t distance = getSonarDistance(angle, maxAngleInclinationSonar);
+    int16_t distance = getSonarDistance(angle, cfg.maxAngleInclinationSonar);
 #endif
 
     // TODO: Use barometer when it exceeds 3m
@@ -121,6 +125,7 @@ float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, uint8_t maxAngleInc
         UARTFlushTx(false);*/
     } else
         buzzer(true); // Turn on buzzer in case sonar sensor return an error
+#endif // USE_SONAR
 
     return throttle;
 }
