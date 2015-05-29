@@ -28,9 +28,9 @@ void initSonar(void);
 bool triggerSonar(void);
 
 #if USE_BARO
-int16_t getSonarDistance(angle_t *angle, bmp180_t *bmp180);
+int16_t getSonarDistance(angle_t *angle, bmp180_t *bmp180, uint8_t maxTiltAngle);
 #else
-int16_t getSonarDistance(angle_t *angle);
+int16_t getSonarDistance(angle_t *angle, uint8_t maxTiltAngle);
 #endif
 
 #ifdef __cplusplus

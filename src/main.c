@@ -203,6 +203,7 @@ int main(void) {
             // Motors routine
 #if USE_SONAR
             static bool altHoldActive;
+            static const uint8_t maxAngleInclinationSonar = 25; // Limit max inclination angle to only 25 degrees when using sonar in altitude mode
 #endif
             if (runMotors) {
                 float aileron = getRXChannel(RX_AILERON_CHAN);
@@ -233,8 +234,13 @@ int main(void) {
                 float setPointRoll, setPointPitch; // Roll and pitch control can both be gyro or accelerometer based
                 const float setPointYaw = rudder * cfg.stickScalingYaw; // Yaw is always gyro controlled
                 if (angleMode) { // Angle mode
-                    setPointRoll = constrain(aileron, -cfg.maxAngleInclination, cfg.maxAngleInclination) - angle.axis.roll;
-                    setPointPitch = constrain(elevator, -cfg.maxAngleInclination, cfg.maxAngleInclination) - angle.axis.pitch;
+                    const uint8_t maxAngleInclination =
+#if USE_SONAR
+                            altitudeMode ? maxAngleInclinationSonar :
+#endif
+                            cfg.maxAngleInclination; // If in altitude mode the angle has to be limited to the capability of the sonar
+                    setPointRoll = constrain(aileron, -maxAngleInclination, maxAngleInclination) - angle.axis.roll;
+                    setPointPitch = constrain(elevator, -maxAngleInclination, maxAngleInclination) - angle.axis.pitch;
                     setPointRoll *= cfg.angleKp;
                     setPointPitch *= cfg.angleKp;
                 } else { // Acro mode
@@ -258,9 +264,9 @@ int main(void) {
                     static float altHoldInitialThrottle; // Throttle when altitude hold was activated
                     static int16_t altHoldSetPoint; // Altitude hold set point
     #if USE_BARO
-                    int16_t distance = getSonarDistance(&angle, &bmp180);
+                    int16_t distance = getSonarDistance(&angle, &bmp180, maxAngleInclinationSonar);
     #else
-                    int16_t distance = getSonarDistance(&angle);
+                    int16_t distance = getSonarDistance(&angle, maxAngleInclinationSonar);
     #endif
                     // TODO: Use barometer when it exceeds 3m
                     if (distance >= 0) { // Make sure the distance is valid
@@ -378,6 +384,7 @@ int main(void) {
         // Set altHoldSetPoint and altHoldInitialThrottle for altitude hold mode
         // Control drone using virtual joystick
             // Auto take off and land in altitude hold mode
+        // Set maxAngleInclinationSonar
     // Add disarm timer
     // Check that both buttons are held in while calibrating ESCs
     // Magnetometer
