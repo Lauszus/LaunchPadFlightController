@@ -20,7 +20,6 @@
 #include <math.h>
 
 #include "Altitude.h"
-#include "BMP180.h"
 #include "Bluetooth.h"
 #include "Buzzer.h"
 #include "EEPROM.h"
@@ -47,9 +46,6 @@ static mpu6500_t mpu6500; // Gyro and accelerometer readings
 #if USE_MAG
 static hmc5883l_t hmc5883l; // Magnetometer readings
 #endif
-#if USE_BARO
-static bmp180_t bmp180; // Barometer readings
-#endif
 
 int main(void) {
     // Set the clocking to run directly from the external crystal/oscillator and use PLL to run at 80 MHz
@@ -64,16 +60,13 @@ int main(void) {
     initEEPROM();
     initPPM();
     initRX();
-#if USE_SONAR
-    initSonar();
-#endif
     initI2C();
     initMPU6500(&mpu6500);
 #if USE_MAG
     intHMC5883L(&hmc5883l);
 #endif
-#if USE_BARO
-    intBMP180(&bmp180);
+#if USE_SONAR || USE_BARO
+    initAltitudeHold();
 #endif
     initBluetooth();
     IntMasterEnable(); // Enable all interrupts
@@ -96,9 +89,6 @@ int main(void) {
 #endif
 #elif UART_DEBUG && USE_MAG
     UARTprintf("Magnetometer zero values: %d\t%d\t%d\n", (int16_t)cfg.magZero.axis.X, (int16_t)cfg.magZero.axis.Y, (int16_t)cfg.magZero.axis.Z);
-#endif
-#if UART_DEBUG && USE_BARO
-    UARTprintf("Barometer values: %d\t%d\t%d\n", bmp180.pressure, bmp180.temperature, (int32_t)bmp180.groundAltitude);
 #endif
 
 #if 0 // Set to 1 in order to run the ESC calibration routine at next power cycle
@@ -250,13 +240,9 @@ int main(void) {
                 float throttle = getRXChannel(RX_THROTTLE_CHAN);
 
 #if USE_SONAR || USE_BARO
-                if (altitudeMode) {
-    #if USE_BARO
-                    throttle = updateAltitudeHold(&angle, &mpu6500, &bmp180, maxAngleInclinationSonar, throttle, dt);
-    #else
+                if (altitudeMode)
                     throttle = updateAltitudeHold(&angle, &mpu6500, maxAngleInclinationSonar, throttle, dt);
-#endif
-                } else
+                else
                     resetAltitudeHold();
 #endif
 

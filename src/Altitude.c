@@ -35,22 +35,36 @@
 
 // TODO: Use sonar to estimate baro offset, for smooth transaction
 
+#if USE_BARO
+static bmp180_t bmp180; // Barometer readings
+#endif
+
 static bool altHoldActive;
 
+void initAltitudeHold(void) {
+    initSonar();
 #if USE_BARO
-float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, bmp180_t *bmp180, uint8_t maxAngleInclinationSonar, float throttle, float dt) {
-#else
-float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, uint8_t maxAngleInclinationSonar, float throttle, float dt) {
+    intBMP180(&bmp180);
 #endif
+
+#if UART_DEBUG && USE_BARO
+    UARTprintf("Barometer values: %d\t%d\t%d\n", bmp180.pressure, bmp180.temperature, (int32_t)bmp180.groundAltitude);
+#endif
+}
+
+// TODO: Use MPU-6500 values for barometer altitude hold code
+float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, uint8_t maxAngleInclinationSonar, float throttle, float dt) {
     static const float throttle_noise_lpf = 1000.0f; // TODO: Set via app
     static float altHoldThrottle; // Low pass filtered throttle input
     static float altHoldInitialThrottle; // Throttle when altitude hold was activated
     static int16_t altHoldSetPoint; // Altitude hold set point
+
 #if USE_BARO
-    int16_t distance = getSonarDistance(angle, bmp180, maxAngleInclinationSonar);
+    int16_t distance = getSonarDistance(angle, &bmp180, maxAngleInclinationSonar);
 #else
     int16_t distance = getSonarDistance(angle, maxAngleInclinationSonar);
 #endif
+
     // TODO: Use barometer when it exceeds 3m
     if (distance >= 0) { // Make sure the distance is valid
         if (!altHoldActive) { // We just went from deactivated to active

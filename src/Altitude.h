@@ -18,18 +18,14 @@
 #if !defined(__altitude_h__) && (USE_SONAR || USE_BARO)
 #define __altitude_h__
 
-#include "BMP180.h"
 #include "MPU6500.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if USE_BARO
-float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, bmp180_t *bmp180, uint8_t maxAngleInclinationSonar, float throttle, float dt);
-#else
+void initAltitudeHold(void);
 float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, uint8_t maxAngleInclinationSonar, float throttle, float dt);
-#endif
 void resetAltitudeHold(void);
 
 #ifdef __cplusplus
