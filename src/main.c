@@ -19,6 +19,9 @@
 #include <stdbool.h>
 #include <math.h>
 
+#if USE_SONAR || USE_BARO
+#include "Altitude.h"
+#endif
 #if USE_BARO
 #include "BMP180.h"
 #endif
@@ -202,7 +205,6 @@ int main(void) {
 
             // Motors routine
 #if USE_SONAR
-            static bool altHoldActive;
             static const uint8_t maxAngleInclinationSonar = 25; // Limit max inclination angle to only 25 degrees when using sonar in altitude mode
 #endif
             if (runMotors) {
@@ -257,50 +259,15 @@ int main(void) {
 
                 float throttle = getRXChannel(RX_THROTTLE_CHAN);
 
-#if USE_SONAR
+#if USE_SONAR || USE_BARO
                 if (altitudeMode) {
-                    static const float throttle_noise_lpf = 1000.0f; // TODO: Set via app
-                    static float altHoldThrottle; // Low pass filtered throttle input
-                    static float altHoldInitialThrottle; // Throttle when altitude hold was activated
-                    static int16_t altHoldSetPoint; // Altitude hold set point
     #if USE_BARO
-                    int16_t distance = getSonarDistance(&angle, &bmp180, maxAngleInclinationSonar);
+                    throttle = updateAltitudeHold(&angle, &mpu6500, &bmp180, maxAngleInclinationSonar, throttle, dt);
     #else
-                    int16_t distance = getSonarDistance(&angle, maxAngleInclinationSonar);
-    #endif
-                    // TODO: Use barometer when it exceeds 3m
-                    if (distance >= 0) { // Make sure the distance is valid
-                        if (!altHoldActive) { // We just went from deactivated to active
-                            altHoldActive = true;
-                            resetPIDAltHold();
-                            altHoldThrottle = throttle; // Set low pass filtered throttle value
-                            altHoldSetPoint = distance > 1500 ? 1500 : distance; // Set new altitude hold set point - limit to 1.5m
-                            altHoldInitialThrottle = throttle; // Save current throttle
-                            if (altHoldInitialThrottle < CHANNEL_MIN_CHECK) { // If throttle is very low, just set an initial value, so it still works
-                                // TODO: Don't hardcode these values
-                                altHoldSetPoint = 1000; // Set to 1m
-                                altHoldInitialThrottle = -30.0f; // Set the throttle value to where is approximately hovers
-                            }
-                        }
-
-                        altHoldThrottle = altHoldThrottle * (1.0f - (1.0f / throttle_noise_lpf)) + throttle * (1.0f / throttle_noise_lpf); // LPF throttle input
-
-                        float setPoint;
-                        if (altHoldThrottle < altHoldInitialThrottle)
-                            setPoint = mapf(altHoldThrottle, -100.0f, altHoldInitialThrottle, 50.0f, altHoldSetPoint); // Limit minimum value to 5cm
-                        else
-                            setPoint = mapf(altHoldThrottle, altHoldInitialThrottle, 100.0f, altHoldSetPoint, 1500.0f); // Limit maximum altitude to 1.5m which is in practice the limit of the sonar
-
-                        float altHoldOut = updatePID(&pidAltHold, setPoint, distance, dt);
-                        // Throttle value is set to throttle when altitude hold were first activated plus output from PID controller
-                        // Set minimum to -90, so the motors are never completely shut off
-                        throttle = constrain(altHoldInitialThrottle + altHoldOut, -90.0f, 100.0f);
-                        /*UARTprintf("%u %d %d %d - %d %d %d %d\n", altHoldActive, (int32_t)altHoldThrottle, (int32_t)altHoldInitialThrottle, altHoldSetPoint,     (int32_t)setPoint, distance, (int32_t)altHoldOut, (int32_t)throttle);
-                        UARTFlushTx(false);*/
-                    } else
-                        buzzer(true); // Turn on buzzer in case sonar sensor return an error
+                    throttle = updateAltitudeHold(&angle, &mpu6500, maxAngleInclinationSonar, throttle, dt);
+#endif
                 } else
-                    altHoldActive = false;
+                    resetAltitudeHold();
 #endif
 
                 float motors[4]; // Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
@@ -350,7 +317,9 @@ int main(void) {
             } else {
                 writePPMAllOff();
                 resetPIDRollPitchYaw();
-                altHoldActive = false;
+#if USE_SONAR || USE_BARO
+                resetAltitudeHold();
+#endif
             }
 
 #if USE_SONAR
