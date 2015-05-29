@@ -102,12 +102,10 @@ int16_t getSonarDistance(angle_t *angle) {
     if (distance > 3000) // Datasheet says 3m is maximum
         return -1;
 
-    // TODO: Do this in 3D space instead
-    float tiltAngle = fmaxf(fabsf(angle->axis.roll), fabsf(angle->axis.pitch));
-    if (tiltAngle > 25) // Return -1 if it is tilted more than 25 degrees
+    if (fmaxf(fabsf(angle->axis.roll), fabsf(angle->axis.pitch)) > 25) // Return -1 if it is tilted more than 25 degrees
         return -1;
 
-    distance *= cosf(tiltAngle * DEG_TO_RAD); // Calculate adjacent side
+    distance *= cosf(angle->axis.roll * DEG_TO_RAD) * cosf(angle->axis.pitch * DEG_TO_RAD); // Calculate adjacent side
 
     return distance;
 }
