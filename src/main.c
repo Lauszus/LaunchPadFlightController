@@ -201,6 +201,9 @@ int main(void) {
             UARTFlushTx(false);*/
 
             // Motors routine
+#if USE_SONAR
+            static bool altHoldActive;
+#endif
             if (runMotors) {
                 float aileron = getRXChannel(RX_AILERON_CHAN);
                 float elevator = getRXChannel(RX_ELEVATOR_CHAN);
@@ -249,7 +252,6 @@ int main(void) {
                 float throttle = getRXChannel(RX_THROTTLE_CHAN);
 
 #if USE_SONAR
-                static bool altHoldActive;
                 if (altitudeMode) {
                     static const float throttle_noise_lpf = 1000.0f; // TODO: Set via app
                     static float altHoldThrottle; // Low pass filtered throttle input
@@ -285,10 +287,11 @@ int main(void) {
                             setPoint = mapf(altHoldThrottle, altHoldInitialThrottle, 100.0f, altHoldSetPoint, 1500.0f); // Limit maximum altitude to 1.5m which is in practice the limit of the sonar
 
                         float altHoldOut = updatePID(&pidAltHold, setPoint, distance, dt);
-                        //UARTprintf1("%d %d\n", distance, (int32_t)altHoldOut); // TODO: Remove
                         // Throttle value is set to throttle when altitude hold were first activated plus output from PID controller
                         // Set minimum to -90, so the motors are never completely shut off
                         throttle = constrain(altHoldInitialThrottle + altHoldOut, -90.0f, 100.0f);
+                        /*UARTprintf("%u %d %d %d - %d %d %d %d\n", altHoldActive, (int32_t)altHoldThrottle, (int32_t)altHoldInitialThrottle, altHoldSetPoint,     (int32_t)setPoint, distance, (int32_t)altHoldOut, (int32_t)throttle);
+                        UARTFlushTx(false);*/
                         oldThrottle = throttle; // Save throttle output
                     } else
                         throttle = oldThrottle; // Set to old throttle output in case sonar sensor return an error
@@ -343,6 +346,7 @@ int main(void) {
             } else {
                 writePPMAllOff();
                 resetPIDRollPitchYaw();
+                altHoldActive = false;
             }
 
 #if USE_SONAR
