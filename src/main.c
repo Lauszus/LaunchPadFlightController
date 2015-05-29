@@ -19,18 +19,12 @@
 #include <stdbool.h>
 #include <math.h>
 
-#if USE_SONAR || USE_BARO
 #include "Altitude.h"
-#endif
-#if USE_BARO
 #include "BMP180.h"
-#endif
 #include "Bluetooth.h"
 #include "Buzzer.h"
 #include "EEPROM.h"
-#if USE_MAG
 #include "HMC5883L.h"
-#endif
 #include "I2C.h"
 #include "IMU.h"
 #include "MPU6500.h"
@@ -38,9 +32,7 @@
 #include "PID.h"
 #include "Pins.h"
 #include "RX.h"
-#if USE_SONAR
 #include "Sonar.h"
-#endif
 #include "Time.h"
 #include "UART.h"
 
@@ -48,9 +40,7 @@
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
 #include "driverlib/sysctl.h"
-#if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
-#endif
 
 static angle_t angle; // Struct used to store angles
 static mpu6500_t mpu6500; // Gyro and accelerometer readings

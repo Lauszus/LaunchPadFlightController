@@ -34,9 +34,7 @@
 #include "driverlib/sysctl.h"
 #include "inc/hw_ints.h"
 #include "inc/hw_memmap.h"
-#if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
-#endif
 
 #define HMC5883L_ADDRESS 0x1E // Address of magnetometer
 

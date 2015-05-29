@@ -34,9 +34,7 @@
 #include "driverlib/pin_map.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/uart.h"
-#if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor - this is used to print to the terminal
-#endif
 
 #define DEBUG_BLUETOOTH_PROTOCOL 1 && UART_DEBUG
 

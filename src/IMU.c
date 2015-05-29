@@ -23,9 +23,7 @@
 #include "IMU.h"
 #include "MPU6500.h"
 
-#if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
-#endif
 
 static float calculateHeading(angle_t *angle, sensor_t *mag);
 static void rotateV(sensor_t *v, sensor_t *gyroRate, float dt);

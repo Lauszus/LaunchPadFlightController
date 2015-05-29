@@ -30,9 +30,7 @@
 #include "driverlib/pin_map.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/timer.h"
-#if UART_DEBUG
 //#include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
-#endif
 
 // These are specific to my receiver and might need adjustment
 #define RX_MIN_INPUT 665
