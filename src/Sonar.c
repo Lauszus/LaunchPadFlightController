@@ -95,8 +95,8 @@ int16_t getSonarDistance(angle_t *angle, bmp180_t *bmp180, uint8_t maxTiltAngle)
     // Use temperature from BMP180 to compensate for the difference in speed of sound in air due to temperature difference
     const uint8_t US_ROUNDTRIP_CM = 1.0f / (3315.0f + (0.6f * bmp180->temperature)) * 2.0f * 1e5f; // Taken from the datasheet - note that temperature is in 0.1 C units, so the equation had to be multiplied by 10
 #else
-#define US_ROUNDTRIP_CM 58 // Microseconds (uS) it takes sound to travel round-trip 1cm (2cm total). Calculated at room temperature.
 int16_t getSonarDistance(angle_t *angle, uint8_t maxTiltAngle) {
+    static const uint8_t US_ROUNDTRIP_CM = 58; // Microseconds (uS) it takes sound to travel round-trip 1cm (2cm total). Calculated at room temperature
 #endif
     int16_t distance = sonarDistanceDeciUs / US_ROUNDTRIP_CM; // The output will actually be in mm, as it is in deci-us
     if (distance > 3000) // Datasheet says 3m is maximum
