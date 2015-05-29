@@ -269,7 +269,7 @@ int main(void) {
                             altHoldActive = true;
                             resetPIDAltHold();
                             altHoldThrottle = throttle; // Set low pass filtered throttle value
-                            altHoldSetPoint = distance; // Set new altitude hold set point
+                            altHoldSetPoint = distance > 1500 ? 1500 : distance; // Set new altitude hold set point - limit to 1.5m
                             altHoldInitialThrottle = throttle; // Save current throttle
                             if (altHoldInitialThrottle < CHANNEL_MIN_CHECK) { // If throttle is very low, just set an initial value, so it still works
                                 // TODO: Don't hardcode these values
