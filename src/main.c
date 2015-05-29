@@ -31,7 +31,6 @@
 #include "PID.h"
 #include "Pins.h"
 #include "RX.h"
-#include "Sonar.h"
 #include "Time.h"
 #include "UART.h"
 
@@ -180,6 +179,10 @@ int main(void) {
             getAngles(&mpu6500, &mag, &angle, dt); // Calculate pitch, roll and yaw
 #endif
 
+#if USE_SONAR || USE_BARO
+            getAltitudeHold();
+#endif
+
             /*UARTprintf("%d\t%d\t%d\n", (int16_t)angle.axis.roll, (int16_t)angle.axis.pitch, (int16_t)angle.axis.yaw);
             UARTFlushTx(false);*/
 
@@ -297,19 +300,6 @@ int main(void) {
                 resetAltitudeHold();
 #endif
             }
-
-#if USE_SONAR
-            if (triggerSonar()) { // Trigger sonar
-#if 0 // Set to 1 to debug sonar sensor
-    #if USE_BARO
-                    int16_t distance = getSonarDistance(&angle, &bmp180);
-    #else
-                    int16_t distance = getSonarDistance(&angle);
-    #endif
-                    UARTprintf("Distance: %d\n", distance);
-#endif
-            }
-#endif
         }
     }
 }

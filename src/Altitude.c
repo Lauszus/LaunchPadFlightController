@@ -52,6 +52,21 @@ void initAltitudeHold(void) {
 #endif
 }
 
+void getAltitudeHold(void) {
+#if USE_SONAR
+    if (triggerSonar()) { // Trigger sonar
+#if 0 // Set to 1 to debug sonar sensor
+    #if USE_BARO
+        int16_t distance = getSonarDistance(&angle, &bmp180);
+    #else
+        int16_t distance = getSonarDistance(&angle);
+    #endif
+        UARTprintf("Distance: %d\n", distance);
+#endif
+    }
+#endif
+}
+
 // TODO: Use MPU-6500 values for barometer altitude hold code
 float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, uint8_t maxAngleInclinationSonar, float throttle, float dt) {
     static const float throttle_noise_lpf = 1000.0f; // TODO: Set via app
