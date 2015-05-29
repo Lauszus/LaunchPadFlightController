@@ -67,6 +67,9 @@ void getAltitudeHold(void) {
 #endif
 }
 
+#define SONAR_MIN_DIST 50   // Limit minimum value to 5cm
+#define SONAR_MAX_DIST 1500 // Limit maximum altitude to 1.5m which is in practice the limit of the sonar
+
 // TODO: Use MPU-6500 values for barometer altitude hold code
 // TODO: Use sonar to estimate baro offset, for smooth transaction
 float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, float throttle, float dt) {
@@ -88,7 +91,7 @@ float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, float throttle, flo
             altHoldActive = true;
             resetPIDAltHold();
             altHoldThrottle = throttle; // Set low pass filtered throttle value
-            altHoldSetPoint = distance > 1500 ? 1500 : distance; // Set new altitude hold set point - limit to 1.5m
+            altHoldSetPoint = constrain(distance, SONAR_MIN_DIST, SONAR_MAX_DIST); // Constrain set point to the min and max allowed
             altHoldInitialThrottle = throttle; // Save current throttle
             if (altHoldInitialThrottle < CHANNEL_MIN_CHECK) { // If throttle is very low, just set an initial value, so it still works
                 // TODO: Don't hardcode these values
@@ -101,9 +104,9 @@ float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, float throttle, flo
 
         float setPoint;
         if (altHoldThrottle < altHoldInitialThrottle)
-            setPoint = mapf(altHoldThrottle, -100.0f, altHoldInitialThrottle, 50.0f, altHoldSetPoint); // Limit minimum value to 5cm
+            setPoint = mapf(altHoldThrottle, -100.0f, altHoldInitialThrottle, SONAR_MIN_DIST, altHoldSetPoint);
         else
-            setPoint = mapf(altHoldThrottle, altHoldInitialThrottle, 100.0f, altHoldSetPoint, 1500.0f); // Limit maximum altitude to 1.5m which is in practice the limit of the sonar
+            setPoint = mapf(altHoldThrottle, altHoldInitialThrottle, 100.0f, altHoldSetPoint, SONAR_MAX_DIST);
 
         float altHoldOut = updatePID(&pidAltHold, setPoint, distance, dt);
         // Throttle value is set to throttle when altitude hold were first activated plus output from PID controller
