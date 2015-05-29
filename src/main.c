@@ -257,7 +257,6 @@ int main(void) {
                     static float altHoldThrottle; // Low pass filtered throttle input
                     static float altHoldInitialThrottle; // Throttle when altitude hold was activated
                     static int16_t altHoldSetPoint; // Altitude hold set point
-                    static float oldThrottle; // Old throttle output
     #if USE_BARO
                     int16_t distance = getSonarDistance(&angle, &bmp180);
     #else
@@ -292,9 +291,8 @@ int main(void) {
                         throttle = constrain(altHoldInitialThrottle + altHoldOut, -90.0f, 100.0f);
                         /*UARTprintf("%u %d %d %d - %d %d %d %d\n", altHoldActive, (int32_t)altHoldThrottle, (int32_t)altHoldInitialThrottle, altHoldSetPoint,     (int32_t)setPoint, distance, (int32_t)altHoldOut, (int32_t)throttle);
                         UARTFlushTx(false);*/
-                        oldThrottle = throttle; // Save throttle output
                     } else
-                        throttle = oldThrottle; // Set to old throttle output in case sonar sensor return an error
+                        buzzer(true); // Turn on buzzer in case sonar sensor return an error
                 } else
                     altHoldActive = false;
 #endif
