@@ -143,8 +143,13 @@ int main(void) {
 #endif
             runMotors = true;
         else {
-            if (readBluetoothData(&mpu6500, &hmc5883l, &angle)) // Read Bluetooth data if motors are not spinning
+#if USE_MAG
+            if (readBluetoothData(&mpu6500, &hmc5883l, &angle)) { // Read Bluetooth data if motors are not spinning
+#else
+            if (readBluetoothData(&mpu6500, &angle)) { // Read Bluetooth data if motors are not spinning
+#endif
                 beepBuzzer(); // Indicate if new values were set
+            }
         }
 
 #if USE_MAG
@@ -305,6 +310,7 @@ int main(void) {
         // Set altHoldSetPoint and altHoldInitialThrottle for altitude hold mode
         // Control drone using virtual joystick
             // Auto take off and land in altitude hold mode
+        // Show distance in graph as well
     // Add disarm timer
     // Check that both buttons are held in while calibrating ESCs
     // Simplify the way PID values are set via Bluetooth

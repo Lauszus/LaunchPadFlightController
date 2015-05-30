@@ -120,7 +120,11 @@ void initBluetooth(void) {
     }
 }
 
+#if USE_MAG
 bool readBluetoothData(mpu6500_t *mpu6500, hmc5883l_t *hmc5883l, angle_t *angle) {
+#else
+bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
+#endif
     bool newValuesReceived = false;
     if (UARTRxBytesAvail1() > strlen(commandHeader)) {
         if (findString(commandHeader)) {
@@ -339,6 +343,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, hmc5883l_t *hmc5883l, angle_t *angle)
                     break;
 
                 case CAL_MAG:
+#if USE_MAG
                     if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
                         calibrateMag(hmc5883l); // Get magnetometer zero values
                         beepLongBuzzer();
@@ -350,6 +355,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, hmc5883l_t *hmc5883l, angle_t *angle)
                     else
                         UARTprintf("CAL_MAG error\n");
 #endif
+#endif // USE_MAG
                     break;
 
                  case RESTORE_DEFAULTS:
