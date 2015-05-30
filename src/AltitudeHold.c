@@ -104,14 +104,13 @@ float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, float throttle, flo
 
         float setPoint;
         if (altHoldThrottle < altHoldInitialThrottle)
-            setPoint = mapf(altHoldThrottle, -100.0f, altHoldInitialThrottle, SONAR_MIN_DIST, altHoldSetPoint);
+            setPoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, altHoldInitialThrottle, SONAR_MIN_DIST, altHoldSetPoint);
         else
-            setPoint = mapf(altHoldThrottle, altHoldInitialThrottle, 100.0f, altHoldSetPoint, SONAR_MAX_DIST);
+            setPoint = mapf(altHoldThrottle, altHoldInitialThrottle, MAX_MOTOR_OUT, altHoldSetPoint, SONAR_MAX_DIST);
 
         float altHoldOut = updatePID(&pidAltHold, setPoint, distance, dt);
-        // Throttle value is set to throttle when altitude hold were first activated plus output from PID controller
-        // Set minimum to -90, so the motors are never completely shut off
-        throttle = constrain(altHoldInitialThrottle + altHoldOut, -90.0f, 100.0f);
+        static const float MIN_MOTOR_OFFSET = (MAX_MOTOR_OUT - MIN_MOTOR_OUT) * 0.05f; // Add 5% to minimum, so the motors are never completely shut off
+        throttle = constrain(altHoldInitialThrottle + altHoldOut, MIN_MOTOR_OUT + MIN_MOTOR_OFFSET, MAX_MOTOR_OUT); // Throttle value is set to throttle when altitude hold were first activated plus output from PID controller
         /*UARTprintf("%u %d %d %d - %d %d %d %d\n", altHoldActive, (int32_t)altHoldThrottle, (int32_t)altHoldInitialThrottle, altHoldSetPoint,     (int32_t)setPoint, distance, (int32_t)altHoldOut, (int32_t)throttle);
         UARTFlushTx(false);*/
     } else
