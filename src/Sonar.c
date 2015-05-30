@@ -99,9 +99,10 @@ int16_t getSonarDistance(angle_t *angle, bmp180_t *bmp180) {
 int16_t getSonarDistance(angle_t *angle) {
     static const uint8_t US_ROUNDTRIP_CM = 58; // Microseconds (uS) it takes sound to travel round-trip 1cm (2cm total). Calculated at room temperature
 #endif
-    int16_t distance = sonarDistanceDeciUs / US_ROUNDTRIP_CM; // The output will actually be in mm, as it is in deci-us
-    if (distance > 3000) // Datasheet says 3m is maximum
+    if (sonarDistanceDeciUs < 1150 || sonarDistanceDeciUs > 185000) // Datasheet says min is 115us and max is 18.5ms
         return -1;
+
+    int16_t distance = sonarDistanceDeciUs / US_ROUNDTRIP_CM; // The output will actually be in mm, as it is in deci-us
 
     if (fmaxf(fabsf(angle->axis.roll), fabsf(angle->axis.pitch)) > cfg.maxAngleInclinationSonar) // Return -1 if it is tilted more than the maximum tilt angle
         return -1;
