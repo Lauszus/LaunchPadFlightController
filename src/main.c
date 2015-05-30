@@ -23,6 +23,7 @@
 #include "Bluetooth.h"
 #include "Buzzer.h"
 #include "EEPROM.h"
+#include "HeadingHold.h"
 #include "HMC5883L.h"
 #include "I2C.h"
 #include "IMU.h"
@@ -154,11 +155,6 @@ int main(void) {
             }
         }
 
-#if USE_MAG
-        if (!armed)
-            GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED if not armed
-#endif
-
         if (dataReadyMPU6500()) {
             uint32_t now = micros();
             static uint32_t timer = 0; // Used to keep track of the time
@@ -193,23 +189,10 @@ int main(void) {
                 //UARTprintf("%d\t%d\t%d\n", (int16_t)aileron, (int16_t)elevator, (int16_t)rudder);
 
 #if USE_MAG
-                static float magHold; // Heading using for heading hold
-                if (headMode && fabsf(rudder) < 5) { // Only use heading hold if user is not applying rudder
-                    static const uint8_t headMaxAngle = 25;
-                    if (fmaxf(fabsf(angle.axis.roll), fabsf(angle.axis.pitch)) < headMaxAngle) { // Check that we are not tilted too much
-                        float dif = angle.axis.yaw - magHold;
-                        if (dif < -180.0f) // Convert range back to [-180:180]
-                            dif += 360.0f;
-                        if (dif > 180.0f)
-                            dif -= 360.0f;
-                        rudder -= dif * cfg.headKp;
-                        GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED
-                    } else
-                        GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED
-                } else {
-                    GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED
-                    magHold = angle.axis.yaw; // Reset heading hold value
-                }
+                if (headMode && fabsf(rudder) < 5) // Only use heading hold if user is not applying rudder
+                    rudder = updateHeadingHold(&angle, rudder);
+                else
+                    resetHeadingHold(&angle);
 #endif
 
                 float setPointRoll, setPointPitch; // Roll and pitch control can both be gyro or accelerometer based
@@ -294,6 +277,9 @@ int main(void) {
                 resetPIDRollPitchYaw();
 #if USE_SONAR || USE_BARO
                 resetAltitudeHold();
+#endif
+#if USE_MAG
+                resetHeadingHold(&angle);
 #endif
             }
         }
