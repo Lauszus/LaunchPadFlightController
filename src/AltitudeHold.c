@@ -24,7 +24,7 @@
 
 #if USE_SONAR || USE_BARO
 
-#include "Altitude.h"
+#include "AltitudeHold.h"
 #include "BMP180.h"
 #include "Buzzer.h"
 #include "MPU6500.h"

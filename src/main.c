@@ -19,7 +19,7 @@
 #include <stdbool.h>
 #include <math.h>
 
-#include "Altitude.h"
+#include "AltitudeHold.h"
 #include "Bluetooth.h"
 #include "Buzzer.h"
 #include "EEPROM.h"
