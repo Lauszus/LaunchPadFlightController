@@ -33,7 +33,9 @@
 #include "driverlib/pin_map.h"
 #include "driverlib/sysctl.h"
 #include "driverlib/timer.h"
+#if UART_DEBUG
 //#include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
+#endif
 
 #define SYSCTL_PERIPH_TRIG          SYSCTL_PERIPH_GPIOE
 #define GPIO_SONAR_TRIG_BASE        GPIO_PORTE_BASE

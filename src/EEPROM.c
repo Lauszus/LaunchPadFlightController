@@ -23,7 +23,9 @@
 
 #include "driverlib/eeprom.h"
 #include "driverlib/sysctl.h"
+#if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
+#endif
 
 static const uint32_t configVersion = 14; // Must be bumped every time config_t is changed
 config_t cfg;

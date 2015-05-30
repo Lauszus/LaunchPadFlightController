@@ -25,7 +25,9 @@
 #include "I2C.h"
 #include "Time.h"
 
+#if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
+#endif
 
 #define BMP185_DEBUG 0 // Set this to 1 to check temperature and pressure calculation
 

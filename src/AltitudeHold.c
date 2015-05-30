@@ -33,7 +33,9 @@
 #include "RX.h"
 #include "Sonar.h"
 
+#if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
+#endif
 
 #if USE_BARO
 static bmp180_t bmp180; // Barometer readings

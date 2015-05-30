@@ -26,7 +26,9 @@
 #include "inc/hw_memmap.h"
 #include "driverlib/gpio.h"
 #include "driverlib/sysctl.h"
+#if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
+#endif
 
 #define MPU6500_SMPLRT_DIV                  0x19
 #define MPU6500_INT_PIN_CFG                 0x37
