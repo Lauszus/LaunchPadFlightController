@@ -92,9 +92,9 @@ bool triggerSonar(void) {
 
 // Returns the distance in mm. Range is 0-3000 mm or -1 if the value is invalid.
 #if USE_BARO
-int16_t getSonarDistance(angle_t *angle, bmp180_t *bmp180) {
-    // Use temperature from BMP180 to compensate for the difference in speed of sound in air due to temperature difference
-    const uint8_t US_ROUNDTRIP_CM = 1.0f / (3315.0f + (0.6f * bmp180->temperature)) * 2.0f * 1e5f; // Taken from the datasheet - note that temperature is in 0.1 C units, so the equation had to be multiplied by 10
+int16_t getSonarDistance(angle_t *angle, int32_t temperature) {
+    // Use temperature to compensate for the difference in speed of sound in air due to temperature difference
+    const uint8_t US_ROUNDTRIP_CM = 1.0f / (3315.0f + (0.6f * temperature)) * 2.0f * 1e5f; // Taken from the datasheet - note that temperature is in 0.1 C units, so the equation had to be multiplied by 10
 #else
 int16_t getSonarDistance(angle_t *angle) {
     static const uint8_t US_ROUNDTRIP_CM = 58; // Microseconds (uS) it takes sound to travel round-trip 1cm (2cm total). Calculated at room temperature

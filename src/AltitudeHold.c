@@ -82,7 +82,7 @@ float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, float throttle, flo
     static int16_t altHoldSetPoint; // Altitude hold set point
 
 #if USE_BARO
-    int16_t distance = getSonarDistance(angle, &bmp180);
+    int16_t distance = getSonarDistance(angle, bmp180.temperature);
 #else
     int16_t distance = getSonarDistance(angle);
 #endif

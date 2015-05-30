@@ -22,13 +22,13 @@
 extern "C" {
 #endif
 
-#include "BMP180.h"
+#include "Types.h"
 
 void initSonar(void);
 bool triggerSonar(void);
 
 #if USE_BARO
-int16_t getSonarDistance(angle_t *angle, bmp180_t *bmp180);
+int16_t getSonarDistance(angle_t *angle, int32_t temperature);
 #else
 int16_t getSonarDistance(angle_t *angle);
 #endif
