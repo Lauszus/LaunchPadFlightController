@@ -18,11 +18,11 @@
 // Inspired by: https://github.com/cleanflight/cleanflight/blob/master/src/main/sensors/barometer.c and https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/altitudehold.c
 // Note that I reused the filtered value from the attitude estimation instead of filtering the LPF accelerometer data like Cleanflight does
 
-#if USE_SONAR || USE_BARO
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <math.h>
+
+#if USE_SONAR || USE_BARO
 
 #include "Altitude.h"
 #include "BMP180.h"

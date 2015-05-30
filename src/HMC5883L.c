@@ -15,12 +15,12 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 
-#if USE_MAG
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <math.h>
+
+#if USE_MAG
 
 #include "EEPROM.h"
 #include "HMC5883L.h"

@@ -15,11 +15,11 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 
-#if USE_BARO
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <math.h>
+
+#if USE_BARO
 
 #include "BMP180.h"
 #include "I2C.h"

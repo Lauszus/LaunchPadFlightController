@@ -15,11 +15,11 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 
-#if USE_SONAR
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <math.h>
+
+#if USE_SONAR
 
 #include "EEPROM.h"
 #include "IMU.h"

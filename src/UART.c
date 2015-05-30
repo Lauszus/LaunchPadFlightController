@@ -15,12 +15,12 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 
-#if UART_DEBUG
-
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
+
+#if UART_DEBUG
 
 #include "EEPROM.h"
 #include "Time.h"
