@@ -65,21 +65,20 @@ static struct msg_t {
 typedef struct {
     uint16_t Kp, Ki, Kd; // Kp is multiplied by 1000, Ki multiplied by 100 and Kd are multiplied by 100000
     uint16_t integrationLimit; // Integration limit multiplied by 100
-} __attribute__((packed)) pidBT_t;
+} __attribute__((packed)) pid_values_bt_t;
 
-static struct settings_t {
+typedef struct {
     uint16_t angleKp, headKp; // Values multiplied by 100
     uint8_t maxAngleInclination, maxAngleInclinationSonar; // Inclination angle in degrees
     uint16_t stickScalingRollPitch, stickScalingYaw; // Stick scaling values multiplied by 100
-} __attribute__((packed)) settings;
+} __attribute__((packed)) settings_t;
 
-static pidBT_t pidRollPitchBT, pidYawBT, pidAltHoldBT; // PID values
 static uint8_t sendAngles; // Non-zero if values should be sent
 
-static struct angles_t {
+typedef struct {
     int16_t roll, pitch; // Roll and pitch are in the range [-180:180]
     uint16_t yaw; // Yaw is in the range [0:360]
-} __attribute__((packed)) angles;
+} __attribute__((packed)) angles_t;
 
 /*
 struct info_t {
@@ -99,6 +98,7 @@ static void readBytes(uint8_t* data, uint8_t length);
 static bool getData(uint8_t *data, uint8_t length);
 static void sendData(uint8_t *data, uint8_t length);
 static uint8_t getCheckSum(uint8_t *data, size_t length);
+static pid_values_t* getPidValuesPointer(uint8_t cmd);
 
 void initBluetooth(void) {
     SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB); // Enable the GPIO port containing the pins that will be used.
@@ -133,136 +133,64 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
             readBytes((uint8_t*)&msg, sizeof(msg));
             switch (msg.cmd) {
                 case SET_PID_ROLL_PITCH:
-                    if (msg.length == sizeof(pidRollPitchBT)) { // Make sure that it has the right length
-                        if (getData((uint8_t*)&pidRollPitchBT, sizeof(pidRollPitchBT))) { // This will read the data and check the checksum
-                            pidRoll.values->Kp = pidPitch.values->Kp = pidRollPitchBT.Kp / 1000.0f;
-                            pidRoll.values->Ki = pidPitch.values->Ki = pidRollPitchBT.Ki / 100.0f;
-                            pidRoll.values->Kd = pidPitch.values->Kd = pidRollPitchBT.Kd / 100000.0f;
-                            pidRoll.values->integrationLimit = pidPitch.values->integrationLimit = pidRollPitchBT.integrationLimit / 100.0f;
+                case SET_PID_YAW:
+                case SET_PID_ALT_HOLD:
+                    if (msg.length == sizeof(pid_values_bt_t)) { // Make sure that it has the right length
+                        pid_values_t *pidValues = getPidValuesPointer(msg.cmd);
+                        if (!pidValues)
+                            break; // Abort
+
+                        pid_values_bt_t pidValuesBt;
+                        if (getData((uint8_t*)&pidValuesBt, sizeof(pidValuesBt))) { // This will read the data and check the checksum
+                            pidValues->Kp = pidValuesBt.Kp / 1000.0f;
+                            pidValues->Ki = pidValuesBt.Ki / 100.0f;
+                            pidValues->Kd = pidValuesBt.Kd / 100000.0f;
+                            pidValues->integrationLimit = pidValuesBt.integrationLimit / 100.0f;
                             updateConfig();
                             newValuesReceived = true;
 #if DEBUG_BLUETOOTH_PROTOCOL
-                            printPIDValues(pidRoll.values); // Print PID Values
+                            printPIDValues(pidValues); // Print PID Values
 #endif
                         }
 #if DEBUG_BLUETOOTH_PROTOCOL
                         else
-                            UARTprintf("SET_PID_ROLL_PITCH checksum error\n");
+                            UARTprintf("Set PID checksum error\n");
 #endif
                     }
 #if DEBUG_BLUETOOTH_PROTOCOL
                     else
-                        UARTprintf("SET_PID_ROLL_PITCH length error: %u\n", msg.length);
+                        UARTprintf("Set PID length error: %u\n", msg.length);
 #endif
                     break;
 
                 case GET_PID_ROLL_PITCH:
+                case GET_PID_YAW:
+                case GET_PID_ALT_HOLD:
                     if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
-                        msg.cmd = GET_PID_ROLL_PITCH;
-                        msg.length = sizeof(pidRollPitchBT);
-                        pidRollPitchBT.Kp = pidPitch.values->Kp * 1000.0f;
-                        pidRollPitchBT.Ki = pidPitch.values->Ki * 100.0f;
-                        pidRollPitchBT.Kd = pidPitch.values->Kd * 100000.0f;
-                        pidRollPitchBT.integrationLimit = pidPitch.values->integrationLimit * 100.0f;
-                        sendData((uint8_t*)&pidRollPitchBT, sizeof(pidRollPitchBT));
+                        msg.length = sizeof(pid_values_bt_t);
+                        pid_values_t *pidValues = getPidValuesPointer(msg.cmd);
+                        if (!pidValues)
+                            break; // Abort
+
+                        pid_values_bt_t pidValuesBt;
+                        pidValuesBt.Kp = pidValues->Kp * 1000.0f;
+                        pidValuesBt.Ki = pidValues->Ki * 100.0f;
+                        pidValuesBt.Kd = pidValues->Kd * 100000.0f;
+                        pidValuesBt.integrationLimit = pidValues->integrationLimit * 100.0f;
+                        sendData((uint8_t*)&pidValuesBt, sizeof(pidValuesBt));
 #if DEBUG_BLUETOOTH_PROTOCOL
-                        UARTprintf("GET_PID_ROLL_PITCH\n");
+                        UARTprintf("Get PID %u\n", msg.cmd);
 #endif
                      }
 #if DEBUG_BLUETOOTH_PROTOCOL
                      else
-                        UARTprintf("GET_PID_ROLL_PITCH error\n");
-#endif
-                    break;
-
-                case SET_PID_YAW:
-                    if (msg.length == sizeof(pidYawBT)) { // Make sure that it has the right length
-                        if (getData((uint8_t*)&pidYawBT, sizeof(pidYawBT))) { // This will read the data and check the checksum
-                            pidYaw.values->Kp = pidYawBT.Kp / 1000.0f;
-                            pidYaw.values->Ki = pidYawBT.Ki / 100.0f;
-                            pidYaw.values->Kd = pidYawBT.Kd / 100000.0f;
-                            pidYaw.values->integrationLimit = pidYawBT.integrationLimit / 100.0f;
-                            updateConfig();
-                            newValuesReceived = true;
-#if DEBUG_BLUETOOTH_PROTOCOL
-                            printPIDValues(pidYaw.values); // Print PID Values
-#endif
-                        }
-#if DEBUG_BLUETOOTH_PROTOCOL
-                        else
-                            UARTprintf("SET_PID_YAW checksum error\n");
-#endif
-                    }
-#if DEBUG_BLUETOOTH_PROTOCOL
-                    else
-                        UARTprintf("SET_PID_YAW length error: %u\n", msg.length);
-#endif
-                    break;
-
-                case GET_PID_YAW:
-                    if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
-                        msg.cmd = GET_PID_YAW;
-                        msg.length = sizeof(pidYawBT);
-                        pidYawBT.Kp = pidYaw.values->Kp * 1000.0f;
-                        pidYawBT.Ki = pidYaw.values->Ki * 100.0f;
-                        pidYawBT.Kd = pidYaw.values->Kd * 100000.0f;
-                        pidYawBT.integrationLimit = pidYaw.values->integrationLimit * 100.0f;
-                        sendData((uint8_t*)&pidYawBT, sizeof(pidYawBT));
-#if DEBUG_BLUETOOTH_PROTOCOL
-                        UARTprintf("GET_PID_YAW\n");
-#endif
-                    }
-#if DEBUG_BLUETOOTH_PROTOCOL
-                    else
-                        UARTprintf("GET_PID_YAW error\n");
-#endif
-                    break;
-
-                case SET_PID_ALT_HOLD:
-                    if (msg.length == sizeof(pidAltHoldBT)) { // Make sure that it has the right length
-                        if (getData((uint8_t*)&pidAltHoldBT, sizeof(pidAltHoldBT))) { // This will read the data and check the checksum
-                            pidAltHold.values->Kp = pidAltHoldBT.Kp / 1000.0f;
-                            pidAltHold.values->Ki = pidAltHoldBT.Ki / 100.0f;
-                            pidAltHold.values->Kd = pidAltHoldBT.Kd / 100000.0f;
-                            pidAltHold.values->integrationLimit = pidAltHoldBT.integrationLimit / 100.0f;
-                            updateConfig();
-                            newValuesReceived = true;
-#if DEBUG_BLUETOOTH_PROTOCOL
-                            printPIDValues(pidAltHold.values); // Print PID Values
-#endif
-                        }
-#if DEBUG_BLUETOOTH_PROTOCOL
-                        else
-                            UARTprintf("SET_PID_ALT_HOLD checksum error\n");
-#endif
-                    }
-#if DEBUG_BLUETOOTH_PROTOCOL
-                    else
-                        UARTprintf("SET_PID_ALT_HOLD length error: %u\n", msg.length);
-#endif
-                    break;
-
-                case GET_PID_ALT_HOLD:
-                    if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
-                        msg.cmd = GET_PID_ALT_HOLD;
-                        msg.length = sizeof(pidAltHoldBT);
-                        pidAltHoldBT.Kp = pidAltHold.values->Kp * 1000.0f;
-                        pidAltHoldBT.Ki = pidAltHold.values->Ki * 100.0f;
-                        pidAltHoldBT.Kd = pidAltHold.values->Kd * 100000.0f;
-                        pidAltHoldBT.integrationLimit = pidAltHold.values->integrationLimit * 100.0f;
-                        sendData((uint8_t*)&pidAltHoldBT, sizeof(pidAltHoldBT));
-#if DEBUG_BLUETOOTH_PROTOCOL
-                        UARTprintf("GET_PID_ALT_HOLD\n");
-#endif
-                    }
-#if DEBUG_BLUETOOTH_PROTOCOL
-                    else
-                        UARTprintf("GET_PID_ALT_HOLD error\n");
+                        UARTprintf("Get PID error\n");
 #endif
                     break;
 
                 case SET_SETTINGS:
-                    if (msg.length == sizeof(settings)) { // Make sure that it has the right length
+                    if (msg.length == sizeof(settings_t)) { // Make sure that it has the right length
+                        settings_t settings;
                         if (getData((uint8_t*)&settings, sizeof(settings))) { // This will read the data and check the checksum
                             cfg.angleKp = settings.angleKp / 100.0f;
                             cfg.headKp = settings.headKp / 100.0f;
@@ -289,8 +217,8 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
 
                 case GET_SETTINGS:
                     if (msg.length == 0 && getData(NULL, 0)) { // Check length and the checksum
-                        msg.cmd = GET_SETTINGS;
-                        msg.length = sizeof(settings);
+                        msg.length = sizeof(settings_t);
+                        settings_t settings;
                         settings.angleKp = cfg.angleKp * 100.0f;
                         settings.headKp = cfg.headKp * 100.0f;
                         settings.maxAngleInclination = cfg.maxAngleInclination;
@@ -314,8 +242,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
 #if DEBUG_BLUETOOTH_PROTOCOL
                             UARTprintf("sendAngles: %u\n", sendAngles);
 #endif
-                        }
-                        else {
+                        } else {
                             sendAngles = 0; // If there was an error, we reset it back to 0, just to be sure
 #if DEBUG_BLUETOOTH_PROTOCOL
                             UARTprintf("SEND_ANGLES checksum error\n");
@@ -387,7 +314,8 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
     if (sendAngles && (int32_t)(millis() - angleTimer) > 10) {
         angleTimer = millis();
         msg.cmd = SEND_ANGLES;
-        msg.length = sizeof(angles);
+        msg.length = sizeof(angles_t);
+        angles_t angles;
         angles.roll = angle->axis.roll * 100.0f;
         angles.pitch = angle->axis.pitch * 100.0f;
         angles.yaw = angle->axis.yaw * 100.0f;
@@ -474,4 +402,15 @@ static uint8_t getCheckSum(uint8_t *data, size_t length) {
     for (size_t i = 0; i < length; i++)
         checksum ^= data[i]; // Calculate checksum
     return checksum;
+}
+
+static pid_values_t* getPidValuesPointer(uint8_t cmd) {
+    if (cmd == SET_PID_ROLL_PITCH || cmd == GET_PID_ROLL_PITCH)
+        return &cfg.pidRollPitchValues;
+    else if (cmd == SET_PID_YAW || cmd == GET_PID_YAW)
+        return &cfg.pidYawValues;
+    else if (cmd == SET_PID_ALT_HOLD || cmd == GET_PID_ALT_HOLD)
+        return &cfg.pidAltHoldValues;
+
+    return NULL;
 }

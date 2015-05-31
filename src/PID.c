@@ -25,8 +25,8 @@ pid_t pidRoll, pidPitch, pidYaw, pidAltHold;
 
 void initPID(void) {
     // Set PID values to point at values read from EEPROM
-    pidRoll.values = &cfg.pidPitchValues;
-    pidPitch.values = &cfg.pidRollValues;
+    pidRoll.values = &cfg.pidRollPitchValues;
+    pidPitch.values = &cfg.pidRollPitchValues;
     pidYaw.values = &cfg.pidYawValues;
     pidAltHold.values = &cfg.pidAltHoldValues;
 }

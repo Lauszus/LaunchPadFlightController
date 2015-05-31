@@ -290,6 +290,7 @@ int main(void) {
     // Altitude hold
         // Use sonar distance to find offset of barometer
         // Redo take off sequence
+            // Ramp up motors slowly
     // Android App
         // Self level angle trim
         // Set magnetic declination
@@ -301,5 +302,3 @@ int main(void) {
         // Show distance in graph as well
     // Add disarm timer
     // Check that both buttons are held in while calibrating ESCs
-    // Simplify the way PID values are set via Bluetooth
-        // Can just set a point to the struct
