@@ -51,7 +51,6 @@ enum {
     SET_SETTINGS,
     GET_SETTINGS,
     SEND_ANGLES,
-    SEND_INFO, // TODO: Remove
     CAL_ACC,
     CAL_MAG,
     RESTORE_DEFAULTS,
@@ -79,16 +78,6 @@ typedef struct {
     int16_t roll, pitch; // Roll and pitch are in the range [-180:180]
     uint16_t yaw; // Yaw is in the range [0:360]
 } __attribute__((packed)) angles_t;
-
-/*
-struct info_t {
-  uint16_t speed;
-  int16_t current; // Note that this can be negative as well
-  int16_t turning; // Note that this can be negative as well
-  uint16_t battery;
-  uint32_t runTime;
-} __attribute__((packed)) info;
-*/
 
 static const char *commandHeader = "$S>"; // Standard command header
 static const char *responseHeader = "$S<"; // Standard response header
