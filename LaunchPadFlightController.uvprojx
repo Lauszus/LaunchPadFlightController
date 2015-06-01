@@ -508,6 +508,16 @@
               <FileType>1</FileType>
               <FilePath>.\src\BMP180.c</FilePath>
             </File>
+            <File>
+              <FileName>AltitudeHold.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\AltitudeHold.c</FilePath>
+            </File>
+            <File>
+              <FileName>HeadingHold.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\HeadingHold.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
