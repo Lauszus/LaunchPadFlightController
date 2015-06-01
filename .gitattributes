@@ -1,3 +1,4 @@
-# Auto detect text files and perform LF normalization
+# Perform LF normalization
 * text=auto
-* text eol=lf
+src/*.c text eol=lf
+src/*.h text eol=lf
