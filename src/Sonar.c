@@ -67,6 +67,7 @@ static void SonarHandler(void) {
         if (curr > prev) { // Take care of timer overflow
             uint32_t diff = curr - prev; // Calculate diff
             sonarDistanceDeciUs = 10000000UL / (SysCtlClockGet() / diff); // Convert to deci-us
+            // TODO: Discard error measurements here?
             //UARTprintf("%u %d %d\n", diff, sonarDistanceDeciUs, sonarDistanceDeciUs / 57);
         }
     }
@@ -94,7 +95,7 @@ bool triggerSonar(void) {
 #if USE_BARO
 int16_t getSonarDistance(angle_t *angle, int32_t temperature) {
     // Use temperature to compensate for the difference in speed of sound in air due to temperature difference
-    const uint8_t US_ROUNDTRIP_CM = 1.0f / (3315.0f + (0.6f * temperature)) * 2.0f * 1e5f; // Taken from the datasheet - note that temperature is in 0.1 C units, so the equation had to be multiplied by 10
+    const uint8_t US_ROUNDTRIP_CM = 2e5f / (3315.0f + (0.6f * temperature)); // Taken from the datasheet - note that temperature is in 0.1 C units, so the equation had to be multiplied by 10
 #else
 int16_t getSonarDistance(angle_t *angle) {
     static const uint8_t US_ROUNDTRIP_CM = 58; // Microseconds (uS) it takes sound to travel round-trip 1cm (2cm total). Calculated at room temperature
