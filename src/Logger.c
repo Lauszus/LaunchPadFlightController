@@ -71,10 +71,8 @@ float logStateMachine(bool active, float setPoint, float input, float step1, flo
                 break;
             case 3:
                 setPoint = step1;
-                if ((int32_t)(now - stateTimer) >= interval) {
-                    stateTimer = now;
+                if ((int32_t)(now - stateTimer) >= interval)
                     state = 4;
-                }
                 break;
             case 4:
                 // Do nothing!
