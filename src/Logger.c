@@ -1,0 +1,100 @@
+/* Copyright (C) 2015 Kristian Lauszus, TKJ Electronics. All rights reserved.
+
+ This software may be distributed and modified under the terms of the GNU
+ General Public License version 2 (GPL2) as published by the Free Software
+ Foundation and appearing in the file GPL2.TXT included in the packaging of
+ this file. Please note that GPL2 Section 2[b] requires that all works based
+ on this software must also be made publicly available under the terms of
+ the GPL2 ("Copyleft").
+
+ Contact information
+ -------------------
+
+ Kristian Lauszus, TKJ Electronics
+ Web      :  http://www.tkjelectronics.com
+ e-mail   :  kristianl@tkjelectronics.com
+*/
+
+#include <stdint.h>
+#include <stdbool.h>
+#include <stdlib.h>
+
+#if LOG_DATA
+
+#include "Logger.h"
+#include "Time.h"
+#include "uartstdio1.h" // Add "UART_BUFFERED1" to preprocessor - it uses a modified version of uartstdio, so it can be used with another UART interface
+
+typedef struct {
+    uint32_t counter;
+    uint32_t timeStamp;
+    float setPoint;
+    float input;
+} logger_t;
+
+static void logData(logger_t *logger) {
+    UARTprintf1("%u,%u,%d.%02u,%d.%02u\n",
+                                        logger->counter,
+                                        logger->timeStamp,
+                                        (int16_t)logger->setPoint, (uint16_t)(abs(logger->setPoint * 100.0f) % 100),
+                                        (int16_t)logger->input, (uint16_t)(abs(logger->input * 100.0f) % 100));
+    UARTFlushTx1(false);
+}
+
+float logStateMachine(bool active, float setPoint, float input, float step1, float step2, uint32_t interval, uint32_t now) {
+    static uint8_t state;
+
+    if (active) {
+        static logger_t logger;
+        static uint32_t startTime, stateTimer;
+
+        switch (state) {
+            case 0:
+                startTime = stateTimer = now; // Set initial value
+                logger.counter = 0; // Reset counter
+                setPoint = step1;
+                state = 1;
+                break;
+            case 1:
+                setPoint = step1;
+                if ((int32_t)(now - stateTimer) >= interval) {
+                    stateTimer = now;
+                    state = 2;
+                }
+                break;
+            case 2:
+                setPoint = step2;
+                if ((int32_t)(now - stateTimer) >= interval) {
+                    stateTimer = now;
+                    state = 3;
+                }
+                break;
+            case 3:
+                setPoint = step1;
+                if ((int32_t)(now - stateTimer) >= interval) {
+                    stateTimer = now;
+                    state = 4;
+                }
+                break;
+            case 4:
+                // Do nothing!
+                break;
+            default:
+                break;
+        }
+
+        if (state < 4) { // Log data if state machine is running
+            logger.counter++;
+            logger.timeStamp = now - startTime;
+            logger.setPoint = setPoint;
+            logger.input = input;
+
+            logData(&logger);
+        }
+    } else
+        state = 0;
+
+    return setPoint;
+}
+
+#endif

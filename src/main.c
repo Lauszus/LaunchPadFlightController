@@ -27,6 +27,7 @@
 #include "HMC5883L.h"
 #include "I2C.h"
 #include "IMU.h"
+#include "Logger.h"
 #include "MPU6500.h"
 #include "PPM.h"
 #include "PID.h"
@@ -158,7 +159,7 @@ int main(void) {
         if (dataReadyMPU6500()) {
             uint32_t now = micros();
             static uint32_t timer = 0; // Used to keep track of the time
-            float dt = (float)(now - timer) / 1000000.0f;
+            float dt = (float)(now - timer) / 1e6f; // Convert to seconds
             //UARTprintf("%d\n", now - timer);
             timer = now;
 
@@ -203,6 +204,13 @@ int main(void) {
                             altitudeMode ? cfg.maxAngleInclinationSonar :
 #endif
                             cfg.maxAngleInclination; // If in altitude mode the angle has to be limited to the capability of the sonar
+
+#if LOG_DATA && !(USE_SONAR || USE_BARO) // Do not use this code if altitude hold code is compiled
+                    static const float step1 = 0; // Start at 0 degrees
+                    static const float step2 = 15; // Tilt 15 degrees
+                    static const uint32_t interval = 1e6; // 1s between steps
+                    aileron = logStateMachine(getRXChannel(RX_AUX2_CHAN) > 0, aileron, angle.axis.roll, step1, step2, interval, now);
+#endif
                     setPointRoll = constrain(aileron, -maxAngleInclination, maxAngleInclination) - angle.axis.roll;
                     setPointPitch = constrain(elevator, -maxAngleInclination, maxAngleInclination) - angle.axis.pitch;
                     setPointRoll *= cfg.angleKp;
@@ -210,6 +218,13 @@ int main(void) {
                 } else { // Acro mode
                     setPointRoll = aileron * cfg.stickScalingRollPitch;
                     setPointPitch = elevator * cfg.stickScalingRollPitch;
+
+#if LOG_DATA && !(USE_SONAR || USE_BARO) // Do not use this code if altitude hold code is compiled
+                    static const float step1 = 0; // Start at 0 degrees/s
+                    static const float step2 = 15; // Rotate 15 degrees/s
+                    static const uint32_t interval = 1e6; // 1s between steps
+                    setPointRoll = logStateMachine(getRXChannel(RX_AUX2_CHAN) > 0, setPointRoll, mpu6500.gyroRate.axis.roll, step1, step2, interval, now);
+#endif
                 }
 
                 /*UARTprintf("%d\t%d\n", (int16_t)setPointRoll, (int16_t)setPointPitch);
@@ -223,7 +238,7 @@ int main(void) {
 
 #if USE_SONAR || USE_BARO
                 if (altitudeMode)
-                    throttle = updateAltitudeHold(&angle, &mpu6500, throttle, dt);
+                    throttle = updateAltitudeHold(&angle, &mpu6500, throttle, now, dt);
                 else
                     resetAltitudeHold();
 #endif

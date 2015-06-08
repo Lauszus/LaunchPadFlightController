@@ -28,6 +28,7 @@
 #include "BMP180.h"
 #include "Buzzer.h"
 #include "MPU6500.h"
+#include "Logger.h"
 #include "PID.h"
 #include "PPM.h"
 #include "RX.h"
@@ -74,7 +75,7 @@ void getAltitudeHold(void) {
 
 // TODO: Use MPU-6500 values for barometer altitude hold code
 // TODO: Use sonar to estimate baro offset, for smooth transaction
-float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, float throttle, float dt) {
+float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, float throttle, float now, float dt) {
 #if USE_SONAR
     static const float throttle_noise_lpf = 1000.0f; // TODO: Set via app
     static float altHoldThrottle; // Low pass filtered throttle input
@@ -102,6 +103,14 @@ float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, float throttle, flo
             }
         }
 
+#if LOG_DATA
+        float input = mapf(distance, SONAR_MIN_DIST, SONAR_MAX_DIST, MIN_MOTOR_OUT, MAX_MOTOR_OUT);
+        const float step1 = mapf(100, SONAR_MIN_DIST, SONAR_MAX_DIST, MIN_MOTOR_OUT, MAX_MOTOR_OUT); // Start at 10cm
+        const float step2 = mapf(1000, SONAR_MIN_DIST, SONAR_MAX_DIST, MIN_MOTOR_OUT, MAX_MOTOR_OUT); // Go to 1m
+        static const uint32_t interval = 5e6; // 5 seconds between steps
+        throttle = logStateMachine(getRXChannel(RX_AUX2_CHAN) > 90, throttle, input, step1, step2, interval, now);
+#endif
+
         altHoldThrottle = altHoldThrottle * (1.0f - (1.0f / throttle_noise_lpf)) + throttle * (1.0f / throttle_noise_lpf); // LPF throttle input
 
         float setPoint;
@@ -109,6 +118,13 @@ float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, float throttle, flo
             setPoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, altHoldInitialThrottle, SONAR_MIN_DIST, altHoldSetPoint);
         else
             setPoint = mapf(altHoldThrottle, altHoldInitialThrottle, MAX_MOTOR_OUT, altHoldSetPoint, SONAR_MAX_DIST);
+
+/*#if LOG_DATA
+        static const float step1 = 100; // Start at 10cm
+        static const float step2 = 1000; // Go to 1m
+        static const uint32_t interval = 5e6; // 5 seconds between steps
+        setPoint = logStateMachine(getRXChannel(RX_AUX2_CHAN) > 90, setPoint, distance, step1, step2, interval, now);
+#endif*/
 
         float altHoldOut = updatePID(&pidAltHold, setPoint, distance, dt);
         static const float MIN_MOTOR_OFFSET = (MAX_MOTOR_OUT - MIN_MOTOR_OUT) * 0.05f; // Add 5% to minimum, so the motors are never completely shut off

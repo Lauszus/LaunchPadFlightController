@@ -15,19 +15,16 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 
-#if !defined(__altitude_h__) && (USE_SONAR || USE_BARO)
-#define __altitude_h__
+#if !defined(__logger_h__) && LOG_DATA
+#define __logger_h__
 
-#include "MPU6500.h"
+#include "Types.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void initAltitudeHold(void);
-void getAltitudeHold(void);
-float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, float throttle, float now, float dt);
-void resetAltitudeHold(void);
+float logStateMachine(bool active, float setPoint, float input, float step1, float step2, uint32_t interval, uint32_t now);
 
 #ifdef __cplusplus
 }
