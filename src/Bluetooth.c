@@ -158,11 +158,11 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
                 case GET_PID_YAW:
                 case GET_PID_ALT_HOLD:
                     if (msg.length == 0 && getData(msg, NULL, 0)) { // Check length and the checksum
-                        msg.length = sizeof(pid_values_bt_t);
                         pid_values_t *pidValues = getPidValuesPointer(msg.cmd);
                         if (!pidValues)
                             break; // Abort
 
+                        msg.length = sizeof(pid_values_bt_t);
                         pid_values_bt_t pidValuesBt;
                         pidValuesBt.Kp = pidValues->Kp * 1000.0f;
                         pidValuesBt.Ki = pidValues->Ki * 100.0f;
