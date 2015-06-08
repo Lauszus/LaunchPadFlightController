@@ -103,21 +103,31 @@ float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, float throttle, flo
             }
         }
 
-#if LOG_DATA
+#if LOG_DATA && 1 // Step before low pass filter
         const float input = mapf(distance, SONAR_MIN_DIST, SONAR_MAX_DIST, MIN_MOTOR_OUT, MAX_MOTOR_OUT);
-        const float step1 = mapf(100, SONAR_MIN_DIST, SONAR_MAX_DIST, MIN_MOTOR_OUT, MAX_MOTOR_OUT); // Start at 10cm
-        const float step2 = mapf(500, SONAR_MIN_DIST, SONAR_MAX_DIST, MIN_MOTOR_OUT, MAX_MOTOR_OUT); // Go to 50cm
-        static const uint32_t interval = 10e6; // 10 seconds between steps
+        const float step1 = mapf(500, SONAR_MIN_DIST, SONAR_MAX_DIST, MIN_MOTOR_OUT, MAX_MOTOR_OUT); // Start at 50cm
+        const float step2 = mapf(1000, SONAR_MIN_DIST, SONAR_MAX_DIST, MIN_MOTOR_OUT, MAX_MOTOR_OUT); // Go to 1m
+        static const uint32_t interval = 15e6; // 15 seconds between steps
         throttle = logStateMachine(getRXChannel(RX_AUX2_CHAN) > 90, throttle, input, step1, step2, interval, now);
 #endif
 
         altHoldThrottle = altHoldThrottle * (1.0f - (1.0f / throttle_noise_lpf)) + throttle * (1.0f / throttle_noise_lpf); // LPF throttle input
 
         float setPoint;
+#if !LOG_DATA
         if (altHoldThrottle < altHoldInitialThrottle)
             setPoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, altHoldInitialThrottle, SONAR_MIN_DIST, altHoldSetPoint);
         else
             setPoint = mapf(altHoldThrottle, altHoldInitialThrottle, MAX_MOTOR_OUT, altHoldSetPoint, SONAR_MAX_DIST);
+#else
+        // This code is only used when logging is used, so it is easy to map between distance and throttle values
+        setPoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, MAX_MOTOR_OUT, SONAR_MIN_DIST, SONAR_MAX_DIST);
+#endif
+
+#if LOG_DATA && 0 // Step directly at PID controller
+        static const uint32_t interval = 10e6; // 10 seconds between steps
+        setPoint = logStateMachine(getRXChannel(RX_AUX2_CHAN) > 90, setPoint, distance, 500, 1000, interval, now); // Start at 50cm and then go to 1m
+#endif
 
         float altHoldOut = updatePID(&pidAltHold, setPoint, distance, dt);
         static const float MIN_MOTOR_OFFSET = (MAX_MOTOR_OUT - MIN_MOTOR_OUT) * 0.05f; // Add 5% to minimum, so the motors are never completely shut off
