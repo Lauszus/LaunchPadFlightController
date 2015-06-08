@@ -22,8 +22,12 @@
 #if LOG_DATA
 
 #include "Logger.h"
+#include "Pins.h"
 #include "Time.h"
 #include "uartstdio1.h" // Add "UART_BUFFERED1" to preprocessor - it uses a modified version of uartstdio, so it can be used with another UART interface
+
+#include "driverlib/gpio.h"
+#include "inc/hw_memmap.h"
 
 typedef struct {
     uint32_t counter;
@@ -82,15 +86,20 @@ float logStateMachine(bool active, float setPoint, float input, float step1, flo
         }
 
         if (state < 4) { // Log data if state machine is running
+            GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED
+
             logger.counter++;
             logger.timeStamp = now - startTime;
             logger.setPoint = setPoint;
             logger.input = input;
 
             logData(&logger);
-        }
-    } else
+        } else
+            GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED
+    } else {
         state = 0;
+        GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED
+    }
 
     return setPoint;
 }
