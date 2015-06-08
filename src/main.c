@@ -298,6 +298,13 @@ int main(void) {
 #endif
             }
         }
+#if 1
+        static uint32_t loopTimer;
+        while ((int32_t)(micros() - loopTimer) < 2500) {
+            // Limit loop to 400 Hz
+        }
+        loopTimer = micros();
+#endif
     }
 }
 
