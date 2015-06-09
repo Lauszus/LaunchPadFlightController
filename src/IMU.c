@@ -143,7 +143,9 @@ static float calculateHeading(angle_t *angle, sensor_t *mag) {
 }
 
 // Rotate accelerometer coordinate axis by a delta angle from gyroscope
-// See: http://mathworld.wolfram.com/RotationMatrix.html
+// See: http://mathworld.wolfram.com/RotationMatrix.html,
+// http://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions#Euler_angles_.28x-y-z_extrinsic.29_.E2.86.92_Rotation_matrix and
+// https://engineering.purdue.edu/~bethel/rot2.pdf
 static void rotateV(sensor_t *v, sensor_t *gyroRate, float dt) {
     sensor_t v_tmp = *v;
     angle_t deltaAngle = { .data = { gyroRate->axis.X * dt, gyroRate->axis.Y * dt, gyroRate->axis.Z * dt } };
