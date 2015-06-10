@@ -83,9 +83,9 @@ static const char *commandHeader = "$S>"; // Standard command header
 static const char *responseHeader = "$S<"; // Standard response header
 
 static bool findString(const char *string);
-static void readBytes(uint8_t *data, uint8_t length);
-static bool getData(msg_t msg, uint8_t *data, uint8_t length);
-static void sendData(msg_t msg, uint8_t *data, uint8_t length);
+static void readBytes(uint8_t *data, size_t length);
+static bool getData(msg_t msg, uint8_t *data, size_t length);
+static void sendData(msg_t msg, uint8_t *data, size_t length);
 static uint8_t getCheckSum(uint8_t *data, size_t length);
 static pid_values_t* getPidValuesPointer(uint8_t cmd);
 
@@ -362,20 +362,19 @@ static bool findString(const char *string) {
     return true; // If we get here, then the string has been found
 }
 
-static void readBytes(uint8_t *data, uint8_t length) {
-    for (uint8_t i = 0; i < length; i++)
+static void readBytes(uint8_t *data, size_t length) {
+    for (size_t i = 0; i < length; i++)
         data[i] = UARTgetc1(); // Store data in buffer - note this is a blocking call
 }
 
-static bool getData(msg_t msg, uint8_t *data, uint8_t length) {
+static bool getData(msg_t msg, uint8_t *data, size_t length) {
     if (length > 0)
         readBytes(data, length); // Read data into buffer
-    uint8_t checksum;
-    readBytes(&checksum, sizeof(checksum)); // Read the checksum
+    uint8_t checksum = UARTgetc1(); // Read the checksum - note this is a blocking call
     return (getCheckSum((uint8_t*)&msg, sizeof(msg)) ^ getCheckSum(data, length)) == checksum; // The checksum is calculated from the length, command and the data
 }
 
-static void sendData(msg_t msg, uint8_t *data, uint8_t length) {
+static void sendData(msg_t msg, uint8_t *data, size_t length) {
     const char checksum = getCheckSum((uint8_t*)&msg, sizeof(msg)) ^ getCheckSum(data, length);
 
     UARTwrite1(responseHeader, strlen(responseHeader));
