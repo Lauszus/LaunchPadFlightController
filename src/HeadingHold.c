@@ -35,12 +35,12 @@ static float magHold; // Heading using for heading hold
 float updateHeadingHold(angle_t *angle, float rudder) {
     static const uint8_t headMaxAngle = 25;
     if (fmaxf(fabsf(angle->axis.roll), fabsf(angle->axis.pitch)) < headMaxAngle) { // Check that we are not tilted too much
-        float diff = angle->axis.yaw - magHold;
+        float diff = magHold - angle->axis.yaw;
         if (diff < -180.0f) // Convert range back to [-180:180]
             diff += 360.0f;
         if (diff > 180.0f)
             diff -= 360.0f;
-        rudder -= diff * cfg.headKp;
+        rudder += diff * cfg.headKp;
 #if !LOG_DATA
         GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED
 #endif
