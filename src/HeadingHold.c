@@ -23,6 +23,8 @@
 
 #include "EEPROM.h"
 #include "HeadingHold.h"
+#include "Logger.h"
+#include "RX.h"
 
 #if !(STEP_ACRO_SELF_LEVEL || STEP_ALTITUDE_HOLD || STEP_HEADING_HOLD) // The logger will use the blue LED as indicator instead
 #include "Pins.h"
@@ -32,13 +34,19 @@
 
 static float magHold; // Heading using for heading hold
 
-float updateHeadingHold(angle_t *angle, float rudder) {
+float updateHeadingHold(angle_t *angle, float rudder, uint32_t __attribute__((unused)) now) {
     static const uint8_t headMaxAngle = 25;
     if (fmaxf(fabsf(angle->axis.roll), fabsf(angle->axis.pitch)) < headMaxAngle) { // Check that we are not tilted too much
+#if STEP_HEADING_HOLD
+        static const float step1 = 0; // Start at 0 degrees (North)
+        static const float step2 = 45; // Rotate 45 degrees (East)
+        static const uint32_t interval = 10e6; // 10 seconds between steps
+        magHold = logStateMachine(getRXChannel(RX_AUX2_CHAN) > 0, magHold, angle->axis.yaw, step1, step2, interval, now);
+#endif
         float diff = magHold - angle->axis.yaw;
         if (diff < -180.0f) // Normalize difference, so 0 is forward and -180 and 180 is backward
             diff += 360.0f;
-        if (diff > 180.0f)
+        else if (diff > 180.0f)
             diff -= 360.0f;
         rudder += diff * cfg.headKp;
 #if !(STEP_ACRO_SELF_LEVEL || STEP_ALTITUDE_HOLD || STEP_HEADING_HOLD)

@@ -191,7 +191,7 @@ int main(void) {
 
 #if USE_MAG
                 if (headMode && fabsf(rudder) < 5) // Only use heading hold if user is not applying rudder
-                    rudder = updateHeadingHold(&angle, rudder);
+                    rudder = updateHeadingHold(&angle, rudder, now);
                 else
                     resetHeadingHold(&angle);
 #endif

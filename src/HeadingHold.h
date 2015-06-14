@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-float updateHeadingHold(angle_t *angle, float rudder);
+float updateHeadingHold(angle_t *angle, float rudder, uint32_t now);
 void resetHeadingHold(angle_t *angle);
 
 #ifdef __cplusplus
