@@ -205,7 +205,7 @@ int main(void) {
 #endif
                             cfg.maxAngleInclination; // If in altitude mode the angle has to be limited to the capability of the sonar
 
-#if LOG_DATA && !(USE_SONAR || USE_BARO) // Do not use this code if altitude hold code is compiled
+#if STEP_ACRO_SELF_LEVEL
                     static const float step1 = 0; // Start at 0 degrees
                     static const float step2 = 15; // Tilt 15 degrees
                     static const uint32_t interval = 1e6; // 1s between steps
@@ -219,7 +219,7 @@ int main(void) {
                     setPointRoll = aileron * cfg.stickScalingRollPitch;
                     setPointPitch = elevator * cfg.stickScalingRollPitch;
 
-#if LOG_DATA && !(USE_SONAR || USE_BARO) // Do not use this code if altitude hold code is compiled
+#if STEP_ACRO_SELF_LEVEL
                     static const float step1 = 0; // Start at 0 degrees/s
                     static const float step2 = 15; // Rotate 15 degrees/s
                     static const uint32_t interval = 1e6; // 1s between steps

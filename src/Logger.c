@@ -19,7 +19,7 @@
 #include <stdbool.h>
 #include <stdlib.h>
 
-#if LOG_DATA
+#if STEP_ACRO_SELF_LEVEL || STEP_ALTITUDE_HOLD || STEP_HEADING_HOLD
 
 #include "Logger.h"
 #include "Pins.h"

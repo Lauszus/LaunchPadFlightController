@@ -24,7 +24,7 @@
 #include "EEPROM.h"
 #include "HeadingHold.h"
 
-#if !LOG_DATA // The logger will use the blue LED as indicator instead
+#if !(STEP_ACRO_SELF_LEVEL || STEP_ALTITUDE_HOLD || STEP_HEADING_HOLD) // The logger will use the blue LED as indicator instead
 #include "Pins.h"
 #include "driverlib/gpio.h"
 #include "inc/hw_memmap.h"
@@ -41,11 +41,11 @@ float updateHeadingHold(angle_t *angle, float rudder) {
         if (diff > 180.0f)
             diff -= 360.0f;
         rudder += diff * cfg.headKp;
-#if !LOG_DATA
+#if !(STEP_ACRO_SELF_LEVEL || STEP_ALTITUDE_HOLD || STEP_HEADING_HOLD)
         GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED
 #endif
     }
-#if !LOG_DATA
+#if !(STEP_ACRO_SELF_LEVEL || STEP_ALTITUDE_HOLD || STEP_HEADING_HOLD)
     else
         GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED
 #endif
@@ -54,7 +54,7 @@ float updateHeadingHold(angle_t *angle, float rudder) {
 }
 
 void resetHeadingHold(angle_t *angle) {
-#if !LOG_DATA
+#if !(STEP_ACRO_SELF_LEVEL || STEP_ALTITUDE_HOLD || STEP_HEADING_HOLD)
     GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED
 #endif
     magHold = angle->axis.yaw; // Reset heading hold value

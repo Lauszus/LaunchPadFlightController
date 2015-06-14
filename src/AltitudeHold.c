@@ -103,7 +103,7 @@ float updateAltitudeHold(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6
             }
         }
 
-#if LOG_DATA && 1 // Step before low pass filter
+#if STEP_ALTITUDE_HOLD && 1 // Step before low pass filter
         const float input = mapf(distance, SONAR_MIN_DIST, SONAR_MAX_DIST, MIN_MOTOR_OUT, MAX_MOTOR_OUT);
         const float step1 = mapf(500, SONAR_MIN_DIST, SONAR_MAX_DIST, MIN_MOTOR_OUT, MAX_MOTOR_OUT); // Start at 50cm
         const float step2 = mapf(1000, SONAR_MIN_DIST, SONAR_MAX_DIST, MIN_MOTOR_OUT, MAX_MOTOR_OUT); // Go to 1m
@@ -114,7 +114,7 @@ float updateAltitudeHold(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6
         altHoldThrottle = altHoldThrottle * (1.0f - (1.0f / throttle_noise_lpf)) + throttle * (1.0f / throttle_noise_lpf); // LPF throttle input
 
         float setPoint;
-#if !LOG_DATA
+#if !STEP_ALTITUDE_HOLD
         if (altHoldThrottle < altHoldInitialThrottle)
             setPoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, altHoldInitialThrottle, SONAR_MIN_DIST, altHoldSetPoint);
         else
@@ -124,7 +124,7 @@ float updateAltitudeHold(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6
         setPoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, MAX_MOTOR_OUT, SONAR_MIN_DIST, SONAR_MAX_DIST);
 #endif
 
-#if LOG_DATA && 0 // Step directly at PID controller
+#if STEP_ALTITUDE_HOLD && 0 // Step directly at PID controller
         static const uint32_t interval = 10e6; // 10 seconds between steps
         setPoint = logStateMachine(getRXChannel(RX_AUX2_CHAN) > 90, setPoint, distance, 500, 1000, interval, now); // Start at 50cm and then go to 1m
 #endif

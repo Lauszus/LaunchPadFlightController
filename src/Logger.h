@@ -15,7 +15,7 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 
-#if !defined(__logger_h__) && LOG_DATA
+#if !defined(__logger_h__) && (STEP_ACRO_SELF_LEVEL || STEP_ALTITUDE_HOLD || STEP_HEADING_HOLD)
 #define __logger_h__
 
 #include "Types.h"
