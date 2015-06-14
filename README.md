@@ -47,6 +47,8 @@ $ brew install openocd
 
 Android application is available at the following repository: <https://github.com/Lauszus/LaunchPadFlightControllerAndroid>.
 
+[![Screenshots](https://raw.githubusercontent.com/Lauszus/LaunchPadFlightControllerAndroid/master/android_screenshots.png)](https://github.com/Lauszus/LaunchPadFlightControllerAndroid)
+
 # Video demonstrations
 
 Some video demonstrations of the flight controller can be seen at my [YouTube channel](https://www.youtube.com/playlist?list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg).
