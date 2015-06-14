@@ -213,7 +213,7 @@ int main(void) {
 #endif
                     setPointRoll = constrain(aileron, -maxAngleInclination, maxAngleInclination) - angle.axis.roll;
                     setPointPitch = constrain(elevator, -maxAngleInclination, maxAngleInclination) - angle.axis.pitch;
-                    setPointRoll *= cfg.angleKp;
+                    setPointRoll *= cfg.angleKp; // A cascaded P controller is used in self level mode, as the output from the P controller is then used as the set point for the acro PID controller
                     setPointPitch *= cfg.angleKp;
                 } else { // Acro mode
                     setPointRoll = aileron * cfg.stickScalingRollPitch;
