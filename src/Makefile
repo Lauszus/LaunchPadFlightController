@@ -101,7 +101,7 @@ USE_BARO ?= 1
 USE_SONAR ?= 1
 LOG_DATA ?= 0
 CFLAGSgcc = -DTARGET_IS_BLIZZARD_RB1 -DUART_BUFFERED -DUART_BUFFERED1 -DUART_DEBUG=$(UART_DEBUG) -DUSE_MAG=$(USE_MAG) -DUSE_BARO=$(USE_BARO) -DUSE_SONAR=$(USE_SONAR) -DLOG_DATA=$(LOG_DATA)
-CFLAGSgcc += -Wdouble-promotion -Wunsafe-loop-optimizations
+CFLAGSgcc += -Wdouble-promotion -Wunsafe-loop-optimizations -Wunused-parameter
 
 #
 # Rebuild everything when makefile changes.

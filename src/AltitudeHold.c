@@ -75,7 +75,7 @@ void getAltitudeHold(void) {
 
 // TODO: Use MPU-6500 values for barometer altitude hold code
 // TODO: Use sonar to estimate baro offset, for smooth transaction
-float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, float throttle, uint32_t now, float dt) {
+float updateAltitudeHold(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6500, float throttle, uint32_t __attribute__((unused)) now, float dt) {
 #if USE_SONAR
     static const float throttle_noise_lpf = 1000.0f; // TODO: Set via app
     static float altHoldThrottle; // Low pass filtered throttle input
