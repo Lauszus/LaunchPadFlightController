@@ -20,6 +20,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <math.h>
 
 #if USE_SONAR || USE_BARO
@@ -33,6 +34,7 @@
 #include "PPM.h"
 #include "RX.h"
 #include "Sonar.h"
+#include "uartstdio1.h" // Add "UART_BUFFERED1" to preprocessor - it uses a modified version of uartstdio, so it can be used with another UART interface
 
 #if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
@@ -64,7 +66,9 @@ void getAltitudeHold(void) {
 #if USE_BARO
     if (getBMP180Data(&bmp180)) {
 #if 0
-        UARTprintf("BMP180: %d %d %d\n", bmp180.pressure, bmp180.temperature, (int32_t)(bmp180.absoluteAltitude - bmp180.groundAltitude));
+        float height = bmp180.absoluteAltitude - bmp180.groundAltitude;
+        UARTprintf1("%d,%d,%d.%02u\n", bmp180.pressure, bmp180.temperature, (int32_t)height, (uint32_t)(abs(height * 100.0f) % 100));
+        UARTFlushTx1(false);
 #endif
     }
 #endif
