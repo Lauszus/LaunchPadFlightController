@@ -311,6 +311,7 @@ int main(void) {
 // TODO:
     // Altitude hold
         // Use sonar distance to find offset of barometer
+        // Use wide timer for sonar
         // Redo take off sequence
             // Ramp up motors slowly
     // Android App
