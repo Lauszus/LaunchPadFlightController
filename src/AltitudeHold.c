@@ -98,12 +98,14 @@ float updateAltitudeHold(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6
             altHoldActive = true;
             resetPIDAltHold();
             altHoldThrottle = throttle; // Set low pass filtered throttle value
-            altHoldSetPoint = constrain(distance, SONAR_MIN_DIST, SONAR_MAX_DIST); // Constrain set point to the min and max allowed
-            altHoldInitialThrottle = throttle; // Save current throttle
+
             if (altHoldInitialThrottle < CHANNEL_MIN_CHECK) { // If throttle is very low, just set an initial value, so it still works
                 // TODO: Don't hardcode these values
                 altHoldSetPoint = 1000; // Set to 1m
                 altHoldInitialThrottle = -30.0f; // Set the throttle value to where is approximately hovers
+            } else {
+                altHoldSetPoint = constrain(distance, SONAR_MIN_DIST, SONAR_MAX_DIST); // Constrain set point to the min and max allowed
+                altHoldInitialThrottle = throttle; // Save current throttle
             }
         }
 
