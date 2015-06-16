@@ -53,7 +53,7 @@
 
 // Implemented based on: http://che126.che.caltech.edu/28015-PING-Sensor-Product-Guide-v2.0.pdf
 
-static volatile int32_t sonarDistanceDeciUs;
+static volatile uint32_t sonarDistanceDeciUs;
 
 static void SonarHandler(void) {
     static uint32_t prev = 0;
@@ -64,12 +64,9 @@ static void SonarHandler(void) {
     bool edge = GPIOPinRead(GPIO_SONAR_ECHO_BASE, GPIO_SONAR_ECHO); // Read the GPIO pin
 
     if (last_edge && !edge) { // Check that we are going from a positive to falling edge
-        if (curr > prev) { // Take care of timer overflow
-            uint32_t diff = curr - prev; // Calculate diff
-            sonarDistanceDeciUs = 10000000UL / (SysCtlClockGet() / diff); // Convert to deci-us
-            // TODO: Discard error measurements here?
-            //UARTprintf("%u %d %d\n", diff, sonarDistanceDeciUs, sonarDistanceDeciUs / 57);
-        }
+        uint32_t diff = curr - prev; // Calculate diff
+        sonarDistanceDeciUs = 10000000UL / (SysCtlClockGet() / diff); // Convert to deci-us
+        //UARTprintf("%u %d %d\n", diff, sonarDistanceDeciUs, sonarDistanceDeciUs / 57);
     }
 
     prev = curr; // Store previous value
@@ -103,11 +100,10 @@ int16_t getSonarDistance(angle_t *angle) {
     if (sonarDistanceDeciUs < 1150 || sonarDistanceDeciUs > 185000) // Datasheet says min is 115us and max is 18.5ms
         return -1;
 
-    int16_t distance = sonarDistanceDeciUs / US_ROUNDTRIP_CM; // The output will actually be in mm, as it is in deci-us
-
     if (fmaxf(fabsf(angle->axis.roll), fabsf(angle->axis.pitch)) > cfg.maxAngleInclinationSonar) // Return -1 if it is tilted more than the maximum tilt angle
         return -1;
 
+    int16_t distance = sonarDistanceDeciUs / US_ROUNDTRIP_CM; // The output will actually be in mm, as it is in deci-us
     distance *= cosf(angle->axis.roll * DEG_TO_RAD) * cosf(angle->axis.pitch * DEG_TO_RAD); // Calculate adjacent side
 
     return distance;
@@ -118,6 +114,7 @@ void initSonar(void) {
     SysCtlPeripheralEnable(SYSCTL_PERIPH_ECHO); // Enable GPIO peripheral
     SysCtlPeripheralEnable(SYSCTL_PERIPH_TRIG); // Enable GPIO peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
+
     GPIOPinConfigure(GPIO_SONAR_ALTERNATE); // Use alternate function
     GPIOPinTypeTimer(GPIO_SONAR_ECHO_BASE, GPIO_SONAR_ECHO); // Use pin with timer peripheral
 
