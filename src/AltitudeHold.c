@@ -62,7 +62,7 @@ void initAltitudeHold(void) {
 #endif
 }
 
-// TODO: Smooth mpu6500->accFiltered.axis.Z even more
+// TODO: LPF mpu6500->inertialFrame.axis.Z
 // TODO: Maybe the altitude should only be run when new barometer values have been read and then just use a movering average of the accelerometer data
 void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, uint32_t __attribute__((unused)) now, float dt) {
 #if USE_SONAR
@@ -105,7 +105,7 @@ void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, u
     /* Estimate altitude, velocity and acceleration using accelerometer */
     // Fist subtract 1g, so it is reading 0g when it's flat, then the value is converted into g's, then in m/s^2 and finally into cm/s^2
     static const float gravitationalAcceleration = 9.80665f; // See: https://en.wikipedia.org/wiki/Gravitational_acceleration
-    altitude->acceleration = (float)(mpu6500->accFiltered.axis.Z - mpu6500->accScaleFactor) / mpu6500->accScaleFactor * gravitationalAcceleration * 100.0f;
+    altitude->acceleration = (float)(mpu6500->inertialFrame.axis.Z - mpu6500->accScaleFactor) / mpu6500->accScaleFactor * gravitationalAcceleration * 100.0f;
 
     float accVelocity = altitude->velocity + altitude->acceleration * dt; // Estimate velocity using accelerometer
     float accAltitude = altitude->altitude + altitude->velocity * dt + 0.5f * altitude->acceleration * dt * dt; // Estimate altitude using accelerometer
