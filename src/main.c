@@ -326,3 +326,5 @@ int main(void) {
         // Show distance in graph as well
     // Add disarm timer
     // Check that both buttons are held in while calibrating ESCs
+    // All filters should depend on dt as well, so loop time does not affect them
+        // And they should also be on the same form to make it consistent
