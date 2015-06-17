@@ -72,6 +72,16 @@ void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, u
 #else
         altitude->sonarDistance = getSonarDistance(angle);
 #endif
+
+#if 0
+        static uint32_t counter;
+        UARTprintf1("%u,%u,%d.%02u,%d.%02u\n",
+                                              ++counter,
+                                              now,
+                                              (int16_t)altitude->altitudeLpf, (uint16_t)(abs(altitude->altitudeLpf * 100.0f) % 100),
+                                              (int16_t)altitude->altitude, (uint16_t)(abs(altitude->altitude * 100.0f) % 100));
+        UARTFlushTx1(false);
+#endif
     }
 #endif
 
@@ -87,7 +97,7 @@ void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, u
     static float baro_noise_lpf = 0.95f; // TODO: Set via app
     static float baroAltitude;
 
-    /* Estimate altitude and velocity using baromter */
+    /* Estimate altitude and velocity using barometer */
     float lastBaroAltitude = baroAltitude;
     baroAltitude = baro_noise_lpf * baroAltitude + (1.0f - baro_noise_lpf) * (bmp180.absoluteAltitude - bmp180.groundAltitude); // LPF to reduce baro noise
     float baroVelocity = (baroAltitude - lastBaroAltitude) / dt; // Estimate baro velocity
@@ -133,13 +143,7 @@ void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, u
     //UARTprintf1("%d\t%d\n", (int32_t)baroAltitude, (int32_t)baroVelocity);
     //UARTprintf1("%d\t%d\t%d\n", (int32_t)accAltitude, (int32_t)accVelocity, (int32_t)altitude->acceleration);
     //UARTprintf1("%d\t%d\t%d\t%d\n", (int32_t)altitude->altitudeLpf, (int32_t)altitude->altitude, (int32_t)altitude->velocity, (int32_t)altitude->acceleration);
-    /*static uint32_t counter;
-    UARTprintf1("%u,%u,%d.%02u,%d.%02u\n",
-                                          ++counter,
-                                          now,
-                                          (int16_t)altitude->altitudeLpf, (uint16_t)(abs(altitude->altitudeLpf * 100.0f) % 100),
-                                          (int16_t)altitude->altitude, (uint16_t)(abs(altitude->altitude * 100.0f) % 100));
-    UARTFlushTx1(false);*/
+    //UARTFlushTx1(false);
 
 #endif // USE_BARO
 }
