@@ -54,6 +54,7 @@
 // Implemented based on: http://che126.che.caltech.edu/28015-PING-Sensor-Product-Guide-v2.0.pdf
 
 static volatile uint32_t sonarDistanceDeciUs;
+static volatile bool newSonarDistance;
 
 static void SonarHandler(void) {
     static uint32_t prev = 0;
@@ -67,6 +68,7 @@ static void SonarHandler(void) {
         uint32_t diff = curr - prev; // Calculate diff
         sonarDistanceDeciUs = 10000000UL / (SysCtlClockGet() / diff); // Convert to deci-us
         //UARTprintf("%u %d %d\n", diff, sonarDistanceDeciUs, sonarDistanceDeciUs / 57);
+        newSonarDistance = true;
     }
 
     prev = curr; // Store previous value
@@ -83,9 +85,8 @@ bool triggerSonar(void) {
         delayMicroseconds(10); // Other sources wait 10us
         GPIOPinWrite(GPIO_SONAR_TRIG_BASE, GPIO_SONAR_TRIG, 0); // Set pin low
         //UARTprintf("%d\n", getSonarDistance());
-        return true;
     }
-    return false;
+    return newSonarDistance; // Returns true if a measurement is ready
 }
 
 // Returns the distance in mm. Range is 0-3000 mm or -1 if the value is invalid.
@@ -97,6 +98,8 @@ int16_t getSonarDistance(angle_t *angle, int32_t temperature) {
 int16_t getSonarDistance(angle_t *angle) {
     static const uint8_t US_ROUNDTRIP_CM = 58; // Microseconds (uS) it takes sound to travel round-trip 1cm (2cm total). Calculated at room temperature
 #endif
+    newSonarDistance = false; // Set variable back to false
+
     if (sonarDistanceDeciUs < 1150 || sonarDistanceDeciUs > 185000) // Datasheet says min is 115us and max is 18.5ms
         return -1;
 

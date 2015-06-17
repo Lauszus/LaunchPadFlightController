@@ -67,7 +67,6 @@ void initAltitudeHold(void) {
 void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, float dt) {
 #if USE_SONAR
     if (triggerSonar()) { // Trigger sonar
-        // TODO: The measurement here is actually the last value, maybe it should only return true if there is actually a new measurement
 #if USE_BARO
         altitude->sonarDistance = getSonarDistance(angle, bmp180.temperature);
 #else
