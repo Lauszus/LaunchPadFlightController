@@ -33,6 +33,17 @@ PART ?= TM4C123GH6PM
 TARGET ?= LaunchPadFlightController
 
 #
+# Preprocessor directives.
+#
+UART_DEBUG ?= 0
+USE_MAG ?= 1
+USE_BARO ?= 1
+USE_SONAR ?= 1
+STEP_ACRO_SELF_LEVEL ?= 0
+STEP_ALTITUDE_HOLD ?= 0
+STEP_HEADING_HOLD ?= 0
+
+#
 # The base directory for TivaWare.
 #
 ROOT = ../lib
@@ -65,7 +76,7 @@ clean:
 	@rm -rf $(COMPILER) $(wildcard *~)
 
 #
-# The rule to clean out all the build products.
+# The rule to build and flash the object file.
 #
 flash: all
 	@lm4flash -v $(COMPILER)/$(TARGET).bin
@@ -95,13 +106,6 @@ ENTRY_$(TARGET) = ResetISR
 #
 # CFLAGS passed to the compiler.
 #
-UART_DEBUG ?= 1
-USE_MAG ?= 1
-USE_BARO ?= 1
-USE_SONAR ?= 1
-STEP_ACRO_SELF_LEVEL ?= 0
-STEP_ALTITUDE_HOLD ?= 0
-STEP_HEADING_HOLD ?= 0
 CFLAGSgcc = -DTARGET_IS_BLIZZARD_RB1 -DUART_BUFFERED -DUART_BUFFERED1 -DUART_DEBUG=$(UART_DEBUG) -DUSE_MAG=$(USE_MAG) -DUSE_BARO=$(USE_BARO) -DUSE_SONAR=$(USE_SONAR) -DSTEP_ACRO_SELF_LEVEL=$(STEP_ACRO_SELF_LEVEL) -DSTEP_ALTITUDE_HOLD=$(STEP_ALTITUDE_HOLD) -DSTEP_HEADING_HOLD=$(STEP_HEADING_HOLD)
 CFLAGSgcc += -Wdouble-promotion -Wunsafe-loop-optimizations -Wunused-parameter
 
