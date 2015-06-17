@@ -64,7 +64,7 @@ void initAltitudeHold(void) {
 
 // TODO: Smooth mpu6500->accFiltered.axis.Z even more
 // TODO: Maybe the altitude should only be run when new barometer values have been read and then just use a movering average of the accelerometer data
-void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, float dt) {
+void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, uint32_t __attribute__((unused)) now, float dt) {
 #if USE_SONAR
     if (triggerSonar()) { // Trigger sonar
 #if USE_BARO
@@ -92,17 +92,6 @@ void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, f
     baroAltitude = baro_noise_lpf * baroAltitude + (1.0f - baro_noise_lpf) * (bmp180.absoluteAltitude - bmp180.groundAltitude); // LPF to reduce baro noise
     float baroVelocity = (baroAltitude - lastBaroAltitude) / dt; // Estimate baro velocity
 
-#if USE_SONAR && 1
-    // TODO: Add smooth transaction between sonar and barometer
-    static float altitudeOffset;
-    if (altitude->sonarDistance > 0 && altitude->sonarDistance < /*3000*/1000) {
-        float sonarHeight = (float)altitude->sonarDistance / 10.0f; // Convert sonar distance to cm
-        altitudeOffset = baroAltitude - sonarHeight;
-        baroAltitude = sonarHeight; // Set barometer altitude estimate equal to sonar height
-    } else
-        baroAltitude -= altitudeOffset; // Subtract offset from all altitude estimates
-#endif
-
     /* Estimate altitude, velocity and acceleration using accelerometer */
     // Fist subtract 1g, so it is reading 0g when it's flat, then the value is converted into g's, then in m/s^2 and finally into cm/s^2
     static const float gravitationalAcceleration = 9.80665f; // See: https://en.wikipedia.org/wiki/Gravitational_acceleration
@@ -121,9 +110,35 @@ void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, f
     static const float altitude_lpf = 0.995f; // TODO: Set in Android app
     altitude->altitudeLpf = altitude_lpf * altitude->altitudeLpf + (1.0f - altitude_lpf) * altitude->altitude; // Low-pass filter altitude estimate
 
+#if USE_SONAR && 1
+    // TODO: Add smooth transaction between sonar and barometer
+    static float altitudeBaroOffset, altitudeOffset, altitudeLpfOffset;
+    if (altitude->sonarDistance > 0 && altitude->sonarDistance < /*3000*/100) {
+        float sonarHeight = (float)altitude->sonarDistance / 10.0f; // Convert sonar distance to cm
+
+        altitudeBaroOffset = baroAltitude - sonarHeight; // Set altitude offsets
+        altitudeOffset = altitude->altitude - sonarHeight;
+        altitudeLpfOffset = altitude->altitudeLpf - sonarHeight;
+
+        baroAltitude = sonarHeight; // Set altitude estimates equal to sonar height
+        altitude->altitude = sonarHeight;
+        altitude->altitudeLpf = sonarHeight;
+    } else {
+        baroAltitude -= altitudeBaroOffset; // Subtract offset from all altitude estimates
+        altitude->altitude -= altitudeOffset;
+        altitude->altitudeLpf -= altitudeLpfOffset;
+    }
+#endif
+
     //UARTprintf1("%d\t%d\n", (int32_t)baroAltitude, (int32_t)baroVelocity);
     //UARTprintf1("%d\t%d\t%d\n", (int32_t)accAltitude, (int32_t)accVelocity, (int32_t)altitude->acceleration);
-    /*UARTprintf1("%d\t%d\t%d\t%d\n", (int32_t)altitude->altitudeLpf, (int32_t)altitude->altitude, (int32_t)altitude->velocity, (int32_t)altitude->acceleration);
+    //UARTprintf1("%d\t%d\t%d\t%d\n", (int32_t)altitude->altitudeLpf, (int32_t)altitude->altitude, (int32_t)altitude->velocity, (int32_t)altitude->acceleration);
+    /*static uint32_t counter;
+    UARTprintf1("%u,%u,%d.%02u,%d.%02u\n",
+                                          ++counter,
+                                          now,
+                                          (int16_t)altitude->altitudeLpf, (uint16_t)(abs(altitude->altitudeLpf * 100.0f) % 100),
+                                          (int16_t)altitude->altitude, (uint16_t)(abs(altitude->altitude * 100.0f) % 100));
     UARTFlushTx1(false);*/
 
 #endif // USE_BARO
