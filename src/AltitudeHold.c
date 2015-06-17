@@ -107,8 +107,9 @@ void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, u
     static const float gravitationalAcceleration = 9.80665f; // See: https://en.wikipedia.org/wiki/Gravitational_acceleration
     altitude->acceleration = (float)(mpu6500->inertialFrame.axis.Z - mpu6500->accScaleFactor) / mpu6500->accScaleFactor * gravitationalAcceleration * 100.0f;
 
-    float accVelocity = altitude->velocity + altitude->acceleration * dt; // Estimate velocity using accelerometer
-    float accAltitude = altitude->altitude + altitude->velocity * dt + 0.5f * altitude->acceleration * dt * dt; // Estimate altitude using accelerometer
+    float accDt = altitude->acceleration * dt; // Limit number of multiplications
+    float accVelocity = altitude->velocity + accDt; // Estimate velocity using accelerometer
+    float accAltitude = altitude->altitude + altitude->velocity * dt + 0.5f * accDt * dt; // Estimate altitude using accelerometer
 
     /* Estimate altitude and velocity using complimentary filter on barometer and accelerometer estimates */
     static const float velocity_cf = 0.985f; // TODO: Set in Android app
