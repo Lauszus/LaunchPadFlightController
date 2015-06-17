@@ -172,7 +172,8 @@ float updateAltitudeHold(altitude_t *altitude, float throttle, uint32_t __attrib
             }
         }
 
-#if STEP_ALTITUDE_HOLD && 1 // Step before low pass filter
+#if STEP_ALTITUDE_HOLD
+        (void)altHoldSetPoint; // Suppress warning
         const float input = mapf(altitude->sonarDistance, SONAR_MIN_DIST, SONAR_MAX_DIST, MIN_MOTOR_OUT, MAX_MOTOR_OUT);
         const float step1 = mapf(500, SONAR_MIN_DIST, SONAR_MAX_DIST, MIN_MOTOR_OUT, MAX_MOTOR_OUT); // Start at 50cm
         const float step2 = mapf(1000, SONAR_MIN_DIST, SONAR_MAX_DIST, MIN_MOTOR_OUT, MAX_MOTOR_OUT); // Go to 1m
@@ -191,11 +192,6 @@ float updateAltitudeHold(altitude_t *altitude, float throttle, uint32_t __attrib
 #else
         // This code is only used when logging is used, so it is easy to map between distance and throttle values
         setPoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, MAX_MOTOR_OUT, SONAR_MIN_DIST, SONAR_MAX_DIST);
-#endif
-
-#if STEP_ALTITUDE_HOLD && 0 // Step directly at PID controller
-        static const uint32_t interval = 10e6; // 10 seconds between steps
-        setPoint = logStateMachine(getRXChannel(RX_AUX2_CHAN) > 90, setPoint, altitude->sonarDistance, 500, 1000, interval, now); // Start at 50cm and then go to 1m
 #endif
 
         float altHoldOut = updatePID(&pidAltHold, setPoint, altitude->sonarDistance, dt);
