@@ -176,7 +176,8 @@ int main(void) {
 #endif
 
 #if USE_SONAR || USE_BARO
-            getAltitudeHold();
+            static altitude_t altitude;
+            getAltitudeHold(&angle, &mpu6500, &altitude, dt);
 #endif
 
             /*UARTprintf("%d\t%d\t%d\n", (int16_t)angle.axis.roll, (int16_t)angle.axis.pitch, (int16_t)angle.axis.yaw);
@@ -238,7 +239,7 @@ int main(void) {
 
 #if USE_SONAR || USE_BARO
                 if (altitudeMode)
-                    throttle = updateAltitudeHold(&angle, &mpu6500, throttle, now, dt);
+                    throttle = updateAltitudeHold(&altitude, throttle, now, dt);
                 else
                     resetAltitudeHold();
 #endif
