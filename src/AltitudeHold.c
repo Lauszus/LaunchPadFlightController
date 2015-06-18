@@ -115,8 +115,8 @@ void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, u
     baroAltitude = baro_noise_lpf * baroAltitude + (1.0f - baro_noise_lpf) * (bmp180.absoluteAltitude - bmp180.groundAltitude); // LPF to reduce baro noise
     float baroVelocity = (baroAltitude - lastBaroAltitude) / dt; // Estimate baro velocity
 
-    /* Estimate altitude, velocity using acceleration */
-    // Fist subtract 1g, so it is reading 0g when it's flat, then the value is converted into g's, then in m/s^2 and finally into cm/s^2
+    /* Estimate altitude and velocity using acceleration */
+    // Fist subtract 1g datasheet value, so it is reading 0g when it is flat, then the value is actually converted into g's, then into m/s^2 and finally into cm/s^2
     static const float gravitationalAcceleration = 9.80665f; // See: https://en.wikipedia.org/wiki/Gravitational_acceleration
     altitude->acceleration = (float)(accInertialFrame.axis.Z - mpu6500->accScaleFactor) / mpu6500->accScaleFactor * gravitationalAcceleration * 100.0f;
 
