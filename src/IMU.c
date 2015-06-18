@@ -52,12 +52,12 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
         accMagSquared += accLPF.data[axis] * accLPF.data[axis]; // Update magnitude
     }
 
-    rotateV(&mpu6500->inertialFrame, &gyro, dt); // Rotate inertial frame according to delta angle given by gyro reading
+    rotateV(&mpu6500->accBodyFrame, &gyro, dt); // Rotate body frame according to delta angle given by gyro reading
 
     accMagSquared /= mpu6500->accScaleFactor * mpu6500->accScaleFactor; // Convert readings to g's
     if (0.72f < accMagSquared && accMagSquared < 1.32f) { // Check if < 0.85G or > 1.15G, if so we just skip new accelerometer readings
         for (uint8_t axis = 0; axis < 3; axis++)
-            mpu6500->inertialFrame.data[axis] = (mpu6500->inertialFrame.data[axis] * gyro_cmpf_factor + accLPF.data[axis]) * invGyroComplimentaryFilterFactor; // Complimentary filter accelerometer gyro readings
+            mpu6500->accBodyFrame.data[axis] = (mpu6500->accBodyFrame.data[axis] * gyro_cmpf_factor + accLPF.data[axis]) * invGyroComplimentaryFilterFactor; // Complimentary filter accelerometer gyro readings
     }
 
     // Source: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf eq. 25 and eq. 26
@@ -69,8 +69,8 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
     angle->axis.pitch  = atan2f(-mpu6500->accFiltered.axis.X, sqrtf(mpu6500->accFiltered.axis.Y * mpu6500->accFiltered.axis.Y + mpu6500->accFiltered.axis.Z * mpu6500->accFiltered.axis.Z)); // Use atan2 here anyway, to prevent division by 0
 #else
     // Eq. 28 and 29
-    angle->axis.roll = atan2f(mpu6500->inertialFrame.axis.Y, sqrtf(mpu6500->inertialFrame.axis.X * mpu6500->inertialFrame.axis.X + mpu6500->inertialFrame.axis.Z * mpu6500->inertialFrame.axis.Z)); // Use atan2 here anyway, to prevent division by 0
-    angle->axis.pitch  = atan2f(-mpu6500->inertialFrame.axis.X, mpu6500->inertialFrame.axis.Z);
+    angle->axis.roll = atan2f(mpu6500->accBodyFrame.axis.Y, sqrtf(mpu6500->accBodyFrame.axis.X * mpu6500->accBodyFrame.axis.X + mpu6500->accBodyFrame.axis.Z * mpu6500->accBodyFrame.axis.Z)); // Use atan2 here anyway, to prevent division by 0
+    angle->axis.pitch  = atan2f(-mpu6500->accBodyFrame.axis.X, mpu6500->accBodyFrame.axis.Z);
 #endif
 
 #if USE_MAG
@@ -81,14 +81,14 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
     static const float invGyroComplimentaryFilter_M_Factor = (1.0f / (gyro_cmpfm_factor + 1.0f));
 #endif
 
-    static sensor_t magInertialFrame; // Magnetometer inertial frame
+    static sensor_t magBodyFrame; // Magnitude of the earth magnetic field in the body frame
 
-    rotateV(&magInertialFrame, &gyro, dt); // Rotate inertial frame according to delta angle given by the gyro reading
+    rotateV(&magBodyFrame, &gyro, dt); // Rotate body frame according to delta angle given by the gyro reading
     for (uint8_t axis = 0; axis < 3; axis++) // TODO: Should this only be done when there is actual new magnetometer data?
-        magInertialFrame.data[axis] = (magInertialFrame.data[axis] * gyro_cmpfm_factor + mag->data[axis]) * invGyroComplimentaryFilter_M_Factor; // Use complimentary filter on magnetometer values
-    angle->axis.yaw = calculateHeading(angle, &magInertialFrame); // Get heading in degrees
+        magBodyFrame.data[axis] = (magBodyFrame.data[axis] * gyro_cmpfm_factor + mag->data[axis]) * invGyroComplimentaryFilter_M_Factor; // Use complimentary filter on magnetometer values
+    angle->axis.yaw = calculateHeading(angle, &magBodyFrame); // Get heading in degrees
 #else
-    rotateV(mag, &gyro, dt); // Rotate inertial frame according to delta angle given by the gyro reading
+    rotateV(mag, &gyro, dt); // Rotate body frame according to delta angle given by the gyro reading
     angle->axis.yaw = calculateHeading(angle, mag); // Get heading in degrees
 #endif
 

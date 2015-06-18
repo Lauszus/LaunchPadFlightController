@@ -62,8 +62,9 @@ void initAltitudeHold(void) {
 #endif
 }
 
-// TODO: LPF mpu6500->inertialFrame.axis.Z
+// TODO: LPF mpu6500->accBodyFrame.axis.Z
 // TODO: Maybe the altitude should only be run when new barometer values have been read and then just use a movering average of the accelerometer data
+// TODO: Calculate the z-acceleration with respect to the inertial frame
 void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, uint32_t __attribute__((unused)) now, float dt) {
 #if USE_SONAR
     if (triggerSonar()) { // Trigger sonar
@@ -105,7 +106,7 @@ void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, u
     /* Estimate altitude, velocity and acceleration using accelerometer */
     // Fist subtract 1g, so it is reading 0g when it's flat, then the value is converted into g's, then in m/s^2 and finally into cm/s^2
     static const float gravitationalAcceleration = 9.80665f; // See: https://en.wikipedia.org/wiki/Gravitational_acceleration
-    altitude->acceleration = (float)(mpu6500->inertialFrame.axis.Z - mpu6500->accScaleFactor) / mpu6500->accScaleFactor * gravitationalAcceleration * 100.0f;
+    altitude->acceleration = (float)(mpu6500->accBodyFrame.axis.Z - mpu6500->accScaleFactor) / mpu6500->accScaleFactor * gravitationalAcceleration * 100.0f;
 
     float accDt = altitude->acceleration * dt; // Limit number of multiplications
     float accVelocity = altitude->velocity + accDt; // Estimate velocity using accelerometer
