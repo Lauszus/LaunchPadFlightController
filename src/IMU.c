@@ -88,7 +88,7 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
         magBodyFrame.data[axis] = (magBodyFrame.data[axis] * gyro_cmpfm_factor + mag->data[axis]) * invGyroComplimentaryFilter_M_Factor; // Use complimentary filter on magnetometer values
     angle->axis.yaw = calculateHeading(angle, &magBodyFrame); // Get heading in degrees
 #else
-    rotateV(mag, &gyro, dt); // Rotate body frame according to delta angle given by the gyro reading
+    rotateV(mag, &deltaAngle); // Rotate body frame according to delta angle given by the gyro reading
     angle->axis.yaw = calculateHeading(angle, mag); // Get heading in degrees
 #endif
 
