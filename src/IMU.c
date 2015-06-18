@@ -28,7 +28,6 @@
 #endif
 
 static float calculateHeading(angle_t *angle, sensor_t *mag);
-static void rotateV(sensor_t *v, sensor_t *gyroRate, float dt);
 
 // Accelerometer readings can be in any scale, but gyro rate needs to be in deg/s
 // Make sure that roll increases when tilting quadcopter to the right, pitch increases
@@ -52,7 +51,8 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
         accMagSquared += accLPF.data[axis] * accLPF.data[axis]; // Update magnitude
     }
 
-    rotateV(&mpu6500->accBodyFrame, &gyro, dt); // Rotate body frame according to delta angle given by gyro reading
+    angle_t deltaAngle = { .data = { gyro.axis.X * dt, gyro.axis.Y * dt, gyro.axis.Z * dt } };
+    rotateV(&mpu6500->accBodyFrame, &deltaAngle); // Rotate body frame according to delta angle given by gyro reading
 
     accMagSquared /= mpu6500->accScaleFactor * mpu6500->accScaleFactor; // Convert readings to g's
     if (0.72f < accMagSquared && accMagSquared < 1.32f) { // Check if < 0.85G or > 1.15G, if so we just skip new accelerometer readings
@@ -83,7 +83,7 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
 
     static sensor_t magBodyFrame; // Magnitude of the earth magnetic field in the body frame
 
-    rotateV(&magBodyFrame, &gyro, dt); // Rotate body frame according to delta angle given by the gyro reading
+    rotateV(&magBodyFrame, &deltaAngle); // Rotate body frame according to delta angle given by the gyro reading
     for (uint8_t axis = 0; axis < 3; axis++) // TODO: Should this only be done when there is actual new magnetometer data?
         magBodyFrame.data[axis] = (magBodyFrame.data[axis] * gyro_cmpfm_factor + mag->data[axis]) * invGyroComplimentaryFilter_M_Factor; // Use complimentary filter on magnetometer values
     angle->axis.yaw = calculateHeading(angle, &magBodyFrame); // Get heading in degrees
@@ -145,16 +145,15 @@ static float calculateHeading(angle_t *angle, sensor_t *mag) {
 // See: http://mathworld.wolfram.com/RotationMatrix.html,
 // http://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions#Euler_angles_.28x-y-z_extrinsic.29_.E2.86.92_Rotation_matrix and
 // https://engineering.purdue.edu/~bethel/rot2.pdf
-static void rotateV(sensor_t *v, sensor_t *gyroRate, float dt) {
+void rotateV(sensor_t *v, angle_t *angle) {
     sensor_t v_tmp = *v;
-    angle_t deltaAngle = { .data = { gyroRate->axis.X * dt, gyroRate->axis.Y * dt, gyroRate->axis.Z * dt } };
 
-    float cosx = cosf(deltaAngle.axis.roll);
-    float sinx = sinf(deltaAngle.axis.roll);
-    float cosy = cosf(deltaAngle.axis.pitch);
-    float siny = sinf(deltaAngle.axis.pitch);
-    float cosz = cosf(deltaAngle.axis.yaw);
-    float sinz = sinf(deltaAngle.axis.yaw);
+    float cosx = cosf(angle->axis.roll);
+    float sinx = sinf(angle->axis.roll);
+    float cosy = cosf(angle->axis.pitch);
+    float siny = sinf(angle->axis.pitch);
+    float cosz = cosf(angle->axis.yaw);
+    float sinz = sinf(angle->axis.yaw);
 
     float coszcosx = cosz * cosx;
     float sinzcosx = sinz * cosx;

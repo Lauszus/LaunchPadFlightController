@@ -28,6 +28,7 @@ extern "C" {
 #endif
 
 void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt);
+void rotateV(sensor_t *v, angle_t *angle);
 
 #ifdef __cplusplus
 }

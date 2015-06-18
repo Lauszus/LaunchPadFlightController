@@ -28,6 +28,7 @@
 #include "AltitudeHold.h"
 #include "BMP180.h"
 #include "Buzzer.h"
+#include "IMU.h"
 #include "MPU6500.h"
 #include "Logger.h"
 #include "PID.h"
@@ -63,8 +64,7 @@ void initAltitudeHold(void) {
 }
 
 // TODO: LPF mpu6500->accBodyFrame.axis.Z
-// TODO: Maybe the altitude should only be run when new barometer values have been read and then just use a movering average of the accelerometer data
-// TODO: Calculate the z-acceleration with respect to the inertial frame
+// TODO: Maybe the altitude should only be run when new barometer values have been read and then just use a moving average on the acceleration data
 void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, uint32_t __attribute__((unused)) now, float dt) {
 #if USE_SONAR
     if (triggerSonar()) { // Trigger sonar
@@ -95,24 +95,35 @@ void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, u
 #endif
     }
 
+    /* Rotate body frame into inertial frame */
+    angle_t rotAngle = {
+            .axis = {
+                    .roll = -angle->axis.roll * DEG_TO_RAD,
+                    .pitch = -angle->axis.pitch * DEG_TO_RAD,
+                    .yaw = -angle->axis.yaw * DEG_TO_RAD,
+            }
+    };
+    sensor_t accInertialFrame = mpu6500->accBodyFrame;
+    rotateV(&accInertialFrame, &rotAngle);
+
+    /* Estimate altitude and velocity using barometer */
     static float baro_noise_lpf = 0.95f; // TODO: Set via app
     static float baroAltitude;
 
-    /* Estimate altitude and velocity using barometer */
     float lastBaroAltitude = baroAltitude;
     baroAltitude = baro_noise_lpf * baroAltitude + (1.0f - baro_noise_lpf) * (bmp180.absoluteAltitude - bmp180.groundAltitude); // LPF to reduce baro noise
     float baroVelocity = (baroAltitude - lastBaroAltitude) / dt; // Estimate baro velocity
 
-    /* Estimate altitude, velocity and acceleration using accelerometer */
+    /* Estimate altitude, velocity using acceleration */
     // Fist subtract 1g, so it is reading 0g when it's flat, then the value is converted into g's, then in m/s^2 and finally into cm/s^2
     static const float gravitationalAcceleration = 9.80665f; // See: https://en.wikipedia.org/wiki/Gravitational_acceleration
-    altitude->acceleration = (float)(mpu6500->accBodyFrame.axis.Z - mpu6500->accScaleFactor) / mpu6500->accScaleFactor * gravitationalAcceleration * 100.0f;
+    altitude->acceleration = (float)(accInertialFrame.axis.Z - mpu6500->accScaleFactor) / mpu6500->accScaleFactor * gravitationalAcceleration * 100.0f;
 
     float accDt = altitude->acceleration * dt; // Limit number of multiplications
-    float accVelocity = altitude->velocity + accDt; // Estimate velocity using accelerometer
-    float accAltitude = altitude->altitude + altitude->velocity * dt + 0.5f * accDt * dt; // Estimate altitude using accelerometer
+    float accVelocity = altitude->velocity + accDt; // Estimate velocity using acceleration
+    float accAltitude = altitude->altitude + altitude->velocity * dt + 0.5f * accDt * dt; // Estimate altitude using acceleration
 
-    /* Estimate altitude and velocity using complimentary filter on barometer and accelerometer estimates */
+    /* Estimate altitude and velocity using complimentary filter on barometer and acceleration estimates */
     static const float velocity_cf = 0.985f; // TODO: Set in Android app
     altitude->velocity = velocity_cf * accVelocity + (1 - velocity_cf) * baroVelocity; // Estimate velocity using complimentary filter
 
