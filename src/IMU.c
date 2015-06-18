@@ -65,8 +65,8 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
     // It is then converted from radians to degrees
 #if 0 // Set to 0 to restrict roll to +-90deg instead - please read: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf
     // Eq. 25 and 26
-    angle->axis.roll = atan2f(mpu6500->accFiltered.axis.Y, mpu6500->accFiltered.axis.Z);
-    angle->axis.pitch  = atan2f(-mpu6500->accFiltered.axis.X, sqrtf(mpu6500->accFiltered.axis.Y * mpu6500->accFiltered.axis.Y + mpu6500->accFiltered.axis.Z * mpu6500->accFiltered.axis.Z)); // Use atan2 here anyway, to prevent division by 0
+    angle->axis.roll = atan2f(mpu6500->accBodyFrame.axis.Y, mpu6500->accBodyFrame.axis.Z);
+    angle->axis.pitch  = atan2f(-mpu6500->accBodyFrame.axis.X, sqrtf(mpu6500->accBodyFrame.axis.Y * mpu6500->accBodyFrame.axis.Y + mpu6500->accBodyFrame.axis.Z * mpu6500->accBodyFrame.axis.Z)); // Use atan2 here anyway, to prevent division by 0
 #else
     // Eq. 28 and 29
     angle->axis.roll = atan2f(mpu6500->accBodyFrame.axis.Y, sqrtf(mpu6500->accBodyFrame.axis.X * mpu6500->accBodyFrame.axis.X + mpu6500->accBodyFrame.axis.Z * mpu6500->accBodyFrame.axis.Z)); // Use atan2 here anyway, to prevent division by 0
