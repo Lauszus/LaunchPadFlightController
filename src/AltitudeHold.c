@@ -113,6 +113,18 @@ void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, u
 
     float lastBaroAltitude = baroAltitude;
     baroAltitude = baro_noise_lpf * baroAltitude + (1.0f - baro_noise_lpf) * (bmp180.absoluteAltitude - bmp180.groundAltitude); // LPF to reduce baro noise
+
+#if USE_SONAR && 1
+    // TODO: Add smooth transaction between sonar and barometer
+    static float altitudeBaroOffset;
+    if (altitude->sonarDistance > 0 && altitude->sonarDistance < /*3000*/100) {
+        float sonarHeight = (float)altitude->sonarDistance / 10.0f; // Convert sonar distance to cm
+        altitudeBaroOffset = baroAltitude - sonarHeight; // Set altitude offset
+        baroAltitude = sonarHeight; // Set altitude estimate equal to sonar height
+    } else
+        baroAltitude -= altitudeBaroOffset; // Subtract offset from altitude estimate
+#endif
+
     float baroVelocity = (baroAltitude - lastBaroAltitude) / dt; // Estimate baro velocity
 
     /* Estimate altitude and velocity using acceleration */
@@ -133,26 +145,6 @@ void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, u
 
     static const float altitude_lpf = 0.995f; // TODO: Set in Android app
     altitude->altitudeLpf = altitude_lpf * altitude->altitudeLpf + (1.0f - altitude_lpf) * altitude->altitude; // Low-pass filter altitude estimate
-
-#if USE_SONAR && 1
-    // TODO: Add smooth transaction between sonar and barometer
-    static float altitudeBaroOffset, altitudeOffset, altitudeLpfOffset;
-    if (altitude->sonarDistance > 0 && altitude->sonarDistance < /*3000*/100) {
-        float sonarHeight = (float)altitude->sonarDistance / 10.0f; // Convert sonar distance to cm
-
-        altitudeBaroOffset = baroAltitude - sonarHeight; // Set altitude offsets
-        altitudeOffset = altitude->altitude - sonarHeight;
-        altitudeLpfOffset = altitude->altitudeLpf - sonarHeight;
-
-        baroAltitude = sonarHeight; // Set altitude estimates equal to sonar height
-        altitude->altitude = sonarHeight;
-        altitude->altitudeLpf = sonarHeight;
-    } else {
-        baroAltitude -= altitudeBaroOffset; // Subtract offset from all altitude estimates
-        altitude->altitude -= altitudeOffset;
-        altitude->altitudeLpf -= altitudeLpfOffset;
-    }
-#endif
 
     //UARTprintf1("%d\t%d\n", (int32_t)baroAltitude, (int32_t)baroVelocity);
     //UARTprintf1("%d\t%d\t%d\n", (int32_t)accAltitude, (int32_t)accVelocity, (int32_t)altitude->acceleration);
