@@ -101,7 +101,7 @@ void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, u
             .axis = {
                     .roll = -angle->axis.roll * DEG_TO_RAD,
                     .pitch = -angle->axis.pitch * DEG_TO_RAD,
-                    .yaw = -angle->axis.yaw * DEG_TO_RAD,
+                    .yaw = angle->axis.yaw * DEG_TO_RAD, // Yaw angle is already inverted
             }
     };
     sensor_t accInertialFrame = mpu6500->accBodyFrame;
