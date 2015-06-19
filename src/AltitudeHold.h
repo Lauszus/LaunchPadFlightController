@@ -24,9 +24,19 @@
 extern "C" {
 #endif
 
+typedef struct {
+#if USE_BARO
+    float altitude, velocity, acceleration; // Values are in cm
+    float altitudeLpf; // Low-pass filtered altitude estimate
+#endif
+#if USE_SONAR
+    int16_t sonarDistance; // Distance in mm
+#endif
+} altitude_t;
+
 void initAltitudeHold(void);
-void getAltitudeHold(void);
-float updateAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, float throttle, uint32_t now, float dt);
+void getAltitudeHold(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, uint32_t now, float dt);
+float updateAltitudeHold(altitude_t *altitude, float throttle, uint32_t now, float dt);
 void resetAltitudeHold(void);
 
 #ifdef __cplusplus

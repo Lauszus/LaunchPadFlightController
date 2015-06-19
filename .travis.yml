@@ -9,7 +9,6 @@ env:
     - USE_MAG=0 USE_BARO=0 USE_SONAR=0 UART_DEBUG=0
 
 compiler:
-    - clang
     - gcc
 
 before_install:

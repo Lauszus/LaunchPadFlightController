@@ -355,7 +355,7 @@ IntDefaultHandler(void)
 //
 //*****************************************************************************
 #ifdef DEBUG
-void __error__(char *pcFilename, unsigned long ulLine)
+void __error__(char __attribute__((unused)) *pcFilename, unsigned long __attribute__((unused)) ulLine)
 {
   //
   // Something horrible happened! You need to look

@@ -176,7 +176,8 @@ int main(void) {
 #endif
 
 #if USE_SONAR || USE_BARO
-            getAltitudeHold();
+            static altitude_t altitude;
+            getAltitudeHold(&angle, &mpu6500, &altitude, now, dt);
 #endif
 
             /*UARTprintf("%d\t%d\t%d\n", (int16_t)angle.axis.roll, (int16_t)angle.axis.pitch, (int16_t)angle.axis.yaw);
@@ -238,7 +239,7 @@ int main(void) {
 
 #if USE_SONAR || USE_BARO
                 if (altitudeMode)
-                    throttle = updateAltitudeHold(&angle, &mpu6500, throttle, now, dt);
+                    throttle = updateAltitudeHold(&altitude, throttle, now, dt);
                 else
                     resetAltitudeHold();
 #endif
@@ -325,3 +326,6 @@ int main(void) {
         // Show distance in graph as well
     // Add disarm timer
     // Check that both buttons are held in while calibrating ESCs
+    // All filters should depend on dt as well, so loop time does not affect them
+        // And they should also be on the same form to make it consistent
+    // Store angles in radians as well
