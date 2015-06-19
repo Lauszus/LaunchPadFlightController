@@ -63,11 +63,11 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
     - __AUX1:__ Use 3-POS switch for self level and heading hold. At first position both are off, at second position self level is on and at third position both are on
     - __AUX2:__ Use a 2-POS switch for altitude hold. Activated when switch is high. Note that self level mode must be activated for altitude hold to work
 * Store PID values, calibration values etc. in EEPROM
-* Gyro & accelerometer calibration routine
+* Gyro, accelerometer & Magnetometercalibration routine
     - Gyro is calibrated at startup
-    - Accelerometer calibration routine can be activated in the code or by using the Android app
-* Magnetometer calibration routine (turns on Blue LED when calibrating)
-    - Magnetometer calibration routine can only be activated in the code for now
+    - Accelerometer and magnetometer calibration routine can be activated in the code or by using the Android app
+    - The magnetometer turns on the Blue LED while calibrating
+        + Rotate flight controller slowly along all three axis
 * Arm/disarm using rudder
 * Status LEDs
 * Supports CPPM receivers
@@ -83,7 +83,7 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
 
 * Motors: Dualsky 980kv
 * ESC's: [Hobby King 20A ESC 3A UBEC (F-20A)](http://hobbyking.com/hobbyking/store/uh_viewItem.asp?idProduct=37253) - flashed with SimonK bs_nfet with OneShot125 and COMP_PWM = 1
-* Props: 10x4.5
+* Propellers: 10x4.5
 * Frame: [Hobby King Q450 V3 Glass Fiber Quadcopter Frame 450mm](http://hobbyking.com/hobbyking/store/__49725__Q450_V3_Glass_Fiber_Quadcopter_Frame_450mm_Integrated_PCB_Version.html)
 * LiPo: [Turnigy 3300mAh 3S 30C Lipo Pack](http://hobbyking.com/hobbyking/store/uh_viewItem.asp?idProduct=35870)
 * RX: [OrangeRX R615X](http://www.hobbyking.com/hobbyking/store/__46632__OrangeRx_R615X_Spektrum_JR_DSM2_DSMX_Compatible_6Ch_2_4GHz_Receiver_w_CPPM.html)
