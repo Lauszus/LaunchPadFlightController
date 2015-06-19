@@ -30,7 +30,7 @@
 #include "Buzzer.h"
 #include "IMU.h"
 #include "MPU6500.h"
-#include "Logger.h"
+#include "StepResponse.h"
 #include "PID.h"
 #include "PPM.h"
 #include "RX.h"
@@ -184,7 +184,7 @@ float updateAltitudeHold(altitude_t *altitude, float throttle, uint32_t __attrib
         const float step1 = mapf(500, SONAR_MIN_DIST, SONAR_MAX_DIST, MIN_MOTOR_OUT, MAX_MOTOR_OUT); // Start at 50cm
         const float step2 = mapf(1000, SONAR_MIN_DIST, SONAR_MAX_DIST, MIN_MOTOR_OUT, MAX_MOTOR_OUT); // Go to 1m
         static const uint32_t interval = 15e6; // 15 seconds between steps
-        throttle = logStateMachine(getRXChannel(RX_AUX2_CHAN) > 90, throttle, input, step1, step2, interval, now);
+        throttle = stepResponse(getRXChannel(RX_AUX2_CHAN) > 90, throttle, input, step1, step2, interval, now);
 #endif
 
         altHoldThrottle = altHoldThrottle * (1.0f - (1.0f / throttle_noise_lpf)) + throttle * (1.0f / throttle_noise_lpf); // LPF throttle input

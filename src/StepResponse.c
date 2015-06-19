@@ -21,8 +21,8 @@
 
 #if STEP_ACRO_SELF_LEVEL || STEP_ALTITUDE_HOLD || STEP_HEADING_HOLD
 
-#include "Logger.h"
 #include "Pins.h"
+#include "StepResponse.h"
 #include "Time.h"
 #include "uartstdio1.h" // Add "UART_BUFFERED1" to preprocessor - it uses a modified version of uartstdio, so it can be used with another UART interface
 
@@ -34,28 +34,28 @@ typedef struct {
     uint32_t timeStamp;
     float setPoint;
     float input;
-} logger_t;
+} step_t;
 
-static void logData(logger_t *logger) {
+static void logData(step_t *step) {
     UARTprintf1("%u,%u,%d.%02u,%d.%02u\n",
-                                        logger->counter,
-                                        logger->timeStamp,
-                                        (int16_t)logger->setPoint, (uint16_t)(abs(logger->setPoint * 100.0f) % 100),
-                                        (int16_t)logger->input, (uint16_t)(abs(logger->input * 100.0f) % 100));
+                                        step->counter,
+                                        step->timeStamp,
+                                        (int16_t)step->setPoint, (uint16_t)(abs(step->setPoint * 100.0f) % 100),
+                                        (int16_t)step->input, (uint16_t)(abs(step->input * 100.0f) % 100));
     UARTFlushTx1(false);
 }
 
-float logStateMachine(bool active, float setPoint, float input, float step1, float step2, uint32_t interval, uint32_t now) {
+float stepResponse(bool active, float setPoint, float input, float step1, float step2, uint32_t interval, uint32_t now) {
     static uint8_t state;
 
     if (active) {
-        static logger_t logger;
+        static step_t step;
         static uint32_t startTime, stateTimer;
 
         switch (state) {
             case 0:
                 startTime = stateTimer = now; // Set initial value
-                logger.counter = 0; // Reset counter
+                step.counter = 0; // Reset counter
                 setPoint = step1;
                 state = 1;
                 break;
@@ -88,12 +88,12 @@ float logStateMachine(bool active, float setPoint, float input, float step1, flo
         if (state < 4) { // Log data if state machine is running
             GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED
 
-            logger.counter++;
-            logger.timeStamp = now - startTime;
-            logger.setPoint = setPoint;
-            logger.input = input;
+            step.counter++;
+            step.timeStamp = now - startTime;
+            step.setPoint = setPoint;
+            step.input = input;
 
-            logData(&logger);
+            logData(&step);
         } else
             GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED
     } else {

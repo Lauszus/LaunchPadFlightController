@@ -24,7 +24,7 @@
 extern "C" {
 #endif
 
-float logStateMachine(bool active, float setPoint, float input, float step1, float step2, uint32_t interval, uint32_t now);
+float stepResponse(bool active, float setPoint, float input, float step1, float step2, uint32_t interval, uint32_t now);
 
 #ifdef __cplusplus
 }

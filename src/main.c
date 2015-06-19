@@ -27,12 +27,12 @@
 #include "HMC5883L.h"
 #include "I2C.h"
 #include "IMU.h"
-#include "Logger.h"
 #include "MPU6500.h"
 #include "PPM.h"
 #include "PID.h"
 #include "Pins.h"
 #include "RX.h"
+#include "StepResponse.h"
 #include "Time.h"
 #include "UART.h"
 
@@ -210,7 +210,7 @@ int main(void) {
                     static const float step1 = 0; // Start at 0 degrees
                     static const float step2 = 15; // Tilt 15 degrees
                     static const uint32_t interval = 1e6; // 1s between steps
-                    aileron = logStateMachine(getRXChannel(RX_AUX2_CHAN) > 0, aileron, angle.axis.roll, step1, step2, interval, now);
+                    aileron = stepResponse(getRXChannel(RX_AUX2_CHAN) > 0, aileron, angle.axis.roll, step1, step2, interval, now);
 #endif
                     setPointRoll = constrain(aileron, -maxAngleInclination, maxAngleInclination) - angle.axis.roll;
                     setPointPitch = constrain(elevator, -maxAngleInclination, maxAngleInclination) - angle.axis.pitch;
@@ -224,7 +224,7 @@ int main(void) {
                     static const float step1 = 0; // Start at 0 degrees/s
                     static const float step2 = 15; // Rotate 15 degrees/s
                     static const uint32_t interval = 1e6; // 1s between steps
-                    setPointRoll = logStateMachine(getRXChannel(RX_AUX2_CHAN) > 0, setPointRoll, mpu6500.gyroRate.axis.roll, step1, step2, interval, now);
+                    setPointRoll = stepResponse(getRXChannel(RX_AUX2_CHAN) > 0, setPointRoll, mpu6500.gyroRate.axis.roll, step1, step2, interval, now);
 #endif
                 }
 
