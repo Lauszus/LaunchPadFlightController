@@ -150,8 +150,23 @@ static void updateMotor(uint8_t motor, float value) {
 }
 
 void updateMotorsAll(float *values) {
+    // Find the maximum motor output
+    float maxMotor = values[0];
+    for (uint8_t i = 1; i < 4; i++) {
+        // If one motor is above the maxthrottle threshold, we reduce the value
+        // of all motors by the amount of overshoot. That way, only one motor
+        // is at max and the relative power of each motor is preserved
+        if (values[i] > maxMotor)
+            maxMotor = values[i];
+    }
+
+    if (maxMotor > MAX_MOTOR_OUT) {
+        for (uint8_t i = 0; i < 4; i++)
+            values[i] -= maxMotor - MAX_MOTOR_OUT; // This is a way to still have good gyro corrections if at least one motor reaches its max
+    }
+
     for (uint8_t i = 0; i < 4; i++)
-        updateMotor(i, values[i]);
+        updateMotor(i, values[i]); // Write output to ESCs
 #if ONESHOT125
     syncMotors();
 #endif

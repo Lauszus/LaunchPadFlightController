@@ -264,21 +264,6 @@ int main(void) {
                 motors[2] += yawOut;
                 motors[3] -= yawOut;
 
-                // Find the maximum motor output
-                float maxMotor = motors[0];
-                for (uint8_t i = 1; i < 4; i++) {
-                    // If one motor is above the maxthrottle threshold, we reduce the value
-                    // of all motors by the amount of overshoot. That way, only one motor
-                    // is at max and the relative power of each motor is preserved
-                    if (motors[i] > maxMotor)
-                        maxMotor = motors[i];
-                }
-
-                for (uint8_t i = 0; i < 4; i++) {
-                    if (maxMotor > MAX_MOTOR_OUT)
-                        motors[i] -= maxMotor - MAX_MOTOR_OUT; // This is a way to still have good gyro corrections if at least one motor reaches its max
-                }
-
                 updateMotorsAll(motors);
 
                 //UARTprintf("%d\t%d\n", (int16_t)elevator, (int16_t)aileron);
@@ -311,7 +296,7 @@ int main(void) {
 
 // TODO:
     // Altitude hold
-        // Use sonar distance to find offset of barometer
+        // Implement altitude hold using height estimated using barometer
         // Use wide timer for sonar
         // Redo take off sequence
             // Ramp up motors slowly
@@ -329,3 +314,4 @@ int main(void) {
     // All filters should depend on dt as well, so loop time does not affect them
         // And they should also be on the same form to make it consistent
     // Store angles in radians as well
+    // IMU driver should have MPU-6500 and HMC5883L instances, so they did not have to be in the main loop
