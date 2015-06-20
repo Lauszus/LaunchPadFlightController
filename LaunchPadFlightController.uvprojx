@@ -363,7 +363,7 @@
             <useXO>0</useXO>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>rvmdk PART_TM4C123GH6PM UART_BUFFERED UART_BUFFERED1 UART_DEBUG=0 USE_MAG=1 USE_BARO=1 USE_SONAR=1 LOG_DATA=0</Define>
+              <Define>rvmdk PART_TM4C123GH6PM UART_BUFFERED UART_BUFFERED1 UART_DEBUG=0 USE_MAG=1 USE_BARO=1 USE_SONAR=1 STEP_ACRO_SELF_LEVEL=0 STEP_ALTITUDE_HOLD=0 STEP_HEADING_HOLD=0</Define>
               <Undefine></Undefine>
               <IncludePath>.\lib</IncludePath>
             </VariousControls>
@@ -519,9 +519,9 @@
               <FilePath>.\src\HeadingHold.c</FilePath>
             </File>
             <File>
-              <FileName>Logger.c</FileName>
+              <FileName>StepResponse.c</FileName>
               <FileType>1</FileType>
-              <FilePath>.\src\Logger.c</FilePath>
+              <FilePath>.\src\StepResponse.c</FilePath>
             </File>
           </Files>
         </Group>
