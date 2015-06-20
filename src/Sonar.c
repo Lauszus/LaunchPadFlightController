@@ -65,10 +65,12 @@ static void SonarHandler(void) {
     bool edge = GPIOPinRead(GPIO_SONAR_ECHO_BASE, GPIO_SONAR_ECHO); // Read the GPIO pin
 
     if (last_edge && !edge) { // Check that we are going from a positive to falling edge
-        uint32_t diff = curr - prev; // Calculate diff
-        sonarDistanceDeciUs = 10000000UL / (SysCtlClockGet() / diff); // Convert to deci-us
-        //UARTprintf("%u %d %d\n", diff, sonarDistanceDeciUs, sonarDistanceDeciUs / 57);
-        newSonarDistance = true;
+        if (curr > prev) {
+            uint32_t diff = curr - prev; // Calculate diff
+            sonarDistanceDeciUs = 10000000UL / (SysCtlClockGet() / diff); // Convert to deci-us
+            //UARTprintf("%u %d %d\n", diff, sonarDistanceDeciUs, sonarDistanceDeciUs / 57);
+            newSonarDistance = true;
+        }
     }
 
     prev = curr; // Store previous value
