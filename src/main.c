@@ -177,7 +177,7 @@ int main(void) {
 
 #if USE_SONAR || USE_BARO
             static altitude_t altitude;
-            getAltitudeHold(&angle, &mpu6500, &altitude, now, dt);
+            getAltitude(&angle, &mpu6500, &altitude, now, dt);
 #endif
 
             /*UARTprintf("%d\t%d\t%d\n", (int16_t)angle.axis.roll, (int16_t)angle.axis.pitch, (int16_t)angle.axis.yaw);
