@@ -46,6 +46,7 @@
 
 #if USE_BARO
 static bmp180_t bmp180; // Barometer readings
+static float altitudeSetPoint;
 #endif
 
 static bool altHoldActive;
@@ -117,7 +118,7 @@ void getAltitude(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, uint3
 #if USE_SONAR && 1
     // TODO: Add smooth transaction between sonar and barometer
     static float altitudeBaroOffset;
-    if (altitude->sonarDistance > 0 && altitude->sonarDistance < /*3000*/100) {
+    if (altitude->sonarDistance > 0 && altitude->sonarDistance < /*2000*/100) {
         float sonarHeight = (float)altitude->sonarDistance / 10.0f; // Convert sonar distance to cm
         altitudeBaroOffset = baroAltitude - sonarHeight; // Set altitude offset
         baroAltitude = sonarHeight; // Set altitude estimate equal to sonar height
@@ -154,15 +155,16 @@ void getAltitude(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, uint3
 #endif // USE_BARO
 }
 
-float updateAltitudeHold(altitude_t *altitude, float throttle, uint32_t __attribute__((unused)) now, float dt) {
+float updateAltitudeHold(float aux, altitude_t *altitude, float throttle, uint32_t __attribute__((unused)) now, float dt) {
+    static const float MIN_MOTOR_OFFSET = (MAX_MOTOR_OUT - MIN_MOTOR_OUT) * 0.05f; // Add 5% to minimum, so the motors are never completely shut off
+    static float altHoldInitialThrottle = -30.0f; // Throttle when altitude hold was activated
+
 #if USE_SONAR
     static const float throttle_noise_lpf = 1000.0f; // TODO: Set via app
     static float altHoldThrottle; // Low pass filtered throttle input
-    static float altHoldInitialThrottle; // Throttle when altitude hold was activated
     static int16_t altHoldSetPoint; // Altitude hold set point
 
-    // TODO: Use barometer when it exceeds 3m
-    if (altitude->sonarDistance >= 0) { // Make sure the distance is valid
+    if (aux < 60 && altitude->sonarDistance >= 0/* && altitude->sonarDistance > 2000*/) { // Make sure the distance is valid
         if (!altHoldActive) { // We just went from deactivated to active
             altHoldActive = true;
             resetPIDAltHold();
@@ -201,19 +203,37 @@ float updateAltitudeHold(altitude_t *altitude, float throttle, uint32_t __attrib
 #endif
 
         float altHoldOut = updatePID(&pidAltHold, setPoint, altitude->sonarDistance, dt);
-        static const float MIN_MOTOR_OFFSET = (MAX_MOTOR_OUT - MIN_MOTOR_OUT) * 0.05f; // Add 5% to minimum, so the motors are never completely shut off
         throttle = constrain(altHoldInitialThrottle + altHoldOut, MIN_MOTOR_OUT + MIN_MOTOR_OFFSET, MAX_MOTOR_OUT); // Throttle value is set to throttle when altitude hold were first activated plus output from PID controller
         /*UARTprintf("%u %d %d %d - %d %d %d %d\n", altHoldActive, (int32_t)altHoldThrottle, (int32_t)altHoldInitialThrottle, altHoldSetPoint,     (int32_t)setPoint, altitude->sonarDistance, (int32_t)altHoldOut, (int32_t)throttle);
         UARTFlushTx(false);*/
-    } else
-        buzzer(true); // Turn on buzzer in case sonar sensor return an error
+    }
+#if USE_BARO
+    else
+#endif // USE_BARO
 #endif // USE_SONAR
+
+#if USE_BARO
+    if (aux > 60/* && altitude->sonarDistance > 2000*/) {
+        if (!altHoldActive) { // We just went from deactivated to active
+            altHoldActive = true;
+            altHoldInitialThrottle = throttle; // Save current throttle
+            resetPIDAltHold();
+        }
+        float altHoldOut = updatePID(&pidAltHold, altitudeSetPoint * 10.0f, altitude->altitudeLpf * 10.0f, dt); // Multiply by 10 in order to convert it from cm to mm
+        throttle = constrain(altHoldInitialThrottle + altHoldOut, MIN_MOTOR_OUT + MIN_MOTOR_OFFSET, MAX_MOTOR_OUT); // Throttle value is set to throttle when altitude hold were first activated plus output from PID controller
+        /*UARTprintf1("%d %d %d %d %d\n", (int32_t)altitudeSetPoint, (int32_t)altitude->altitudeLpf, (int32_t)altHoldInitialThrottle, (int32_t)altHoldOut, (int32_t)throttle);
+        UARTFlushTx1(false);*/
+    }
+#endif // USE_BARO
 
     return throttle;
 }
 
-void resetAltitudeHold(void) {
+void resetAltitudeHold(altitude_t *altitude) {
     altHoldActive = false;
+#if USE_BARO
+    altitudeSetPoint = altitude->altitudeLpf;
+#endif // USE_BARO
 }
 
 #endif // USE_SONAR || USE_BARO
