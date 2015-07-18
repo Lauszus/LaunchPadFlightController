@@ -36,7 +36,7 @@ typedef struct {
 void initMPU6500(mpu6500_t *mpu6500);
 bool dataReadyMPU6500(void);
 void getMPU6500Data(mpu6500_t *mpu6500);
-bool calibrateAcc(mpu6500_t *mpu6500);
+bool calibrateMPU6500Acc(mpu6500_t *mpu6500);
 
 #ifdef __cplusplus
 }

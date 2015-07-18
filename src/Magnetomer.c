@@ -15,30 +15,27 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 
-#if !defined(__hmc5883l_h__) && USE_MAG
-#define __hmc5883l_h__
+#include <stdint.h>
 
-#include <stdbool.h>
+#if USE_MAG
 
-#include "Types.h"
+#include "HMC5883L.h"
+#include "Magnetometer.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+static hmc5883l_t hmc5883l;
 
-typedef struct {
-    sensorRaw_t magRaw; // Raw magnetometer readings
-    sensor_t mag; // Magnetometer readings with gain and offset applied
-    sensor_t magGain; // Magnetometer gain
-} hmc5883l_t;
-
-void initHMC5883L(hmc5883l_t *hmc5883l);
-bool dataReadyHMC5883L(void);
-void getHMC5883LData(hmc5883l_t *hmc5883l, bool calibrating);
-void calibrateHMC5883L(hmc5883l_t *hmc5883l);
-
-#ifdef __cplusplus
+void initMag(void) {
+    initHMC5883L(&hmc5883l);
 }
-#endif
 
-#endif
+void getMagData(sensor_t *mag) {
+    if (dataReadyHMC5883L()) // The HMC5883L update rate is very slow (15 Hz), so we have to check if data is ready
+        getHMC5883LData(&hmc5883l, false); // Get magnetometer values with zero values subtracted
+    *mag = hmc5883l.mag;
+}
+
+void calibrateMag(void) {
+    calibrateHMC5883L(&hmc5883l);
+}
+
+#endif // USE_MAG
