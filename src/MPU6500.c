@@ -131,7 +131,7 @@ static bool calibrateSensor(sensorRaw_t *zeroValues, uint8_t regAddr, int16_t ma
     return 0; // No error
 }
 
-static bool calibrateGyro(void) {
+static bool calibrateMPU6500Gyro(void) {
     bool rcode = calibrateSensor(&gyroZero, MPU6500_GYRO_XOUT_H, 100); // 100 / 16.4 ~= 6.10 deg/s
 
 #if UART_DEBUG
@@ -144,7 +144,7 @@ static bool calibrateGyro(void) {
     return rcode;
 }
 
-bool calibrateAcc(mpu6500_t *mpu6500) {
+bool calibrateMPU6500Acc(mpu6500_t *mpu6500) {
     bool rcode = calibrateSensor(&cfg.accZero, MPU6500_ACCEL_XOUT_H, 100); // 100 / 4096 ~= 0.02g
     cfg.accZero.axis.Z -= mpu6500->accScaleFactor; // Z-axis is reading +1g when horizontal, so we subtract 1g from the value found
 
@@ -210,7 +210,7 @@ void initMPU6500(mpu6500_t *mpu6500) {
 
     delay(100); // Wait for sensor to stabilize
 
-    while (calibrateGyro()) { // Get gyro zero values
+    while (calibrateMPU6500Gyro()) { // Get gyro zero values
         // Loop until calibration is successful
     }
 }

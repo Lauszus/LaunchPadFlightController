@@ -27,11 +27,7 @@ extern "C" {
 #endif
 
 void initBluetooth(void);
-#if USE_MAG
-bool readBluetoothData(mpu6500_t *mpu6500, hmc5883l_t *hmc5883l, angle_t *angle);
-#else
 bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle);
-#endif
 
 #ifdef __cplusplus
 }

@@ -136,7 +136,7 @@ void getHMC5883LData(hmc5883l_t *hmc5883l, bool calibrating) {
 #endif
 }
 
-void calibrateMag(hmc5883l_t *hmc5883l) {
+void calibrateHMC5883L(hmc5883l_t *hmc5883l) {
     GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED
     while (!dataReadyHMC5883L()); // Wait for data to get ready
     getHMC5883LData(hmc5883l, true); // Get magnetometer values without zero values subtracted
@@ -171,7 +171,7 @@ static bool checkLimit(sensorRaw_t sensorRaw, int16_t low, int16_t high) {
 }
 
 // Inspired by: https://code.google.com/p/open-headtracker and https://github.com/cleanflight/cleanflight/blob/master/src/main/drivers/compass_hmc5883l.c
-void intHMC5883L(hmc5883l_t *hmc5883l) {
+void initHMC5883L(hmc5883l_t *hmc5883l) {
     // Enable interrupt for DRDY (Data Ready Interrupt Pin)
     SysCtlPeripheralEnable(GPIO_HMC5883L_DRDY_PERIPH); // Enable GPIO peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
