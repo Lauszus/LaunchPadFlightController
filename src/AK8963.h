@@ -33,7 +33,6 @@ typedef struct {
 bool initAK8963(/*ak8963_t *ak8963*/);
 bool dataReadyAK8963(void);
 void getAK8963Data(ak8963_t *ak8963, bool calibrating);
-void calibrateAK8963(ak8963_t *ak8963);
 
 #ifdef __cplusplus
 }

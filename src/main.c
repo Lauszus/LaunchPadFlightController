@@ -157,7 +157,7 @@ int main(void) {
             // Read IMU
             getMPU6500Data(&mpu6500); // Get accelerometer and gyroscope values
 #if USE_MAG
-            getMagData(&mag);
+            getMagData(&mag, false); // Get magnetometer values with zero values subtracted
 #endif
             getAngles(&mpu6500, &mag, &angle, dt); // Calculate pitch, roll and yaw
 
