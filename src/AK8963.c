@@ -21,6 +21,7 @@
 #if USE_MAG
 
 #include "AK8963.h"
+#include "Buzzer.h"
 #include "EEPROM.h"
 #include "I2C.h"
 #include "MPU6500.h"
@@ -105,6 +106,7 @@ void getAK8963Data(ak8963_t *ak8963, bool calibrating) {
 #if UART_DEBUG
         UARTprintf("Magnetic sensor overflow occurred\n");
 #endif
+        buzzer(true);
     }
 
     ak8963BoardOrientation(&ak8963->mag); // Apply board orientation
