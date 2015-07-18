@@ -24,6 +24,7 @@
 #include "EEPROM.h"
 #include "I2C.h"
 #include "Pins.h"
+#include "MPU6500.h"
 #include "Time.h"
 
 #include "driverlib/gpio.h"
@@ -89,9 +90,10 @@ static void ak8963BoardOrientation(sensorRaw_t *sensorRaw) {
     // y -> x
     // z-> -z
     sensorRaw_t sensorRawTemp = *sensorRaw;
-    sensorRaw->axis.X = sensorRawTemp.axis.X;
-    sensorRaw->axis.Y = -sensorRawTemp.axis.Y;
+    sensorRaw->axis.X = sensorRawTemp.axis.Y; // Note: Do not change these, change the orientation in the MPU-6500 driver if needed
+    sensorRaw->axis.Y = sensorRawTemp.axis.X;
     sensorRaw->axis.Z = -sensorRawTemp.axis.Z;
+    mpu6500BoardOrientation(sensorRaw);
 }
 
 void getAK8963Data(ak8963_t *ak8963, bool calibrating) {

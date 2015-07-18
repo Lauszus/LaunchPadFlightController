@@ -34,6 +34,7 @@ typedef struct {
 } mpu6500_t;
 
 void initMPU6500(mpu6500_t *mpu6500);
+void mpu6500BoardOrientation(sensorRaw_t *sensorRaw);
 bool dataReadyMPU6500(void);
 void getMPU6500Data(mpu6500_t *mpu6500);
 bool calibrateMPU6500Acc(mpu6500_t *mpu6500);
