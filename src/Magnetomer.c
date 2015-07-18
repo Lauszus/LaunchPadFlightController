@@ -46,23 +46,23 @@ void initMag(void) {
     GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED, so user knows something is up
 }
 
-void getMagData(sensor_t *mag, bool calibrating) {
+bool getMagData(sensor_t *mag, bool calibrating) {
+    bool newData = false;
     if (useMagHMC5883L) {
-        if (dataReadyHMC5883L()) // The HMC5883L update rate is very slow (15 Hz), so we have to check if data is ready
+        if (dataReadyHMC5883L()) { // The HMC5883L update rate is very slow (15 Hz), so we have to check if data is ready
+            newData = true;
             getHMC5883LData(&hmc5883l, calibrating);
-        *mag = hmc5883l.mag;
+            *mag = hmc5883l.mag;
+        }
     } else if (useMagAK8963) { // The AK8963 update rate is set to 100 Hz
-        if (dataReadyAK8963())
+        if (dataReadyAK8963()) {
+            newData = true;
             getAK8963Data(&ak8963, calibrating);
-        for (uint8_t axis = 0; axis < 3; axis++)
-            mag->data[axis] = ak8963.mag.data[axis];
+            for (uint8_t axis = 0; axis < 3; axis++)
+                mag->data[axis] = ak8963.mag.data[axis];
+        }
     }
-}
-
-static bool dataReadyMag(void) {
-    if (useMagHMC5883L)
-        return dataReadyHMC5883L();
-    return dataReadyAK8963();
+    return newData;
 }
 
 void calibrateMag(void) {
@@ -70,19 +70,17 @@ void calibrateMag(void) {
         return; // Return in case no magnetometer was detected
 
     GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED
-    while (!dataReadyMag()) {
+    sensor_t mag;
+    while (!getMagData(&mag, true)) { // Get magnetometer values without zero values subtracted
         delay(1); // Wait for data to get ready
     }
-    sensor_t mag;
-    getMagData(&mag, true); // Get magnetometer values without zero values subtracted
     sensor_t magZeroMin = mag, magZeroMax = mag; // Get initial reading
 
     uint32_t now = millis();
     while ((int32_t)(millis() - now) < 30000) { // Calibrate for 30s
-        while (!dataReadyMag()) {
+        while (!getMagData(&mag, true)) { // Get magnetometer values without zero values subtracted
             delay(1); // Wait for data to get ready
         }
-        getMagData(&mag, true); // Get magnetometer values without zero values subtracted
         for (uint8_t axis = 0; axis < 3; axis++) {
             if (mag.data[axis] < magZeroMin.data[axis])
                 magZeroMin.data[axis] = mag.data[axis];
