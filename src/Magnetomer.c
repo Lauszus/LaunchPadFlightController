@@ -36,12 +36,10 @@ static ak8963_t ak8963;
 static bool useMagHMC5883L, useMagAK8963;
 
 void initMag(void) {
-    useMagHMC5883L = initHMC5883L(&hmc5883l);
-    if (useMagHMC5883L)
+    if ((useMagHMC5883L = initHMC5883L(&hmc5883l)))
         return;
-    useMagAK8963 = initAK8963();
-    if (useMagAK8963)
-            return;
+    if ((useMagAK8963 = initAK8963()))
+        return;
     beepLongBuzzer();
     GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED, so user knows something is up
 }
