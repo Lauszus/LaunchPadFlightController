@@ -23,12 +23,9 @@
 #include "AK8963.h"
 #include "EEPROM.h"
 #include "I2C.h"
-#include "Pins.h"
 #include "MPU6500.h"
 #include "Time.h"
 
-#include "driverlib/gpio.h"
-#include "inc/hw_memmap.h"
 #if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
@@ -116,29 +113,6 @@ void getAK8963Data(ak8963_t *ak8963, bool calibrating) {
         for (uint8_t axis = 0; axis < 3; axis++)
             ak8963->mag.data[axis] -= cfg.magZero.data[axis]; // Subtract zero value stored in EEPROM
     }
-}
-
-void calibrateAK8963(ak8963_t *ak8963) {
-    GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED
-    while (!dataReadyAK8963()); // Wait for data to get ready
-    getAK8963Data(ak8963, true); // Get magnetometer values without zero values subtracted
-    sensorRaw_t magZeroMin = ak8963->mag, magZeroMax = ak8963->mag; // Get initial reading
-
-    uint32_t now = millis();
-    while ((int32_t)(millis() - now) < 30000) { // Calibrate for 30s
-        while (!dataReadyAK8963()); // Wait for data to get ready
-        getAK8963Data(ak8963, true); // Get magnetometer values without zero values subtracted
-        for (uint8_t axis = 0; axis < 3; axis++) {
-            if (ak8963->mag.data[axis] < magZeroMin.data[axis])
-                magZeroMin.data[axis] = ak8963->mag.data[axis];
-            if (ak8963->mag.data[axis] > magZeroMax.data[axis])
-                magZeroMax.data[axis] = ak8963->mag.data[axis];
-        }
-    }
-    for (uint8_t axis = 0; axis < 3; axis++)
-        cfg.magZero.data[axis] = (magZeroMax.data[axis] + magZeroMin.data[axis]) / 2.0f;
-    updateConfig(); // Save new values in EEPROM
-    GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED
 }
 
 #endif // USE_MAG

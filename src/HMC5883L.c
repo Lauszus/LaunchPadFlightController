@@ -25,7 +25,6 @@
 #include "EEPROM.h"
 #include "HMC5883L.h"
 #include "I2C.h"
-#include "Pins.h"
 #include "Time.h"
 #include "Types.h"
 
@@ -134,29 +133,6 @@ void getHMC5883LData(hmc5883l_t *hmc5883l, bool calibrating) {
                                             (int16_t)hmc5883l->mag.axis.Z, (uint16_t)(abs(hmc5883l->mag.axis.Z * 1000.0f) % 1000));
     UARTFlushTx(false);
 #endif
-}
-
-void calibrateHMC5883L(hmc5883l_t *hmc5883l) {
-    GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED
-    while (!dataReadyHMC5883L()); // Wait for data to get ready
-    getHMC5883LData(hmc5883l, true); // Get magnetometer values without zero values subtracted
-    sensor_t magZeroMin = hmc5883l->mag, magZeroMax = hmc5883l->mag; // Get initial reading
-
-    uint32_t now = millis();
-    while ((int32_t)(millis() - now) < 30000) { // Calibrate for 30s
-        while (!dataReadyHMC5883L()); // Wait for data to get ready
-        getHMC5883LData(hmc5883l, true); // Get magnetometer values without zero values subtracted
-        for (uint8_t axis = 0; axis < 3; axis++) {
-            if (hmc5883l->mag.data[axis] < magZeroMin.data[axis])
-                magZeroMin.data[axis] = hmc5883l->mag.data[axis];
-            if (hmc5883l->mag.data[axis] > magZeroMax.data[axis])
-                magZeroMax.data[axis] = hmc5883l->mag.data[axis];
-        }
-    }
-    for (uint8_t axis = 0; axis < 3; axis++)
-        cfg.magZero.data[axis] = (magZeroMax.data[axis] + magZeroMin.data[axis]) / 2.0f;
-    updateConfig(); // Save new values in EEPROM
-    GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED
 }
 
 static bool checkLimit(sensorRaw_t sensorRaw, int16_t low, int16_t high) {
