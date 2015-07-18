@@ -171,7 +171,7 @@ static bool checkLimit(sensorRaw_t sensorRaw, int16_t low, int16_t high) {
 }
 
 // Inspired by: https://code.google.com/p/open-headtracker and https://github.com/cleanflight/cleanflight/blob/master/src/main/drivers/compass_hmc5883l.c
-void initHMC5883L(hmc5883l_t *hmc5883l) {
+bool initHMC5883L(hmc5883l_t *hmc5883l) {
     // Enable interrupt for DRDY (Data Ready Interrupt Pin)
     SysCtlPeripheralEnable(GPIO_HMC5883L_DRDY_PERIPH); // Enable GPIO peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
@@ -193,7 +193,7 @@ void initHMC5883L(hmc5883l_t *hmc5883l) {
 #if UART_DEBUG
         UARTprintf("Could not find HMC5883L: %c%c%c\n", buf[0], buf[1], buf[2]);
 #endif
-        while (1);
+        return false;
     }
 
     // Self test according to datasheet: http://www51.honeywell.com/aero/common/documents/myaerospacecatalog-documents/Defense_Brochures-documents/HMC5883L_3-Axis_Digital_Compass_IC.pdf page 19
@@ -215,7 +215,7 @@ void initHMC5883L(hmc5883l_t *hmc5883l) {
 #if UART_DEBUG
         UARTprintf("HMC5883L self test high limit failed: %d < %d %d %d < %d\n", LOW_LIMIT, hmc5883l->magRaw.axis.X, hmc5883l->magRaw.axis.Y, hmc5883l->magRaw.axis.Z, HIGH_LIMIT);
 #endif
-        while (1);
+        return false;
     }
 
     sensor_t mag_total = { .data = { 0, 0, 0 } };
@@ -234,7 +234,7 @@ void initHMC5883L(hmc5883l_t *hmc5883l) {
 #if UART_DEBUG
         UARTprintf("HMC5883L self test low limit failed: %d < %d %d %d < %d\n", -HIGH_LIMIT, hmc5883l->magRaw.axis.X, hmc5883l->magRaw.axis.Y, hmc5883l->magRaw.axis.Z, -LOW_LIMIT);
 #endif
-        while (1);
+        return false;
     }
 
     mag_total.axis.X -= hmc5883l->magRaw.axis.X;
@@ -259,6 +259,8 @@ void initHMC5883L(hmc5883l_t *hmc5883l) {
                                                     (int16_t)hmc5883l->magGain.axis.Z, (uint16_t)(abs(hmc5883l->magGain.axis.Z * 1000.0f) % 1000));
     UARTFlushTx(false);
 #endif
+
+    return true;
 }
 
 #endif // USE_MAG
