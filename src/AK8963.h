@@ -15,8 +15,8 @@
  e-mail   :  kristianl@tkjelectronics.com
 */
 
-#if !defined(__hmc5883l_h__) && USE_MAG
-#define __hmc5883l_h__
+#if !defined(__ak8963_h__) && USE_MAG
+#define __ak8963_h__
 
 #include <stdbool.h>
 
@@ -27,15 +27,13 @@ extern "C" {
 #endif
 
 typedef struct {
-    sensorRaw_t magRaw; // Raw magnetometer readings
-    sensor_t mag; // Magnetometer readings with gain and offset applied
-    sensor_t magGain; // Magnetometer gain
-} hmc5883l_t;
+    sensorRaw_t mag; // Magnetometer readings with offset subtracted
+} ak8963_t;
 
-bool initHMC5883L(hmc5883l_t *hmc5883l);
-bool dataReadyHMC5883L(void);
-void getHMC5883LData(hmc5883l_t *hmc5883l, bool calibrating);
-void calibrateHMC5883L(hmc5883l_t *hmc5883l);
+bool initAK8963(/*ak8963_t *ak8963*/);
+bool dataReadyAK8963(void);
+void getAK8963Data(ak8963_t *ak8963, bool calibrating);
+void calibrateAK8963(ak8963_t *ak8963);
 
 #ifdef __cplusplus
 }
