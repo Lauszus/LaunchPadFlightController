@@ -39,6 +39,7 @@
 
 #define MPU6500_ADDRESS                     0x68
 #define MPU6500_WHO_AM_I_ID                 0x70
+#define MPU9250_WHO_AM_I_ID                 0x71
 
 // Scale factor for +-2000deg/s and +-8g - see datasheet: http://www.invensense.com/mems/gyro/documents/PS-MPU-6500A-01.pdf at page 9-10
 #define MPU6500_GYRO_SCALE_FACTOR_2000      16.4f
@@ -170,9 +171,13 @@ void initMPU6500(mpu6500_t *mpu6500) {
 #if UART_DEBUG
         UARTprintf("MPU-6500 found\n");
 #endif
+    } else if (i2cBuffer[0] == MPU9250_WHO_AM_I_ID) {
+#if UART_DEBUG
+        UARTprintf("MPU-9250 found\n");
+#endif
     } else {
 #if UART_DEBUG
-        UARTprintf("Could not find MPU-6500: %2X\n", i2cBuffer[0]);
+        UARTprintf("Could not find MPU-6500 or MPU-9250: %2X\n", i2cBuffer[0]);
 #endif
         while (1);
     }
@@ -193,14 +198,15 @@ void initMPU6500(mpu6500_t *mpu6500) {
     i2cWriteData(MPU6500_ADDRESS, MPU6500_SMPLRT_DIV, i2cBuffer, 5); // Write to all five registers at once
 
     // Set accelerometer and gyroscope scale factor from datasheet
-    mpu6500->accScaleFactor = MPU6500_ACC_SCALE_FACTOR_8;
     mpu6500->gyroScaleFactor = MPU6500_GYRO_SCALE_FACTOR_2000;
+    mpu6500->accScaleFactor = MPU6500_ACC_SCALE_FACTOR_8;
 
-    /* Enable Raw Data Ready Interrupt on INT pin */
-    i2cBuffer[0] = (1 << 5) | (1 << 4); // Enable LATCH_INT_EN and INT_ANYRD_2CLEAR
-                                        // When this bit is equal to 1, the INT pin is held high until the interrupt is cleared
-                                        // When this bit is equal to 1, interrupt status is cleared if any read operation is performed
-    i2cBuffer[1] = (1 << 0);            // Enable RAW_RDY_EN - When set to 1, Enable Raw Sensor Data Ready interrupt to propagate to interrupt pin
+    /* Enable Raw Data Ready Interrupt on INT pin and enable bypass/passthrough mode */
+    i2cBuffer[0] = (1 << 5) | (1 << 4) | (1 << 1); // Enable LATCH_INT_EN, INT_ANYRD_2CLEAR and BYPASS_EN
+                                                   // When this bit is equal to 1, the INT pin is held high until the interrupt is cleared
+                                                   // When this bit is equal to 1, interrupt status is cleared if any read operation is performed
+                                                   // When asserted, the I2C_MASTER interface pins (ES_CL and ES_DA) will go into 'bypass mode' when the I2C master interface is disabled
+    i2cBuffer[1] = (1 << 0);                       // Enable RAW_RDY_EN - When set to 1, Enable Raw Sensor Data Ready interrupt to propagate to interrupt pin
     i2cWriteData(MPU6500_ADDRESS, MPU6500_INT_PIN_CFG, i2cBuffer, 2); // Write to both registers at once
 
     // Set INT input pin
