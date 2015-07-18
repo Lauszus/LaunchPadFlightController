@@ -175,7 +175,7 @@ bool getBMP180Data(bmp180_t *bmp180) {
     return false;
 }
 
-void intBMP180(bmp180_t *bmp180) {
+void initBMP180(bmp180_t *bmp180) {
     uint8_t buf[BMP185_CAL_LENGTH]; // Buffer for I2C data
 
     buf[0] = i2cRead(BMP180_ADDRESS, BMP185_CHIP_ID);

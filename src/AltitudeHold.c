@@ -55,7 +55,7 @@ void initAltitudeHold(void) {
     initSonar();
 #endif
 #if USE_BARO
-    intBMP180(&bmp180);
+    initBMP180(&bmp180);
 #endif
 
 #if UART_DEBUG && USE_BARO
