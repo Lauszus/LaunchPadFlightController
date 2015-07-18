@@ -20,6 +20,7 @@
 #if USE_MAG
 
 #include "AK8963.h"
+#include "Buzzer.h"
 #include "EEPROM.h"
 #include "HMC5883L.h"
 #include "Magnetometer.h"
@@ -39,6 +40,10 @@ void initMag(void) {
     if (useMagHMC5883L)
         return;
     useMagAK8963 = initAK8963();
+    if (useMagAK8963)
+            return;
+    beepLongBuzzer();
+    GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED, so user knows something is up
 }
 
 void getMagData(sensor_t *mag, bool calibrating) {
