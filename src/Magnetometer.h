@@ -25,7 +25,7 @@ extern "C" {
 #endif
 
 void initMag(void);
-void getMagData(sensor_t *mag, bool calibrating);
+bool getMagData(sensor_t *mag, bool calibrating);
 void calibrateMag(void);
 
 #ifdef __cplusplus
