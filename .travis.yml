@@ -1,5 +1,12 @@
 language: c
 
+sudo: false
+
+addons:
+    apt:
+        packages:
+            - libc6-i386
+
 env:
     - USE_MAG=1 USE_BARO=1 USE_SONAR=1 UART_DEBUG=1 DEBUG=1 STEP_ACRO_SELF_LEVEL=1 STEP_ALTITUDE_HOLD=1 STEP_HEADING_HOLD=1
     - USE_MAG=0 USE_BARO=0 USE_SONAR=0 UART_DEBUG=1 DEBUG=1
@@ -11,13 +18,9 @@ env:
 compiler:
     - gcc
 
-before_install:
-    - sudo apt-get update
-    - wget "https://launchpad.net/gcc-arm-embedded/4.8/4.8-2014-q3-update/+download/gcc-arm-none-eabi-4_8-2014q3-20140805-linux.tar.bz2"
-
 install:
-    - sudo apt-get install libc6-i386
-    - tar -xf gcc-arm-none-eabi-4_8-2014q3-20140805-linux.tar.bz2
+    - wget "https://launchpad.net/gcc-arm-embedded/4.8/4.8-2014-q3-update/+download/gcc-arm-none-eabi-4_8-2014q3-20140805-linux.tar.bz2"
+    - tar -xvf gcc-arm-none-eabi-4_8-2014q3-20140805-linux.tar.bz2
     - export PATH=$PATH:$PWD/gcc-arm-none-eabi-4_8-2014q3/bin
 
 before_script: arm-none-eabi-gcc --version
