@@ -98,9 +98,9 @@ void getAK8963Data(ak8963_t *ak8963, bool calibrating) {
     uint8_t buf[AK8963_DATA_LENGTH];
     i2cReadData(AK8963_ADDRESS, AK8963_HXL, buf, AK8963_DATA_LENGTH); // Get magnetometer values
 
-    ak8963->mag.axis.X = (buf[1] << 8) | buf[0];
-    ak8963->mag.axis.Y = (buf[3] << 8) | buf[2];
-    ak8963->mag.axis.Z = (buf[5] << 8) | buf[4];
+    ak8963->mag.axis.X = (int16_t)((buf[1] << 8) | buf[0]);
+    ak8963->mag.axis.Y = (int16_t)((buf[3] << 8) | buf[2]);
+    ak8963->mag.axis.Z = (int16_t)((buf[5] << 8) | buf[4]);
 
     if (buf[6] & AK8963_STATUS_2_HOFL_BIT) { // ST2 register must be read!
 #if UART_DEBUG

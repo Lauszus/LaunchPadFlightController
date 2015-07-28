@@ -109,9 +109,9 @@ static void getHMC5883LDataRaw(sensorRaw_t *magRaw) {
     uint8_t buf[6];
     i2cReadData(HMC5883L_ADDRESS, HMC5883L_OUTPUT_REG_X_MSB, buf, 6); // Get magnetometer values
 
-    magRaw->axis.X = (buf[0] << 8) | buf[1];
-    magRaw->axis.Z = (buf[2] << 8) | buf[3];
-    magRaw->axis.Y = (buf[4] << 8) | buf[5];
+    magRaw->axis.X = (int16_t)((buf[0] << 8) | buf[1]);
+    magRaw->axis.Z = (int16_t)((buf[2] << 8) | buf[3]);
+    magRaw->axis.Y = (int16_t)((buf[4] << 8) | buf[5]);
 }
 
 void getHMC5883LData(hmc5883l_t *hmc5883l, bool calibrating) {
