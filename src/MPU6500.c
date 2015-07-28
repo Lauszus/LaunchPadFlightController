@@ -71,13 +71,13 @@ void getMPU6500Data(mpu6500_t *mpu6500) {
     uint8_t buf[14];
     i2cReadData(MPU6500_ADDRESS, MPU6500_ACCEL_XOUT_H, buf, 14); // Note that we can't write directly into mpu6500_t, because of endian conflict. So it has to be done manually
 
-    mpu6500->acc.axis.X = (buf[0] << 8) | buf[1];
-    mpu6500->acc.axis.Y = (buf[2] << 8) | buf[3];
-    mpu6500->acc.axis.Z = (buf[4] << 8) | buf[5];
+    mpu6500->acc.axis.X = (int16_t)((buf[0] << 8) | buf[1]);
+    mpu6500->acc.axis.Y = (int16_t)((buf[2] << 8) | buf[3]);
+    mpu6500->acc.axis.Z = (int16_t)((buf[4] << 8) | buf[5]);
 
-    mpu6500->gyro.axis.X = (buf[8] << 8) | buf[9];
-    mpu6500->gyro.axis.Y = (buf[10] << 8) | buf[11];
-    mpu6500->gyro.axis.Z = (buf[12] << 8) | buf[13];
+    mpu6500->gyro.axis.X = (int16_t)((buf[8] << 8) | buf[9]);
+    mpu6500->gyro.axis.Y = (int16_t)((buf[10] << 8) | buf[11]);
+    mpu6500->gyro.axis.Z = (int16_t)((buf[12] << 8) | buf[13]);
 
     mpu6500BoardOrientation(&mpu6500->acc); // Apply board orientation
     mpu6500BoardOrientation(&mpu6500->gyro);
@@ -110,9 +110,9 @@ static bool calibrateSensor(sensorRaw_t *zeroValues, uint8_t regAddr, int16_t ma
             // Wait until new date is ready
         }
         i2cReadData(MPU6500_ADDRESS, regAddr, buf, 6);
-        sensorBuffer[0][i] = (buf[0] << 8) | buf[1]; // X
-        sensorBuffer[1][i] = (buf[2] << 8) | buf[3]; // Y
-        sensorBuffer[2][i] = (buf[4] << 8) | buf[5]; // Z
+        sensorBuffer[0][i] = (int16_t)((buf[0] << 8) | buf[1]); // X
+        sensorBuffer[1][i] = (int16_t)((buf[2] << 8) | buf[3]); // Y
+        sensorBuffer[2][i] = (int16_t)((buf[4] << 8) | buf[5]); // Z
         delay(10);
     }
 
