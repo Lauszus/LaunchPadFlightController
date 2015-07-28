@@ -27,10 +27,10 @@ extern "C" {
 #endif
 
 typedef struct {
-    sensorRaw_t mag; // Magnetometer readings with offset subtracted
+    sensor_t mag; // Magnetometer readings with offset subtracted
 } ak8963_t;
 
-bool initAK8963(/*ak8963_t *ak8963*/);
+bool initAK8963(void);
 bool dataReadyAK8963(void);
 void getAK8963Data(ak8963_t *ak8963, bool calibrating);
 

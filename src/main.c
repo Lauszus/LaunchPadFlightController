@@ -304,3 +304,4 @@ int main(void) {
     // Make yaw right hand rotation
     // Move all IMU related code into IMU driver
         // Also make generic accGyro driver
+    // Use pointer for magnetometer functions
