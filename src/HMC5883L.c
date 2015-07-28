@@ -191,7 +191,7 @@ bool initHMC5883L(hmc5883l_t *hmc5883l) {
 #if UART_DEBUG
         UARTprintf("HMC5883L self test high limit failed: %d < %d %d %d < %d\n", LOW_LIMIT, hmc5883l->magRaw.axis.X, hmc5883l->magRaw.axis.Y, hmc5883l->magRaw.axis.Z, HIGH_LIMIT);
 #endif
-        return false;
+        while (1);
     }
 
     sensor_t mag_total = { .data = { 0, 0, 0 } };
@@ -210,7 +210,7 @@ bool initHMC5883L(hmc5883l_t *hmc5883l) {
 #if UART_DEBUG
         UARTprintf("HMC5883L self test low limit failed: %d < %d %d %d < %d\n", -HIGH_LIMIT, hmc5883l->magRaw.axis.X, hmc5883l->magRaw.axis.Y, hmc5883l->magRaw.axis.Z, -LOW_LIMIT);
 #endif
-        return false;
+        while (1);
     }
 
     mag_total.axis.X -= hmc5883l->magRaw.axis.X;
