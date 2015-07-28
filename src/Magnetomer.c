@@ -40,6 +40,8 @@ void initMag(void) {
         return;
     if ((useMagAK8963 = initAK8963()))
         return;
+
+    // No magnetometer was detected
     beepLongBuzzer();
     GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED, so user knows something is up
 }
@@ -56,8 +58,7 @@ bool getMagData(sensor_t *mag, bool calibrating) {
         if (dataReadyAK8963()) {
             newData = true;
             getAK8963Data(&ak8963, calibrating);
-            for (uint8_t axis = 0; axis < 3; axis++)
-                mag->data[axis] = ak8963.mag.data[axis];
+            *mag = ak8963.mag;
         }
     }
     return newData;

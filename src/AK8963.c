@@ -98,9 +98,10 @@ void getAK8963Data(ak8963_t *ak8963, bool calibrating) {
     uint8_t buf[AK8963_DATA_LENGTH];
     i2cReadData(AK8963_ADDRESS, AK8963_HXL, buf, AK8963_DATA_LENGTH); // Get magnetometer values
 
-    ak8963->mag.axis.X = (int16_t)((buf[1] << 8) | buf[0]);
-    ak8963->mag.axis.Y = (int16_t)((buf[3] << 8) | buf[2]);
-    ak8963->mag.axis.Z = (int16_t)((buf[5] << 8) | buf[4]);
+    sensorRaw_t magRaw;
+    magRaw.axis.X = (int16_t)((buf[1] << 8) | buf[0]);
+    magRaw.axis.Y = (int16_t)((buf[3] << 8) | buf[2]);
+    magRaw.axis.Z = (int16_t)((buf[5] << 8) | buf[4]);
 
     if (buf[6] & AK8963_STATUS_2_HOFL_BIT) { // ST2 register must be read!
 #if UART_DEBUG
@@ -109,10 +110,11 @@ void getAK8963Data(ak8963_t *ak8963, bool calibrating) {
         buzzer(true);
     }
 
-    ak8963BoardOrientation(&ak8963->mag); // Apply board orientation
+    ak8963BoardOrientation(&magRaw); // Apply board orientation
 
-    if (!calibrating) { // If we are not calibrating, then subtract zero values
-        for (uint8_t axis = 0; axis < 3; axis++)
+    for (uint8_t axis = 0; axis < 3; axis++) {
+        ak8963->mag.data[axis] = magRaw.data[axis];
+        if (!calibrating) // If we are not calibrating, then subtract zero values
             ak8963->mag.data[axis] -= cfg.magZero.data[axis]; // Subtract zero value stored in EEPROM
     }
 }
