@@ -13,7 +13,9 @@ More information can be found at the following blog post: <http://blog.tkjelectr
 
 Some video demonstrations of the flight controller can be seen at my [YouTube channel](https://www.youtube.com/playlist?list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg).
 
+# Report
 
+The report I wrote for my Bachelor's these can be found in the [docs](docs) folder. The 3D model and Matlab code can be found in there as well.
 
 # Features
 
