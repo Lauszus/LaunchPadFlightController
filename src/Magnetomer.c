@@ -16,6 +16,7 @@
 */
 
 #include <stdint.h>
+#include <stdbool.h>
 
 #if USE_MAG
 
@@ -36,9 +37,9 @@ static ak8963_t ak8963;
 static bool useMagHMC5883L, useMagAK8963;
 
 void initMag(void) {
-    if ((useMagHMC5883L = initHMC5883L(&hmc5883l)))
+    if ((useMagHMC5883L = initHMC5883L(&hmc5883l)) != false)
         return;
-    if ((useMagAK8963 = initAK8963()))
+    if ((useMagAK8963 = initAK8963()) != false)
         return;
 
     // No magnetometer was detected
