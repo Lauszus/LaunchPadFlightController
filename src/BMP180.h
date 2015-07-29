@@ -47,7 +47,7 @@ typedef struct {
     bmp180_cal_t cal; // Calibration data
 } bmp180_t;
 
-void intBMP180(bmp180_t *bmp180);
+void initBMP180(bmp180_t *bmp180);
 bool getBMP180Data(bmp180_t *bmp180);
 
 #ifdef __cplusplus

@@ -21,8 +21,8 @@
 
 #include "Bluetooth.h"
 #include "Buzzer.h"
-#include "HMC5883L.h"
 #include "EEPROM.h"
+#include "Magnetometer.h"
 #include "MPU6500.h"
 #include "Time.h"
 #include "UART.h"
@@ -111,11 +111,7 @@ void initBluetooth(void) {
     }
 }
 
-#if USE_MAG
-bool readBluetoothData(mpu6500_t *mpu6500, hmc5883l_t *hmc5883l, angle_t *angle) {
-#else
 bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
-#endif
     bool newValuesReceived = false;
     msg_t msg;
 
@@ -248,7 +244,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
 
                 case CAL_ACC:
                     if (msg.length == 0 && getData(msg, NULL, 0)) { // Check length and the checksum
-                        while (calibrateAcc(mpu6500)) { // Get accelerometer zero values
+                        while (calibrateMPU6500Acc(mpu6500)) { // Get accelerometer zero values
                             // Loop until calibration values are found
                         }
                         beepLongBuzzer();
@@ -265,7 +261,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
                 case CAL_MAG:
 #if USE_MAG
                     if (msg.length == 0 && getData(msg, NULL, 0)) { // Check length and the checksum
-                        calibrateMag(hmc5883l); // Get magnetometer zero values
+                        calibrateMag(); // Get magnetometer zero values
                         beepLongBuzzer();
 #if DEBUG_BLUETOOTH_PROTOCOL
                         UARTprintf("CAL_MAG\n");

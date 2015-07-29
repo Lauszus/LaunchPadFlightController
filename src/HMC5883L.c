@@ -25,7 +25,6 @@
 #include "EEPROM.h"
 #include "HMC5883L.h"
 #include "I2C.h"
-#include "Pins.h"
 #include "Time.h"
 #include "Types.h"
 
@@ -110,9 +109,9 @@ static void getHMC5883LDataRaw(sensorRaw_t *magRaw) {
     uint8_t buf[6];
     i2cReadData(HMC5883L_ADDRESS, HMC5883L_OUTPUT_REG_X_MSB, buf, 6); // Get magnetometer values
 
-    magRaw->axis.X = (buf[0] << 8) | buf[1];
-    magRaw->axis.Z = (buf[2] << 8) | buf[3];
-    magRaw->axis.Y = (buf[4] << 8) | buf[5];
+    magRaw->axis.X = (int16_t)((buf[0] << 8) | buf[1]);
+    magRaw->axis.Z = (int16_t)((buf[2] << 8) | buf[3]);
+    magRaw->axis.Y = (int16_t)((buf[4] << 8) | buf[5]);
 }
 
 void getHMC5883LData(hmc5883l_t *hmc5883l, bool calibrating) {
@@ -136,29 +135,6 @@ void getHMC5883LData(hmc5883l_t *hmc5883l, bool calibrating) {
 #endif
 }
 
-void calibrateMag(hmc5883l_t *hmc5883l) {
-    GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED
-    while (!dataReadyHMC5883L()); // Wait for data to get ready
-    getHMC5883LData(hmc5883l, true); // Get magnetometer values without zero values subtracted
-    sensor_t magZeroMin = hmc5883l->mag, magZeroMax = hmc5883l->mag; // Get initial reading
-
-    uint32_t now = millis();
-    while ((int32_t)(millis() - now) < 30000) { // Calibrate for 30s
-        while (!dataReadyHMC5883L()); // Wait for data to get ready
-        getHMC5883LData(hmc5883l, true); // Get magnetometer values without zero values subtracted
-        for (uint8_t axis = 0; axis < 3; axis++) {
-            if (hmc5883l->mag.data[axis] < magZeroMin.data[axis])
-                magZeroMin.data[axis] = hmc5883l->mag.data[axis];
-            if (hmc5883l->mag.data[axis] > magZeroMax.data[axis])
-                magZeroMax.data[axis] = hmc5883l->mag.data[axis];
-        }
-    }
-    for (uint8_t axis = 0; axis < 3; axis++)
-        cfg.magZero.data[axis] = (magZeroMax.data[axis] + magZeroMin.data[axis]) / 2.0f;
-    updateConfig(); // Save new values in EEPROM
-    GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED
-}
-
 static bool checkLimit(sensorRaw_t sensorRaw, int16_t low, int16_t high) {
     bool status = true;
     for (uint8_t axis = 0; axis < 3; axis++) {
@@ -171,18 +147,7 @@ static bool checkLimit(sensorRaw_t sensorRaw, int16_t low, int16_t high) {
 }
 
 // Inspired by: https://code.google.com/p/open-headtracker and https://github.com/cleanflight/cleanflight/blob/master/src/main/drivers/compass_hmc5883l.c
-void intHMC5883L(hmc5883l_t *hmc5883l) {
-    // Enable interrupt for DRDY (Data Ready Interrupt Pin)
-    SysCtlPeripheralEnable(GPIO_HMC5883L_DRDY_PERIPH); // Enable GPIO peripheral
-    SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
-
-    GPIOPinTypeGPIOInput(GPIO_HMC5883L_DRDY_BASE, GPIO_HMC5883L_DRDY_PIN); // Set DRDY pin as input
-    GPIOIntTypeSet(GPIO_HMC5883L_DRDY_BASE, GPIO_HMC5883L_DRDY_PIN, GPIO_FALLING_EDGE); // Enable interrupt on falling
-
-    IntPrioritySet(INT_GPIOF, 2); // Set interrupt priority to 2
-    GPIOIntEnable(GPIO_HMC5883L_DRDY_BASE, GPIO_HMC5883L_DRDY_PIN); // Enable interrupt
-    GPIOIntRegister(GPIO_HMC5883L_DRDY_BASE, drdyHandler); // Register interrupt handler
-
+bool initHMC5883L(hmc5883l_t *hmc5883l) {
     uint8_t buf[3]; // Buffer for I2C data
     i2cReadData(HMC5883L_ADDRESS, HMC5883L_ID_REG_A, buf, 3);
     if (buf[0] == 'H' && buf[1] == '4' && buf[2] == '3') { // Read identification registers
@@ -193,8 +158,19 @@ void intHMC5883L(hmc5883l_t *hmc5883l) {
 #if UART_DEBUG
         UARTprintf("Could not find HMC5883L: %c%c%c\n", buf[0], buf[1], buf[2]);
 #endif
-        while (1);
+        return false;
     }
+
+    // Enable interrupt for DRDY (Data Ready Interrupt Pin)
+    SysCtlPeripheralEnable(GPIO_HMC5883L_DRDY_PERIPH); // Enable GPIO peripheral
+    SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
+
+    GPIOPinTypeGPIOInput(GPIO_HMC5883L_DRDY_BASE, GPIO_HMC5883L_DRDY_PIN); // Set DRDY pin as input
+    GPIOIntTypeSet(GPIO_HMC5883L_DRDY_BASE, GPIO_HMC5883L_DRDY_PIN, GPIO_FALLING_EDGE); // Enable interrupt on falling
+
+    IntPrioritySet(INT_GPIOF, 2); // Set interrupt priority to 2
+    GPIOIntEnable(GPIO_HMC5883L_DRDY_BASE, GPIO_HMC5883L_DRDY_PIN); // Enable interrupt
+    GPIOIntRegister(GPIO_HMC5883L_DRDY_BASE, drdyHandler); // Register interrupt handler
 
     // Self test according to datasheet: http://www51.honeywell.com/aero/common/documents/myaerospacecatalog-documents/Defense_Brochures-documents/HMC5883L_3-Axis_Digital_Compass_IC.pdf page 19
     // Only difference is that I use 2.5 Ga
@@ -259,6 +235,8 @@ void intHMC5883L(hmc5883l_t *hmc5883l) {
                                                     (int16_t)hmc5883l->magGain.axis.Z, (uint16_t)(abs(hmc5883l->magGain.axis.Z * 1000.0f) % 1000));
     UARTFlushTx(false);
 #endif
+
+    return true;
 }
 
 #endif // USE_MAG

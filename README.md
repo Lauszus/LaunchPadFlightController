@@ -71,8 +71,8 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
 * Arm/disarm using rudder
 * Status LEDs
 * Supports CPPM receivers
-* Gyro & accelerometer (MPU-6500)
-* Magnetometer (HMC5883L)
+* Gyro & accelerometer (MPU-6500 or MPU-9250)
+* Magnetometer (HMC5883L or AK8963 (inside MPU-9250))
 * Barometer (BMP180)
 * Ultrasound sensor aka sonar (HC-SR04)
 * [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid)
