@@ -148,17 +148,6 @@ static bool checkLimit(sensorRaw_t sensorRaw, int16_t low, int16_t high) {
 
 // Inspired by: https://code.google.com/p/open-headtracker and https://github.com/cleanflight/cleanflight/blob/master/src/main/drivers/compass_hmc5883l.c
 bool initHMC5883L(hmc5883l_t *hmc5883l) {
-    // Enable interrupt for DRDY (Data Ready Interrupt Pin)
-    SysCtlPeripheralEnable(GPIO_HMC5883L_DRDY_PERIPH); // Enable GPIO peripheral
-    SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
-
-    GPIOPinTypeGPIOInput(GPIO_HMC5883L_DRDY_BASE, GPIO_HMC5883L_DRDY_PIN); // Set DRDY pin as input
-    GPIOIntTypeSet(GPIO_HMC5883L_DRDY_BASE, GPIO_HMC5883L_DRDY_PIN, GPIO_FALLING_EDGE); // Enable interrupt on falling
-
-    IntPrioritySet(INT_GPIOF, 2); // Set interrupt priority to 2
-    GPIOIntEnable(GPIO_HMC5883L_DRDY_BASE, GPIO_HMC5883L_DRDY_PIN); // Enable interrupt
-    GPIOIntRegister(GPIO_HMC5883L_DRDY_BASE, drdyHandler); // Register interrupt handler
-
     uint8_t buf[3]; // Buffer for I2C data
     i2cReadData(HMC5883L_ADDRESS, HMC5883L_ID_REG_A, buf, 3);
     if (buf[0] == 'H' && buf[1] == '4' && buf[2] == '3') { // Read identification registers
@@ -171,6 +160,17 @@ bool initHMC5883L(hmc5883l_t *hmc5883l) {
 #endif
         return false;
     }
+
+    // Enable interrupt for DRDY (Data Ready Interrupt Pin)
+    SysCtlPeripheralEnable(GPIO_HMC5883L_DRDY_PERIPH); // Enable GPIO peripheral
+    SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
+
+    GPIOPinTypeGPIOInput(GPIO_HMC5883L_DRDY_BASE, GPIO_HMC5883L_DRDY_PIN); // Set DRDY pin as input
+    GPIOIntTypeSet(GPIO_HMC5883L_DRDY_BASE, GPIO_HMC5883L_DRDY_PIN, GPIO_FALLING_EDGE); // Enable interrupt on falling
+
+    IntPrioritySet(INT_GPIOF, 2); // Set interrupt priority to 2
+    GPIOIntEnable(GPIO_HMC5883L_DRDY_BASE, GPIO_HMC5883L_DRDY_PIN); // Enable interrupt
+    GPIOIntRegister(GPIO_HMC5883L_DRDY_BASE, drdyHandler); // Register interrupt handler
 
     // Self test according to datasheet: http://www51.honeywell.com/aero/common/documents/myaerospacecatalog-documents/Defense_Brochures-documents/HMC5883L_3-Axis_Digital_Compass_IC.pdf page 19
     // Only difference is that I use 2.5 Ga
