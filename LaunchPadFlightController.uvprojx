@@ -523,6 +523,16 @@
               <FileType>1</FileType>
               <FilePath>.\src\StepResponse.c</FilePath>
             </File>
+            <File>
+              <FileName>AK8963.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\AK8963.c</FilePath>
+            </File>
+            <File>
+              <FileName>Magnetomer.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\Magnetomer.c</FilePath>
+            </File>
           </Files>
         </Group>
       </Groups>
