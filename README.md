@@ -52,22 +52,22 @@ The report I wrote for my Bachelor's these can be found in the [docs](docs) fold
 
 # Pinout
 
-| Pin  |    Connection  |
-|------|----------------|
-| PB6  |     Motor 1    |
-| PB7  |     Motor 2    |
-| PB4  |     Motor 3    |
-| PB5  |     Motor 4    |
-| PC6  |    CPPM input  |
-| PA6  |      SCL       |
-| PA7  |      SDA       |
-| PE3  |  MPU-6500 INT  |
-| PB2  |   Sonar echo   |
-| PE0  |  Sonar trigger |
-| PB0* |    UART1 RX    |
-| PB1* |    UART1 TX    |
-| PA5  |     Buzzer     |
-| PE4  |  HMC5883L DRDY |
+| Pin  |         Connection      |
+|------|-------------------------|
+| PB6  |          Motor 1        |
+| PB7  |          Motor 2        |
+| PB4  |          Motor 3        |
+| PB5  |          Motor 4        |
+| PC6  |         CPPM input      |
+| PA6  |           SCL           |
+| PA7  |           SDA           |
+| PE3  |  MPU-6500/MPU-9250 INT  |
+| PB2  |        Sonar echo       |
+| PE0  |       Sonar trigger     |
+| PB0* |         UART1 RX        |
+| PB1* |         UART1 TX        |
+| PA5  |          Buzzer         |
+| PE4  |       HMC5883L DRDY     |
 
 \* UART1 is connected to a HC-06 Bluetooth module running at a baudrate of 115200. __Not 5V tolerant!__, so make sure your Bluetooth module outputs 3.3 voltage level or use logic level converter.
 
