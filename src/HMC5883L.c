@@ -155,12 +155,8 @@ static bool checkLimit(sensorRaw_t sensorRaw, int16_t low, int16_t high) {
 bool initHMC5883L(void) {
     uint8_t buf[3]; // Buffer for I2C data
     i2cReadData(HMC5883L_ADDRESS, HMC5883L_ID_REG_A, buf, 3);
-    if (buf[0] == 'H' && buf[1] == '4' && buf[2] == '3') { // Read identification registers
-#if UART_DEBUG
-        UARTprintf("HMC5883L found\n");
-#endif
-    } else {
-#if UART_DEBUG
+    if (buf[0] != 'H' || buf[1] != '4' || buf[2] != '3') { // Read identification registers
+#if 0 && UART_DEBUG
         UARTprintf("Could not find HMC5883L: %c%c%c\n", buf[0], buf[1], buf[2]);
 #endif
         return false;

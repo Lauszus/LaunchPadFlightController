@@ -30,6 +30,9 @@
 
 #include "driverlib/gpio.h"
 #include "inc/hw_memmap.h"
+#if UART_DEBUG
+#include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
+#endif
 
 // Function pointer used to call the low-level magnetometer drivers
 static bool (*dataReady)(void);
@@ -37,18 +40,26 @@ static void (*getData)(sensor_t *mag, bool calibrating);
 
 void initMag(void) {
     if (initHMC5883L()) { // The HMC5883L update rate is very slow (15 Hz)
+#if UART_DEBUG
+        UARTprintf("HMC5883L found\n");
+#endif
         dataReady = &dataReadyHMC5883L;
         getData = &getHMC5883LData;
         return;
     } else if (initAK8963()) { // The AK8963 update rate is set to 100 Hz
+#if UART_DEBUG
+        UARTprintf("AK8963 found\n");
+#endif
         dataReady = &dataReadyAK8963;
         getData = &getAK8963Data;
         return;
     }
 
-    // No magnetometer was detected
-    beepLongBuzzer();
+#if UART_DEBUG
+    UARTprintf("No magnetometer found!\n");
+#endif
     GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED, so user knows something is up
+    beepLongBuzzer();
 }
 
 bool getMagData(sensor_t *mag, bool calibrating) {
