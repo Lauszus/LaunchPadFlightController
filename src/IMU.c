@@ -101,9 +101,9 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
     for (uint8_t axis = 0; axis < 3; axis++)
         gyroAngle.data[axis] += mpu6500->gyroRate.data[axis] * dt; // Gyro angle is only used for debugging
 
-    UARTprintf("%d\t%d\t", (int16_t)gyroAngle.roll, (int16_t)angle->roll);
-    UARTprintf("%d\t%d\t", (int16_t)gyroAngle.pitch, (int16_t)angle->pitch);
-    UARTprintf("%d\t%d\n", (int16_t)gyroAngle.yaw, (int16_t)angle->yaw);
+    UARTprintf("%d\t%d\t", (int16_t)gyroAngle.axis.roll, (int16_t)angle->axis.roll);
+    UARTprintf("%d\t%d\t", (int16_t)gyroAngle.axis.pitch, (int16_t)angle->axis.pitch);
+    UARTprintf("%d\t%d\n", (int16_t)gyroAngle.axis.yaw, (int16_t)angle->axis.yaw);
     UARTFlushTx(false);
 #endif
 }

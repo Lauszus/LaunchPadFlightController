@@ -9,53 +9,13 @@ It is written for the [Tiva C Series TM4C123G LaunchPad](http://www.ti.com/tool/
 
 More information can be found at the following blog post: <http://blog.tkjelectronics.dk/2015/01/launchpad-flight-controller/>.
 
-# Build instructions
-
-In order to built this project you need to download Keil µVision IDE 5 or use [Make](http://www.gnu.org/software/make/).
-
-If you are using Keil µVision IDE 5, then simply open the [project file](LaunchPadFlightController.uvprojx).
-
-If you are using Make, then you will need to first download and install [gcc-arm-none-eabi](https://launchpad.net/gcc-arm-embedded/4.8/4.8-2014-q3-update) and then install [lm4tools](https://github.com/utzig/lm4tools).
-
-lm4tools can be installed like so:
-
-```bash
-$ git clone https://github.com/utzig/lm4tools.git
-$ cd lm4tools/
-$ cd lm4flash/ && make
-$ sudo cp lm4flash /usr/bin/
-$ cd ..
-$ cd lmicdiusb/ && make
-$ sudo cp lmicdi /usr/bin/
-```
-
-If you are on a Mac, I recommend installing gcc-arm-none-eabi using Homebrew like so:
-
-```bash
-$ brew tap PX4/homebrew-px4
-$ brew update
-$ brew install gcc-arm-none-eabi
-```
-
-OpenOCD can be installed via Homebrew as well:
-
-```bash
-$ brew install openocd
-```
-
-# Android application
-
-Android application is available at the following repository: <https://github.com/Lauszus/LaunchPadFlightControllerAndroid>.
-
-[![Screenshots](https://raw.githubusercontent.com/Lauszus/LaunchPadFlightControllerAndroid/master/android_screenshots.png)](https://github.com/Lauszus/LaunchPadFlightControllerAndroid)
-
 # Video demonstrations
 
 Some video demonstrations of the flight controller can be seen at my [YouTube channel](https://www.youtube.com/playlist?list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg).
 
-# GUI
+# Report
 
-A simple GUI can be found inside the [GUI](GUI) directory. It can be used to visualize the orientation of the flight controller.
+The report I wrote for my Bachelor's these can be found in the [docs](docs) folder. The 3D model and Matlab code can be found in there as well.
 
 # Features
 
@@ -71,8 +31,8 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
 * Arm/disarm using rudder
 * Status LEDs
 * Supports CPPM receivers
-* Gyro & accelerometer (MPU-6500)
-* Magnetometer (HMC5883L)
+* Gyro & accelerometer (MPU-6500 or MPU-9250)
+* Magnetometer (HMC5883L or AK8963 (inside MPU-9250))
 * Barometer (BMP180)
 * Ultrasound sensor aka sonar (HC-SR04)
 * [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid)
@@ -120,6 +80,52 @@ Make sure that roll increases when tilting quadcopter to the right, pitch increa
 It is a good idea to run the accelerometer, magnetometer and ESCs calibration routines before flying the aircraft.
 
 __WARNING:__ Take propellers OFF when testing and calibrating ESCs!!
+
+# Android application
+
+Android application is available at the following repository: <https://github.com/Lauszus/LaunchPadFlightControllerAndroid>.
+
+[![Screenshots](https://raw.githubusercontent.com/Lauszus/LaunchPadFlightControllerAndroid/master/android_screenshots.png)](https://github.com/Lauszus/LaunchPadFlightControllerAndroid)
+
+# GUI
+
+A simple GUI can be found inside the [GUI](GUI) directory. It can be used to visualize the orientation of the flight controller.
+
+# Build instructions
+
+In order to built this project you need to download Keil µVision IDE 5 or use [Make](http://www.gnu.org/software/make/).
+
+If you are using Keil µVision IDE 5, then simply open the [project file](LaunchPadFlightController.uvprojx).
+
+If you are using Make, then you will need to first download and install [gcc-arm-none-eabi](https://launchpad.net/gcc-arm-embedded/4.8/4.8-2014-q3-update) and then install [lm4tools](https://github.com/utzig/lm4tools).
+
+lm4tools can be installed like so:
+
+```bash
+$ git clone https://github.com/utzig/lm4tools.git
+$ cd lm4tools/
+$ cd lm4flash/ && make
+$ sudo cp lm4flash /usr/bin/
+$ cd ..
+$ cd lmicdiusb/ && make
+$ sudo cp lmicdi /usr/bin/
+```
+
+If you are on a Mac, I recommend installing gcc-arm-none-eabi using [Homebrew](http://brew.sh) like so:
+
+```bash
+$ brew tap PX4/homebrew-px4
+$ brew update
+$ brew install gcc-arm-none-eabi
+```
+
+## Debug application
+
+OpenOCD can be installed via [Homebrew](http://brew.sh) as well:
+
+```bash
+$ brew install openocd
+```
 
 # Credits
 

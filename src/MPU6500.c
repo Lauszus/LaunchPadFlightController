@@ -39,6 +39,7 @@
 
 #define MPU6500_ADDRESS                     0x68
 #define MPU6500_WHO_AM_I_ID                 0x70
+#define MPU9250_WHO_AM_I_ID                 0x71
 
 // Scale factor for +-2000deg/s and +-8g - see datasheet: http://www.invensense.com/mems/gyro/documents/PS-MPU-6500A-01.pdf at page 9-10
 #define MPU6500_GYRO_SCALE_FACTOR_2000      16.4f
@@ -58,7 +59,7 @@ bool dataReadyMPU6500(void) {
 // X-axis should be facing forward
 // Y-axis should be facing to the left
 // Z-axis should be facing upward
-static void mpu6500BoardOrientation(sensorRaw_t *sensorRaw) {
+void mpu6500BoardOrientation(sensorRaw_t *sensorRaw) {
     sensorRaw_t sensorRawTemp = *sensorRaw;
     sensorRaw->axis.X = sensorRawTemp.axis.Y;
     sensorRaw->axis.Y = sensorRawTemp.axis.X;
@@ -70,13 +71,13 @@ void getMPU6500Data(mpu6500_t *mpu6500) {
     uint8_t buf[14];
     i2cReadData(MPU6500_ADDRESS, MPU6500_ACCEL_XOUT_H, buf, 14); // Note that we can't write directly into mpu6500_t, because of endian conflict. So it has to be done manually
 
-    mpu6500->acc.axis.X = (buf[0] << 8) | buf[1];
-    mpu6500->acc.axis.Y = (buf[2] << 8) | buf[3];
-    mpu6500->acc.axis.Z = (buf[4] << 8) | buf[5];
+    mpu6500->acc.axis.X = (int16_t)((buf[0] << 8) | buf[1]);
+    mpu6500->acc.axis.Y = (int16_t)((buf[2] << 8) | buf[3]);
+    mpu6500->acc.axis.Z = (int16_t)((buf[4] << 8) | buf[5]);
 
-    mpu6500->gyro.axis.X = (buf[8] << 8) | buf[9];
-    mpu6500->gyro.axis.Y = (buf[10] << 8) | buf[11];
-    mpu6500->gyro.axis.Z = (buf[12] << 8) | buf[13];
+    mpu6500->gyro.axis.X = (int16_t)((buf[8] << 8) | buf[9]);
+    mpu6500->gyro.axis.Y = (int16_t)((buf[10] << 8) | buf[11]);
+    mpu6500->gyro.axis.Z = (int16_t)((buf[12] << 8) | buf[13]);
 
     mpu6500BoardOrientation(&mpu6500->acc); // Apply board orientation
     mpu6500BoardOrientation(&mpu6500->gyro);
@@ -109,9 +110,9 @@ static bool calibrateSensor(sensorRaw_t *zeroValues, uint8_t regAddr, int16_t ma
             // Wait until new date is ready
         }
         i2cReadData(MPU6500_ADDRESS, regAddr, buf, 6);
-        sensorBuffer[0][i] = (buf[0] << 8) | buf[1]; // X
-        sensorBuffer[1][i] = (buf[2] << 8) | buf[3]; // Y
-        sensorBuffer[2][i] = (buf[4] << 8) | buf[5]; // Z
+        sensorBuffer[0][i] = (int16_t)((buf[0] << 8) | buf[1]); // X
+        sensorBuffer[1][i] = (int16_t)((buf[2] << 8) | buf[3]); // Y
+        sensorBuffer[2][i] = (int16_t)((buf[4] << 8) | buf[5]); // Z
         delay(10);
     }
 
@@ -131,7 +132,7 @@ static bool calibrateSensor(sensorRaw_t *zeroValues, uint8_t regAddr, int16_t ma
     return 0; // No error
 }
 
-static bool calibrateGyro(void) {
+static bool calibrateMPU6500Gyro(void) {
     bool rcode = calibrateSensor(&gyroZero, MPU6500_GYRO_XOUT_H, 100); // 100 / 16.4 ~= 6.10 deg/s
 
 #if UART_DEBUG
@@ -144,7 +145,7 @@ static bool calibrateGyro(void) {
     return rcode;
 }
 
-bool calibrateAcc(mpu6500_t *mpu6500) {
+bool calibrateMPU6500Acc(mpu6500_t *mpu6500) {
     bool rcode = calibrateSensor(&cfg.accZero, MPU6500_ACCEL_XOUT_H, 100); // 100 / 4096 ~= 0.02g
     cfg.accZero.axis.Z -= mpu6500->accScaleFactor; // Z-axis is reading +1g when horizontal, so we subtract 1g from the value found
 
@@ -170,9 +171,13 @@ void initMPU6500(mpu6500_t *mpu6500) {
 #if UART_DEBUG
         UARTprintf("MPU-6500 found\n");
 #endif
+    } else if (i2cBuffer[0] == MPU9250_WHO_AM_I_ID) {
+#if UART_DEBUG
+        UARTprintf("MPU-9250 found\n");
+#endif
     } else {
 #if UART_DEBUG
-        UARTprintf("Could not find MPU-6500: %2X\n", i2cBuffer[0]);
+        UARTprintf("Could not find MPU-6500 or MPU-9250: %2X\n", i2cBuffer[0]);
 #endif
         while (1);
     }
@@ -193,14 +198,15 @@ void initMPU6500(mpu6500_t *mpu6500) {
     i2cWriteData(MPU6500_ADDRESS, MPU6500_SMPLRT_DIV, i2cBuffer, 5); // Write to all five registers at once
 
     // Set accelerometer and gyroscope scale factor from datasheet
-    mpu6500->accScaleFactor = MPU6500_ACC_SCALE_FACTOR_8;
     mpu6500->gyroScaleFactor = MPU6500_GYRO_SCALE_FACTOR_2000;
+    mpu6500->accScaleFactor = MPU6500_ACC_SCALE_FACTOR_8;
 
-    /* Enable Raw Data Ready Interrupt on INT pin */
-    i2cBuffer[0] = (1 << 5) | (1 << 4); // Enable LATCH_INT_EN and INT_ANYRD_2CLEAR
-                                        // When this bit is equal to 1, the INT pin is held high until the interrupt is cleared
-                                        // When this bit is equal to 1, interrupt status is cleared if any read operation is performed
-    i2cBuffer[1] = (1 << 0);            // Enable RAW_RDY_EN - When set to 1, Enable Raw Sensor Data Ready interrupt to propagate to interrupt pin
+    /* Enable Raw Data Ready Interrupt on INT pin and enable bypass/passthrough mode */
+    i2cBuffer[0] = (1 << 5) | (1 << 4) | (1 << 1); // Enable LATCH_INT_EN, INT_ANYRD_2CLEAR and BYPASS_EN
+                                                   // When this bit is equal to 1, the INT pin is held high until the interrupt is cleared
+                                                   // When this bit is equal to 1, interrupt status is cleared if any read operation is performed
+                                                   // When asserted, the I2C_MASTER interface pins (ES_CL and ES_DA) will go into 'bypass mode' when the I2C master interface is disabled
+    i2cBuffer[1] = (1 << 0);                       // Enable RAW_RDY_EN - When set to 1, Enable Raw Sensor Data Ready interrupt to propagate to interrupt pin
     i2cWriteData(MPU6500_ADDRESS, MPU6500_INT_PIN_CFG, i2cBuffer, 2); // Write to both registers at once
 
     // Set INT input pin
@@ -210,7 +216,7 @@ void initMPU6500(mpu6500_t *mpu6500) {
 
     delay(100); // Wait for sensor to stabilize
 
-    while (calibrateGyro()) { // Get gyro zero values
+    while (calibrateMPU6500Gyro()) { // Get gyro zero values
         // Loop until calibration is successful
     }
 }
