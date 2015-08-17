@@ -31,16 +31,20 @@
 #include "driverlib/gpio.h"
 #include "inc/hw_memmap.h"
 
-static hmc5883l_t hmc5883l;
-static ak8963_t ak8963;
-
-static bool useMagHMC5883L, useMagAK8963;
+// Function pointer used to call the low-level magnetometer drivers
+static bool (*dataReady)(void);
+static void (*getData)(sensor_t *mag, bool calibrating);
 
 void initMag(void) {
-    if ((useMagHMC5883L = initHMC5883L(&hmc5883l)) != false)
+    if (initHMC5883L()) { // The HMC5883L update rate is very slow (15 Hz)
+        dataReady = &dataReadyHMC5883L;
+        getData = &getHMC5883LData;
         return;
-    if ((useMagAK8963 = initAK8963()) != false)
+    } else if (initAK8963()) { // The AK8963 update rate is set to 100 Hz
+        dataReady = &dataReadyAK8963;
+        getData = &getAK8963Data;
         return;
+    }
 
     // No magnetometer was detected
     beepLongBuzzer();
@@ -48,25 +52,17 @@ void initMag(void) {
 }
 
 bool getMagData(sensor_t *mag, bool calibrating) {
-    bool newData = false;
-    if (useMagHMC5883L) {
-        if (dataReadyHMC5883L()) { // The HMC5883L update rate is very slow (15 Hz), so we have to check if data is ready
-            newData = true;
-            getHMC5883LData(&hmc5883l, calibrating);
-            *mag = hmc5883l.mag;
-        }
-    } else if (useMagAK8963) { // The AK8963 update rate is set to 100 Hz
-        if (dataReadyAK8963()) {
-            newData = true;
-            getAK8963Data(&ak8963, calibrating);
-            *mag = ak8963.mag;
+    if (dataReady) { // Make sure pointer is not NULL
+        if (dataReady()) {
+            getData(mag, calibrating);
+            return true;
         }
     }
-    return newData;
+    return false;
 }
 
 void calibrateMag(void) {
-    if (!useMagHMC5883L && !useMagAK8963)
+    if (!dataReady)
         return; // Return in case no magnetometer was detected
 
     GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED

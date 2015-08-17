@@ -26,15 +26,9 @@
 extern "C" {
 #endif
 
-typedef struct {
-    sensorRaw_t magRaw; // Raw magnetometer readings
-    sensor_t mag; // Magnetometer readings with gain and offset applied
-    sensor_t magGain; // Magnetometer gain
-} hmc5883l_t;
-
-bool initHMC5883L(hmc5883l_t *hmc5883l);
+bool initHMC5883L(void);
 bool dataReadyHMC5883L(void);
-void getHMC5883LData(hmc5883l_t *hmc5883l, bool calibrating);
+void getHMC5883LData(sensor_t *mag, bool calibrating);
 
 #ifdef __cplusplus
 }

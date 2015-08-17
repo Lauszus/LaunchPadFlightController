@@ -94,7 +94,7 @@ static void ak8963BoardOrientation(sensorRaw_t *sensorRaw) {
     mpu6500BoardOrientation(sensorRaw);
 }
 
-void getAK8963Data(ak8963_t *ak8963, bool calibrating) {
+void getAK8963Data(sensor_t *mag, bool calibrating) {
     uint8_t buf[AK8963_DATA_LENGTH];
     i2cReadData(AK8963_ADDRESS, AK8963_HXL, buf, AK8963_DATA_LENGTH); // Get magnetometer values
 
@@ -113,9 +113,9 @@ void getAK8963Data(ak8963_t *ak8963, bool calibrating) {
     ak8963BoardOrientation(&magRaw); // Apply board orientation
 
     for (uint8_t axis = 0; axis < 3; axis++) {
-        ak8963->mag.data[axis] = magRaw.data[axis];
+        mag->data[axis] = magRaw.data[axis];
         if (!calibrating) // If we are not calibrating, then subtract zero values
-            ak8963->mag.data[axis] -= cfg.magZero.data[axis]; // Subtract zero value stored in EEPROM
+            mag->data[axis] -= cfg.magZero.data[axis]; // Subtract zero value stored in EEPROM
     }
 }
 
