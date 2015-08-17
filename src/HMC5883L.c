@@ -228,9 +228,9 @@ bool initHMC5883L(void) {
     while (!dataReadyHMC5883L()); // Wait for data
     getHMC5883LDataRaw(&hmc5883l.magRaw); // First values are discarded, as it is from previous gain
 
-#if UART_DEBUG
-    UARTprintf("Mag cal: %d\t%d\t%d\t", (int16_t)mag_total.axis.X, (int16_t)mag_total.axis.Y, (int16_t)mag_total.axis.Z);
-    UARTprintf("Gain: %d.%03u\t%d.%03u\t%d.%03u\n",
+#if 0 && UART_DEBUG
+    UARTprintf("Mag cal: %d\t%d\t%d\n", (int16_t)mag_total.axis.X, (int16_t)mag_total.axis.Y, (int16_t)mag_total.axis.Z);
+    UARTprintf("Mag gain: %d.%03u\t%d.%03u\t%d.%03u\n",
                                                     (int16_t)hmc5883l.magGain.axis.X, (uint16_t)(abs(hmc5883l.magGain.axis.X * 1000.0f) % 1000),
                                                     (int16_t)hmc5883l.magGain.axis.Y, (uint16_t)(abs(hmc5883l.magGain.axis.Y * 1000.0f) % 1000),
                                                     (int16_t)hmc5883l.magGain.axis.Z, (uint16_t)(abs(hmc5883l.magGain.axis.Z * 1000.0f) % 1000));
