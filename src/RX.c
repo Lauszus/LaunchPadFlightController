@@ -58,7 +58,7 @@ static void CaptureHandler(void) {
         channelIndex = 0; // Reset channel index
         validRXData = true;
         for (uint8_t i = 0; i < RX_NUM_CHANNELS; i++) {
-            if (rxChannel[i] == 0) // Make sure that all are above 0
+            if (rxChannel[i] < 500 || rxChannel[i] > 2500) // Make sure that all are within a valid range
                 validRXData = false;
         }
         if (validRXData)
