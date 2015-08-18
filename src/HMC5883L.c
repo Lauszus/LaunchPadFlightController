@@ -79,7 +79,7 @@
 
 #define GPIO_HMC5883L_DRDY_PERIPH       SYSCTL_PERIPH_GPIOE
 #define GPIO_HMC5883L_DRDY_BASE         GPIO_PORTE_BASE
-#define GPIO_HMC5883L_DRDY_PIN          GPIO_PIN_4
+#define GPIO_HMC5883L_DRDY_PIN          GPIO_PIN_3
 
 static struct hmc5883l_t {
     sensorRaw_t magRaw; // Raw magnetometer readings

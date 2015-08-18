@@ -47,7 +47,7 @@
 
 #define GPIO_MPU_INT_PERIPH                 SYSCTL_PERIPH_GPIOE
 #define GPIO_MPU_INT_BASE                   GPIO_PORTE_BASE
-#define GPIO_MPU_INT_PIN                    GPIO_PIN_3
+#define GPIO_MPU_INT_PIN                    GPIO_PIN_2
 
 static sensorRaw_t gyroZero; // Gyroscope zero values are found at every power on
 

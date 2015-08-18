@@ -25,9 +25,9 @@
 #include "driverlib/gpio.h"
 #include "driverlib/sysctl.h"
 
-#define SYSCTL_PERIPH_BUZZER    SYSCTL_PERIPH_GPIOA
-#define GPIO_BUZZER_BASE        GPIO_PORTA_BASE
-#define GPIO_PIN_BUZZER         GPIO_PIN_5
+#define SYSCTL_PERIPH_BUZZER    SYSCTL_PERIPH_GPIOD
+#define GPIO_BUZZER_BASE        GPIO_PORTD_BASE
+#define GPIO_PIN_BUZZER         GPIO_PIN_2
 
 void initBuzzer(void) {
     SysCtlPeripheralEnable(SYSCTL_PERIPH_BUZZER); // Enable peripheral

@@ -283,7 +283,6 @@ int main(void) {
 // TODO:
     // Altitude hold
         // Implement altitude hold using height estimated using barometer
-        // Use wide timer for sonar
         // Redo take off sequence
             // Ramp up motors slowly
     // Android App
