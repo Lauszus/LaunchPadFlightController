@@ -23,7 +23,7 @@ The report I wrote for my Bachelor's these can be found in the [docs](docs) fold
     - __AUX1:__ Use 3-POS switch for self level and heading hold. At first position both are off, at second position self level is on and at third position both are on
     - __AUX2:__ Use a 2-POS switch for altitude hold. Activated when switch is high. Note that self level mode must be activated for altitude hold to work
 * Store PID values, calibration values etc. in EEPROM
-* Gyro, accelerometer & Magnetometercalibration routine
+* Gyro, accelerometer & magnetometer calibration routine
     - Gyro is calibrated at startup
     - Accelerometer and magnetometer calibration routine can be activated in the code or by using the Android app
     - The magnetometer turns on the Blue LED while calibrating
