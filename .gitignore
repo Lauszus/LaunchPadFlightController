@@ -27,3 +27,5 @@
 src/.project
 src/.cproject
 src/.settings/
+*.s#?
+*.b#?
