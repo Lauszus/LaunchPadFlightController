@@ -1,5 +1,5 @@
 # LaunchPad Flight Controller
-#### Developed by Kristian Lauszus, 2015
+#### Developed by Kristian Sloth Lauszus, 2015
 _________
 [![Build Status](https://travis-ci.org/Lauszus/LaunchPadFlightController.svg)](https://travis-ci.org/Lauszus/LaunchPadFlightController)
 
@@ -131,4 +131,4 @@ $ brew install openocd
 
 A lot of the inspiration for this code came from [Cleanflight](https://github.com/cleanflight/cleanflight) and other open source flight controller projects.
 
-For more information send me an email at <kristianl@tkjelectronics.dk>.
+For more information send me an email at <lauszus@gmail.com>.
