@@ -7,11 +7,13 @@ This is a flight controller used for a quadcopter in X-configuration.
 
 It is written for the [Tiva C Series TM4C123G LaunchPad](http://www.ti.com/tool/EK-TM4C123GXL) running at 80 MHz.
 
-More information can be found at the following blog post: <http://blog.tkjelectronics.dk/2015/01/launchpad-flight-controller/>.
+More information can be found at the following blog posts: <http://blog.tkjelectronics.dk/2015/01/launchpad-flight-controller> and <http://blog.tkjelectronics.dk/2015/08/bachelors-thesis-launchpad-flight-controller>.
 
 # Video demonstrations
 
 Some video demonstrations of the flight controller can be seen at my [YouTube channel](https://www.youtube.com/playlist?list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg).
+
+<a href="https://www.youtube.com/watch?v=HXX-2L1hKgI&index=1&list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg" target="_blank"><img src="http://img.youtube.com/vi/HXX-2L1hKgI/0.jpg" width="240" height="180" border="10" /></a>
 
 # Report
 
@@ -23,7 +25,7 @@ The report I wrote for my Bachelor's these can be found in the [docs](docs) fold
     - __AUX1:__ Use 3-POS switch for self level and heading hold. At first position both are off, at second position self level is on and at third position both are on
     - __AUX2:__ Use a 2-POS switch for altitude hold. Activated when switch is high. Note that self level mode must be activated for altitude hold to work
 * Store PID values, calibration values etc. in EEPROM
-* Gyro, accelerometer & Magnetometercalibration routine
+* Gyro, accelerometer & magnetometer calibration routine
     - Gyro is calibrated at startup
     - Accelerometer and magnetometer calibration routine can be activated in the code or by using the Android app
     - The magnetometer turns on the Blue LED while calibrating
