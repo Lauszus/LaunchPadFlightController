@@ -7,7 +7,7 @@ This is a flight controller used for a quadcopter in X-configuration.
 
 It is written for the [Tiva C Series TM4C123G LaunchPad](http://www.ti.com/tool/EK-TM4C123GXL) running at 80 MHz.
 
-More information can be found at the following blog post: <http://blog.tkjelectronics.dk/2015/01/launchpad-flight-controller/>.
+More information can be found at the following blog posts: <http://blog.tkjelectronics.dk/2015/01/launchpad-flight-controller> and <http://blog.tkjelectronics.dk/2015/08/bachelors-thesis-launchpad-flight-controller>.
 
 # Video demonstrations
 
