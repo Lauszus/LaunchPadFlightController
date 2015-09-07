@@ -41,6 +41,7 @@
 #define ADNS3080_SQUAL                 0x05
 #define ADNS3080_MOTION_CLEAR          0x12
 #define ADNS3080_FRAME_CAPTURE         0x13
+#define ADNS3080_MOTION_BURST          0x50
 
 // ADNS3080 hardware config
 #define ADNS3080_PIXELS_X              30
@@ -118,18 +119,19 @@ bool dataReadyADNS3080(void) {
     return true;
 }
 
-// TODO: Read burst register
 void getADNS3080Data(int32_t __attribute__((unused)) *x, int32_t __attribute__((unused)) *y) {
 #if 1
     // Read sensor
-    uint8_t surfaceQuality = spiRead(ADNS3080_SQUAL);
-    uint8_t motion = spiRead(ADNS3080_MOTION);
+    uint8_t buf[4];
+    spiReadData(ADNS3080_MOTION_BURST, buf, 4);
+    uint8_t motion = buf[0];
 
     if (motion & 0x10) // Check if we've had an overflow
         UARTprintf("ADNS-3080 overflow\n");
     else if (motion & 0x80) {
-        int8_t dx = spiRead(ADNS3080_DELTA_X);
-        int8_t dy = spiRead(ADNS3080_DELTA_Y);
+        int8_t dx = buf[1];
+        int8_t dy = buf[2];
+        uint8_t surfaceQuality = buf[3];
 
         *x += dx;
         *y += dy;

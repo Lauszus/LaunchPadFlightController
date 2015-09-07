@@ -72,10 +72,11 @@ void spiWriteData(uint8_t regAddr, uint8_t *data, uint8_t length) {
 
     // First send data
     SSIDataPut(SSI0_BASE, regAddr | 0x80); // Indicate write operation
+    delayMicroseconds(75); // Wait minimum 75 us in case writing to Motion or Motion_Burst registers
     while (SSIBusy(SSI0_BASE)); // Wait until transfer is done
     for (uint8_t i = 0; i < length; i++) {
-        delayMicroseconds(50); // Wait minimum 50 us between commands
         SSIDataPut(SSI0_BASE, data[i]); // Write data
+        delayMicroseconds(50); // Wait minimum 50 us between commands
         while (SSIBusy(SSI0_BASE)); // Wait until transfer is done
     }
 
@@ -99,10 +100,11 @@ void spiReadData(uint8_t regAddr, uint8_t *data, uint8_t length) {
 
     // First send data
     SSIDataPut(SSI0_BASE, regAddr); // Send register address
+    delayMicroseconds(75); // Wait minimum 75 us in case writing to Motion or Motion_Burst registers
     while (SSIBusy(SSI0_BASE)); // Wait until transfer is done
     for (uint8_t i = 0; i < length; i++) {
-        delayMicroseconds(50); // Wait minimum 50 us between commands
         SSIDataPut(SSI0_BASE, 0); // Send 0
+        delayMicroseconds(50); // Wait minimum 50 us between commands
         while (SSIBusy(SSI0_BASE)); // Wait until transfer is done
     }
 
