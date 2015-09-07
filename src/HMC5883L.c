@@ -105,9 +105,9 @@ static void drdyHandler(void) {
 // Z-axis should be facing upward
 static void hmc5883lBoardOrientation(sensor_t *sensor) {
     sensor_t sensorTemp = *sensor;
-    sensor->axis.X = sensorTemp.axis.X;
-    sensor->axis.Y = sensorTemp.axis.Y;
-    sensor->axis.Z = sensorTemp.axis.Z;
+    sensor->axis.X = sensorTemp.axis.Y;
+    sensor->axis.Y = sensorTemp.axis.X;
+    sensor->axis.Z = -sensorTemp.axis.Z;
 }
 
 static void getHMC5883LDataRaw(sensorRaw_t *magRaw) {
