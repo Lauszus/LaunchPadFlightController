@@ -78,7 +78,7 @@ void initADNS3080(void) {
 #endif
     } else {
 #if UART_DEBUG
-        UARTprintf("Could not find ADNS-3080: %2X\n", id);
+        UARTprintf("Could not find ADNS-3080: %02X\n", id);
 #endif
         while (1);
     }

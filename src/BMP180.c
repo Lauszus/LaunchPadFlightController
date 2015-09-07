@@ -185,7 +185,7 @@ void initBMP180(bmp180_t *bmp180) {
 #endif
     } else {
 #if UART_DEBUG
-        UARTprintf("Could not find BMP180: %2X\n", buf[0]);
+        UARTprintf("Could not find BMP180: %02X\n", buf[0]);
 #endif
         while (1);
     }
