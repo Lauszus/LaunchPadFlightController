@@ -20,6 +20,7 @@
 #include <math.h>
 
 #include "AltitudeHold.h"
+#include "ADNS3080.h"
 #include "Bluetooth.h"
 #include "Buzzer.h"
 #include "EEPROM.h"
@@ -72,6 +73,9 @@ int main(void) {
 #endif
 #if USE_SONAR || USE_BARO
     initAltitudeHold();
+#endif
+#if USE_FLOW_SENSOR
+    initADNS3080();
 #endif
     initBluetooth();
     IntMasterEnable(); // Enable all interrupts
@@ -303,3 +307,8 @@ int main(void) {
     // Make yaw right hand rotation
     // Move all IMU related code into IMU driver
         // Also make generic accGyro driver
+    // Use SPI for MPU-9250/6500
+    // ADNS3080
+        // Implement configuration: https://github.com/diydrones/ardupilot/blob/5ddbcc296dd6dd9ac9ed6316ac3134c736ae8a78/libraries/AP_OpticalFlow/AP_OpticalFlow_ADNS3080.cpp#L68-L98
+        // Implement "update_conversion_factors"
+        // Implement 'dataReadyADNS3080'

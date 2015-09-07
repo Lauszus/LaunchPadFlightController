@@ -55,7 +55,7 @@ void initUART(void) {
         // Wait until UART is ready
     }
 
-    UARTprintf("Started\n");
+    UARTprintf("\nStarted\n");
 }
 
 void printPIDValues(pid_values_t *pidValues) {
