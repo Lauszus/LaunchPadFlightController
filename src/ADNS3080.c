@@ -39,6 +39,7 @@
 #define ADNS3080_DELTA_X               0x03
 #define ADNS3080_DELTA_Y               0x04
 #define ADNS3080_SQUAL                 0x05
+#define ADNS3080_CONFIGURATION_BITS    0x0A
 #define ADNS3080_MOTION_CLEAR          0x12
 #define ADNS3080_FRAME_CAPTURE         0x13
 #define ADNS3080_MOTION_BURST          0x50
@@ -81,6 +82,9 @@ void initADNS3080(void) {
 #endif
         while (1);
     }
+
+    uint8_t config = spiRead(ADNS3080_CONFIGURATION_BITS);
+    spiWrite(ADNS3080_CONFIGURATION_BITS, config | 0x10); // Set resolution to 1600 counts per inch
 }
 
 // Run: 'python ADNS3080ImageGrabber.py' in order to see the data
@@ -149,7 +153,7 @@ void getADNS3080Data(int32_t __attribute__((unused)) *x, int32_t __attribute__((
     printPixelData();
     UARTprintf("-------------------------\n");
     UARTFlushTx(false);
-    delay(1000);
+    delay(1500);
 #endif
 }
 
