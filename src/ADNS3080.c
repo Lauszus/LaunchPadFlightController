@@ -68,7 +68,7 @@ void initADNS3080(void) {
     // Set reset pin as output
     SysCtlPeripheralEnable(GPIO_RESET_PERIPH); // Enable GPIO peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
-    GPIOPinTypeGPIOOutput(GPIO_RESET_BASE, GPIO_RESET_PIN); // Set as input
+    GPIOPinTypeGPIOOutput(GPIO_RESET_BASE, GPIO_RESET_PIN); // Set as output
     reset();
 
     uint8_t id = spiRead(ADNS3080_PRODUCT_ID);
@@ -95,7 +95,7 @@ static void __attribute__((unused)) printPixelData(void) {
   spiWrite(ADNS3080_FRAME_CAPTURE, 0x83);
 
   // Wait 3 frame periods + 10 nanoseconds for frame to be captured
-  delayMicroseconds(1510); // Min frame speed is 2000 frames/second so 1 frame = 500 nano seconds.  so 500 x 3 + 10 = 1510
+  delayMicroseconds(1510); // Minimum frame speed is 2000 frames/second so 1 frame = 500 nano seconds. So 500 x 3 + 10 = 1510
 
   // Display the pixel data
   for (uint8_t i = 0; i < ADNS3080_PIXELS_Y; i++) {
@@ -106,7 +106,7 @@ static void __attribute__((unused)) printPixelData(void) {
           goto reset;
       }
       isFirstPixel = false;
-      uint8_t pixelValue = regValue << 2; // Only lower 6 bytes have data
+      uint8_t pixelValue = regValue << 2; // Only lower 6 bits contains data
       UARTprintf("%u", pixelValue);
       if (j != ADNS3080_PIXELS_X - 1)
           UARTwrite(",", 1);
@@ -129,6 +129,7 @@ void getADNS3080Data(int32_t __attribute__((unused)) *x, int32_t __attribute__((
     uint8_t buf[4];
     spiReadData(ADNS3080_MOTION_BURST, buf, 4);
     uint8_t motion = buf[0];
+    //UARTprintf("%02X\n", motion & 0x01); // Resolution bit
 
     if (motion & 0x10) // Check if we've had an overflow
         UARTprintf("ADNS-3080 overflow\n");

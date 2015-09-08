@@ -312,3 +312,4 @@ int main(void) {
         // Implement configuration: https://github.com/diydrones/ardupilot/blob/5ddbcc296dd6dd9ac9ed6316ac3134c736ae8a78/libraries/AP_OpticalFlow/AP_OpticalFlow_ADNS3080.cpp#L68-L98
         // Implement "update_conversion_factors"
         // Implement 'dataReadyADNS3080'
+        // Send pixel data as raw data instead of ASCII characters
