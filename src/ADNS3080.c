@@ -89,6 +89,7 @@ void initADNS3080(void) {
 
 // Run: 'python ADNS3080ImageGrabber.py' in order to see the data
 static void __attribute__((unused)) printPixelData(void) {
+#if UART_DEBUG
   bool isFirstPixel = true;
 
   // Write to frame capture register to force capture of frame
@@ -117,6 +118,7 @@ static void __attribute__((unused)) printPixelData(void) {
 
 reset:
   reset(); // Hardware reset to restore sensor to normal operation
+#endif
 }
 
 bool dataReadyADNS3080(void) {
@@ -131,19 +133,24 @@ void getADNS3080Data(int32_t __attribute__((unused)) *x, int32_t __attribute__((
     uint8_t motion = buf[0];
     //UARTprintf("%02X\n", motion & 0x01); // Resolution bit
 
-    if (motion & 0x10) // Check if we've had an overflow
+    if (motion & 0x10) { // Check if we've had an overflow
+#if UART_DEBUG
         UARTprintf("ADNS-3080 overflow\n");
-    else if (motion & 0x80) {
+#endif
+    } else if (motion & 0x80) {
         int8_t dx = buf[1];
         int8_t dy = buf[2];
         uint8_t surfaceQuality = buf[3];
+        (void)surfaceQuality; // Suppress warning
 
         *x += dx;
         *y += dy;
 
+#if 1 && UART_DEBUG
         // Print values
         UARTprintf("%d,%d\t%d,%d\t%u\n", *x, dx, *y, dy, surfaceQuality);
         UARTFlushTx(false);
+#endif
     }
 #if 0
     else
