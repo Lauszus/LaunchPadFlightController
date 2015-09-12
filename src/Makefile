@@ -112,6 +112,13 @@ CFLAGSgcc += -DSTEP_ACRO_SELF_LEVEL=$(STEP_ACRO_SELF_LEVEL) -DSTEP_ALTITUDE_HOLD
 CFLAGSgcc += -Wdouble-promotion -Wunsafe-loop-optimizations -Wunused-parameter
 
 #
+# Make all warnings into errors when building using Travis CI
+#
+ifdef TRAVIS_CI
+CFLAGSgcc += -Werror
+endif
+
+#
 # Rebuild everything when makefile changes.
 #
 $(TARGET_OBJS): Makefile
