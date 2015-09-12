@@ -111,6 +111,13 @@ CFLAGSgcc = -DTARGET_IS_BLIZZARD_RB1 -DUART_BUFFERED -DUART_BUFFERED1 -DUART_DEB
 CFLAGSgcc += -Wdouble-promotion -Wunsafe-loop-optimizations -Wunused-parameter
 
 #
+# Make all warnings into errors when building using Travis CI
+#
+ifdef TRAVIS_CI
+CFLAGSgcc += -Werror
+endif
+
+#
 # Rebuild everything when makefile changes.
 #
 $(TARGET_OBJS): Makefile
