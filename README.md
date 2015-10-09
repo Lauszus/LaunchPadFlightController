@@ -108,9 +108,6 @@ $ git clone https://github.com/utzig/lm4tools.git
 $ cd lm4tools/
 $ cd lm4flash/ && make
 $ sudo cp lm4flash /usr/bin/
-$ cd ..
-$ cd lmicdiusb/ && make
-$ sudo cp lmicdi /usr/bin/
 ```
 
 If you are on a Mac, I recommend installing gcc-arm-none-eabi using [Homebrew](http://brew.sh) like so:
@@ -121,13 +118,27 @@ $ brew update
 $ brew install gcc-arm-none-eabi
 ```
 
-## Debug application
+## Hardware debugging using OpenOCD
 
 OpenOCD can be installed via [Homebrew](http://brew.sh) as well:
 
 ```bash
 $ brew install openocd
 ```
+
+Now run the following commands:
+
+```bash
+$ openocd --file /usr/local/share/openocd/scripts/board/ek-tm4c123gxl.cfg
+
+$ arm-none-eabi-gdb gcc/LaunchPadFlightController.axf
+(gdb) target extended-remote :3333
+(gdb) monitor reset halt
+(gdb) load
+(gdb) monitor reset init
+```
+
+More information regarding hardware debugging can be found at the [Wiki](https://github.com/Lauszus/LaunchPadFlightController/wiki/Hardware-Debugging-In-Eclipse).
 
 # Credits
 
