@@ -84,8 +84,8 @@ static const char *responseHeader = "$S<"; // Standard response header
 
 static bool findString(const char *string);
 static void readBytes(uint8_t *data, size_t length);
-static bool getData(msg_t msg, uint8_t *data, size_t length);
-static void sendData(msg_t msg, uint8_t *data, size_t length);
+static bool getData(msg_t msg, uint8_t *data);
+static void sendData(msg_t msg, uint8_t *data);
 static uint8_t getCheckSum(uint8_t *data, size_t length);
 static pid_values_t* getPidValuesPointer(uint8_t cmd);
 
@@ -128,7 +128,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
                             break; // Abort
 
                         pid_values_bt_t pidValuesBt;
-                        if (getData(msg, (uint8_t*)&pidValuesBt, sizeof(pidValuesBt))) { // This will read the data and check the checksum
+                        if (getData(msg, (uint8_t*)&pidValuesBt)) { // This will read the data and check the checksum
                             pidValues->Kp = pidValuesBt.Kp / 1000.0f;
                             pidValues->Ki = pidValuesBt.Ki / 100.0f;
                             pidValues->Kd = pidValuesBt.Kd / 100000.0f;
@@ -153,7 +153,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
                 case GET_PID_ROLL_PITCH:
                 case GET_PID_YAW:
                 case GET_PID_ALT_HOLD:
-                    if (msg.length == 0 && getData(msg, NULL, 0)) { // Check length and the checksum
+                    if (msg.length == 0 && getData(msg, NULL)) { // Check length and the checksum
                         pid_values_t *pidValues = getPidValuesPointer(msg.cmd);
                         if (!pidValues)
                             break; // Abort
@@ -164,7 +164,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
                         pidValuesBt.Ki = pidValues->Ki * 100.0f;
                         pidValuesBt.Kd = pidValues->Kd * 100000.0f;
                         pidValuesBt.integrationLimit = pidValues->integrationLimit * 100.0f;
-                        sendData(msg, (uint8_t*)&pidValuesBt, sizeof(pidValuesBt));
+                        sendData(msg, (uint8_t*)&pidValuesBt);
 #if DEBUG_BLUETOOTH_PROTOCOL
                         UARTprintf("Get PID %u\n", msg.cmd);
 #endif
@@ -178,7 +178,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
                 case SET_SETTINGS:
                     if (msg.length == sizeof(settings_t)) { // Make sure that it has the right length
                         settings_t settings;
-                        if (getData(msg, (uint8_t*)&settings, sizeof(settings))) { // This will read the data and check the checksum
+                        if (getData(msg, (uint8_t*)&settings)) { // This will read the data and check the checksum
                             cfg.angleKp = settings.angleKp / 100.0f;
                             cfg.headKp = settings.headKp / 100.0f;
                             cfg.maxAngleInclination = settings.maxAngleInclination;
@@ -203,7 +203,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
                     break;
 
                 case GET_SETTINGS:
-                    if (msg.length == 0 && getData(msg, NULL, 0)) { // Check length and the checksum
+                    if (msg.length == 0 && getData(msg, NULL)) { // Check length and the checksum
                         msg.length = sizeof(settings_t);
                         settings_t settings;
                         settings.angleKp = cfg.angleKp * 100.0f;
@@ -212,7 +212,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
                         settings.maxAngleInclinationSonar = cfg.maxAngleInclinationSonar;
                         settings.stickScalingRollPitch = cfg.stickScalingRollPitch * 100.0f;
                         settings.stickScalingYaw = cfg.stickScalingYaw * 100.0f;
-                        sendData(msg, (uint8_t*)&settings, sizeof(settings));
+                        sendData(msg, (uint8_t*)&settings);
 #if DEBUG_BLUETOOTH_PROTOCOL
                         UARTprintf("GET_SETTINGS\n");
 #endif
@@ -225,7 +225,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
 
                 case SEND_ANGLES:
                     if (msg.length == sizeof(sendAngles)) { // Make sure that it has the right length
-                        if (getData(msg, (uint8_t*)&sendAngles, sizeof(sendAngles))) { // This will read the data and check the checksum
+                        if (getData(msg, (uint8_t*)&sendAngles)) { // This will read the data and check the checksum
 #if DEBUG_BLUETOOTH_PROTOCOL
                             UARTprintf("sendAngles: %u\n", sendAngles);
 #endif
@@ -243,7 +243,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
                     break;
 
                 case CAL_ACC:
-                    if (msg.length == 0 && getData(msg, NULL, 0)) { // Check length and the checksum
+                    if (msg.length == 0 && getData(msg, NULL)) { // Check length and the checksum
                         while (calibrateMPU6500Acc(mpu6500)) { // Get accelerometer zero values
                             // Loop until calibration values are found
                         }
@@ -260,7 +260,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
 
                 case CAL_MAG:
 #if USE_MAG
-                    if (msg.length == 0 && getData(msg, NULL, 0)) { // Check length and the checksum
+                    if (msg.length == 0 && getData(msg, NULL)) { // Check length and the checksum
                         calibrateMag(); // Get magnetometer zero values
                         beepLongBuzzer();
 #if DEBUG_BLUETOOTH_PROTOCOL
@@ -275,7 +275,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
                     break;
 
                  case RESTORE_DEFAULTS:
-                    if (msg.length == 0 && getData(msg, NULL, 0)) { // Check length and the checksum
+                    if (msg.length == 0 && getData(msg, NULL)) { // Check length and the checksum
                         setDefaultConfig();
                         beepLongBuzzer();
 #if DEBUG_BLUETOOTH_PROTOCOL
@@ -306,7 +306,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
         angles.roll = angle->axis.roll * 100.0f;
         angles.pitch = angle->axis.pitch * 100.0f;
         angles.yaw = angle->axis.yaw * 100.0f;
-        sendData(msg, (uint8_t*)&angles, sizeof(angles));
+        sendData(msg, (uint8_t*)&angles);
 
 #if 0 && DEBUG_BLUETOOTH_PROTOCOL
         UARTprintf("%d\t%d\t%u\n", angles.roll, angles.pitch, angles.yaw);
@@ -363,19 +363,19 @@ static void readBytes(uint8_t *data, size_t length) {
         data[i] = UARTgetc1(); // Store data in buffer - note this is a blocking call
 }
 
-static bool getData(msg_t msg, uint8_t *data, size_t length) {
-    if (length > 0)
-        readBytes(data, length); // Read data into buffer
+static bool getData(msg_t msg, uint8_t *data) {
+    if (msg.length > 0)
+        readBytes(data, msg.length); // Read data into buffer
     uint8_t checksum = UARTgetc1(); // Read the checksum - note this is a blocking call
-    return (getCheckSum((uint8_t*)&msg, sizeof(msg)) ^ getCheckSum(data, length)) == checksum; // The checksum is calculated from the length, command and the data
+    return (getCheckSum((uint8_t*)&msg, sizeof(msg)) ^ getCheckSum(data, msg.length)) == checksum; // The checksum is calculated from the length, command and the data
 }
 
-static void sendData(msg_t msg, uint8_t *data, size_t length) {
-    const char checksum = getCheckSum((uint8_t*)&msg, sizeof(msg)) ^ getCheckSum(data, length);
+static void sendData(msg_t msg, uint8_t *data) {
+    const char checksum = getCheckSum((uint8_t*)&msg, sizeof(msg)) ^ getCheckSum(data, msg.length);
 
     UARTwrite1(responseHeader, strlen(responseHeader));
     UARTwrite1((const char*)&msg, sizeof(msg));
-    UARTwrite1((const char*)data, length);
+    UARTwrite1((const char*)data, msg.length);
     UARTwrite1(&checksum, sizeof(checksum)); // The checksum is calculated from the length, command and the data
     UARTwrite1("\r\n", 2); // Print carriage return and line feed as well, this is needed for the Android application
     UARTFlushTx1(false); // Flush TX buffer
