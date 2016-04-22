@@ -36,7 +36,7 @@ void setup() {
    frame.setIconImage((Image) loadImage("data/logo.png").getNative());*/
 
   controlP5 = new ControlP5(this);
-  size(width, height, P3D);
+  size(600, 600, P3D);
 
   initDropdownlist();
 }
@@ -52,8 +52,8 @@ void draw() {
 
     pushMatrix();
     translate(width/2, height/2, 0);
-    float radRoll = radians(roll);
-    float radPitch = radians(pitch);
+    float radRoll = radians(roll) * (-1);
+    float radPitch = radians(pitch) * (-1);
     float radYaw = radians(yaw);
     rotateX(radPitch * cos(radYaw) - radRoll * sin(radYaw) + HALF_PI);
     rotateY(radRoll * cos(radYaw) + radPitch * sin(radYaw));
@@ -141,4 +141,3 @@ void keyPressed() {
     key = 0; // Disable Processing from quiting when pressing ESC
   }
 }
-

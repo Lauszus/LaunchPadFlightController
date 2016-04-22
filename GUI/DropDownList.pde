@@ -58,12 +58,6 @@ void initDropdownlist() {
       dropdownList.setValue(i); // Automatically select the last selected serial port
   }
 
-  addMouseWheelListener(new MouseWheelListener() { // Add a mousewheel listener to scroll the dropdown list
-    public void mouseWheelMoved(MouseWheelEvent mwe) {
-      dropdownList.scroll(mwe.getWheelRotation() > 0 ? 1 : 0); // Scroll the dropdownlist using the mousewheel
-    }
-  });
-
   controlP5.addButton("connect")
            .setPosition(225, 3)
            .setSize(41, 15);
@@ -79,14 +73,14 @@ void initDropdownlist() {
 }
 
 void controlEvent(ControlEvent theEvent) {
-  if (theEvent.isGroup()) {
-    if (theEvent.getGroup().getName() == dropdownList.getName())
-      portNumber = int(theEvent.getGroup().getValue()); // Since the list returns a float, we need to convert it to an int. For that we us the int() function
-  }
+ // if (theEvent.isController()) {
+    portNumber = int(theEvent.getController().getValue()); // Since the list returns a float, we need to convert it to an int. For that we us the int() function //<>//
+ // }
 }
 
 void connect() {
   disconnect(); // Disconnect any existing connection
+  portNumber=2;
   if (portNumber != -1) { // Check if com port and baudrate is set and if there is not already a connection established
     println("ConnectSerial");
     dropdownList.close();
@@ -129,4 +123,3 @@ void SaveSerialPort(String port) {
   output.flush(); // Writes the remaining data to the file
   output.close(); // Finishes the file
 }
-
