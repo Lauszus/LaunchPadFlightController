@@ -23,6 +23,7 @@
 #include "PID.h"
 #include "PPM.h"
 #include "Time.h"
+#include "Pins.h"
 
 #include "inc/hw_memmap.h"
 #include "driverlib/gpio.h"
@@ -30,7 +31,6 @@
 #include "driverlib/pwm.h"
 #include "driverlib/sysctl.h"
 
-#define CALIBRATE_ESC_ACTIVATED 0
 #define ONESHOT125 1
 
 #if ONESHOT125
@@ -47,13 +47,6 @@ static void writePPMUs(uint8_t motor, uint16_t us);
 #if ONESHOT125
 static void syncMotors(void);
 #endif
-
-// Sets calibrating flag in EEPROM
-// Calibration routine will be run next time power is applied if flag is true
-void calibrateESCs(bool flag) {
-    cfg.calibrateESCs = flag; // Set flag
-    updateConfig(); // Write new value to EEPROM
-}
 
 void initPPM(void) {
 #if ONESHOT125
@@ -95,35 +88,47 @@ void initPPM(void) {
 
     // Enable the outputs
     PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT | PWM_OUT_1_BIT | PWM_OUT_2_BIT | PWM_OUT_3_BIT, true);
-
-    if (cfg.calibrateESCs) {
-#if CALIBRATE_ESC_ACTIVATED
-        #warning "Take propellers off and then only apply power from the battery once and then unplug the battery after calibration procedure is done!"
-        // ESCs are calibrated by sending out the maximum pulse when power is applied and then sending lowest pulse afterwards
-        for (uint8_t i = 0; i < 4; i++)
-            writePPMUs(i, PPM_MAX);
+    
+    if (!GPIOPinRead(GPIO_KEY_BASE, GPIO_KEY1 | GPIO_KEY2)) { // Both keys pressed?
+        if (cfg.calibrateESCs) { // ESC calibrating armed?
+#if UART_DEBUG
+            UARTprintf("Calibrating ESCs!\n");
+#endif
+            GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED);
+            for (uint8_t i = 0; i < 4; i++)
+                writePPMUs(i, PPM_MAX);
 #if ONESHOT125
-        syncMotors();
+            syncMotors();
 #endif
-        delay(4000); // Wait 4s - TODO: Make sure both buttons are held in
-        for (uint8_t i = 0; i < 4; i++)
-            writePPMUs(i, PPM_MIN);
+            delay(4000);
+            for (uint8_t i = 0; i < 4; i++)
+                writePPMUs(i, PPM_MIN);
 #if ONESHOT125
-        syncMotors();
+            syncMotors();
 #endif
-        delay(3000);
-        buzzerLongBeep();
-#else // CALIBRATE_ESC_ACTIVATED
-        writePPMAllOff();
+            delay(4000);
+            beepLongBuzzer();
+            cfg.calibrateESCs = false;
+            updateConfig();
+            GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, !GPIO_BLUE_LED);
+        } else {
+#if UART_DEBUG
+            UARTprintf("Calibrating ESCs at next power cycle is armed now!\n");
 #endif
-        calibrateESCs(false); // Set back to false
-
-        while (1) {
-            // Prevent user from flying
+            cfg.calibrateESCs = true;
+            updateConfig();
+            GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED);
         }
-    } else
-        writePPMAllOff();
-
+    } else { // Not both keys pressed
+        if (cfg.calibrateESCs) { // Delete the armed ESC calibrating
+#if UART_DEBUG
+            UARTprintf("Calibrating ESCs canceled!\n");
+#endif
+            cfg.calibrateESCs = false;
+            updateConfig();
+        }
+    }
+    writePPMAllOff();
 #if ONESHOT125
     syncMotors();
 #endif

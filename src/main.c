@@ -52,11 +52,12 @@ int main(void) {
     // Set the clocking to run directly from the external crystal/oscillator and use PLL to run at 80 MHz
     SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ); // Set clock to 80 MHz (400 MHz(PLL) / 2 / 2.5 = 80 MHz)
 
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_LED); // Enable peripheral
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOF); // Enable GPIO port F peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
     GPIOPinTypeGPIOOutput(GPIO_LED_BASE, GPIO_RED_LED | GPIO_BLUE_LED | GPIO_GREEN_LED); // Set red, blue and green LEDs as outputs
-
-    initPID();
+    GPIOPinTypeGPIOInput(GPIO_KEY_BASE, GPIO_KEY1 | GPIO_KEY2); // Key 1 and 2 as input
+    GPIOPadConfigSet(GPIO_KEY_BASE, GPIO_KEY1 | GPIO_KEY2, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU); // Switch on pull ups at key 1 and 2
+    
 #if UART_DEBUG
     initUART();
 #endif
@@ -64,6 +65,7 @@ int main(void) {
     initBuzzer();
     initEEPROM();
     initPPM();
+    initPID();
     initRX();
     initI2C();
     initMPU6500(&mpu6500);
@@ -82,13 +84,6 @@ int main(void) {
 
 #if UART_DEBUG && USE_MAG
     UARTprintf("Magnetometer zero values: %d\t%d\t%d\n", (int16_t)cfg.magZero.axis.X, (int16_t)cfg.magZero.axis.Y, (int16_t)cfg.magZero.axis.Z);
-#endif
-
-#if 0 // Set to 1 in order to run the ESC calibration routine at next power cycle
-    // WARNING: Do this with propellers off!!
-    // Also set CALIBRATE_ESC_ACTIVATED to 1 inside PPM.c
-    calibrateESCs(true); // ESCs will be calibrated on next power cycle
-    UARTprintf("Calibrating ESCs on next power cycle\n");
 #endif
 
 #if UART_DEBUG

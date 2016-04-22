@@ -22,11 +22,14 @@
 extern "C" {
 #endif
 
-#define SYSCTL_PERIPH_LED   SYSCTL_PERIPH_GPIOF
 #define GPIO_LED_BASE       GPIO_PORTF_BASE
 #define GPIO_RED_LED        GPIO_PIN_1
 #define GPIO_BLUE_LED       GPIO_PIN_2
 #define GPIO_GREEN_LED      GPIO_PIN_3
+
+#define GPIO_KEY_BASE       GPIO_PORTF_BASE
+#define GPIO_KEY1           GPIO_PIN_4
+#define GPIO_KEY2           GPIO_PIN_0
 
 #ifdef __cplusplus
 }
