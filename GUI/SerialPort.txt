@@ -1,1 +1,1 @@
-/dev/tty.LaunchPad-DevB
+COM6
