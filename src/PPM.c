@@ -100,13 +100,13 @@ void initPPM(void) {
 #if ONESHOT125
             syncMotors();
 #endif
-            delay(4000);
+            delay(6000);
             for (uint8_t i = 0; i < 4; i++)
                 writePPMUs(i, PPM_MIN);
 #if ONESHOT125
             syncMotors();
 #endif
-            delay(4000);
+            delay(6000);
             beepLongBuzzer();
             cfg.calibrateESCs = false;
             updateConfig();
