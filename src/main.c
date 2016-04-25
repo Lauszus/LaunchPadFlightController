@@ -56,13 +56,13 @@ int main(void) {
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
     GPIOPinTypeGPIOOutput(GPIO_LED_BASE, GPIO_RED_LED | GPIO_BLUE_LED | GPIO_GREEN_LED); // Set red, blue and green LEDs as outputs
 
-    initPID();
 #if UART_DEBUG
     initUART();
 #endif
     initTime();
     initBuzzer();
     initEEPROM();
+    initPID();
     initPPM();
     initRX();
     initI2C();
