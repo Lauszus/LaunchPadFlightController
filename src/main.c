@@ -94,7 +94,8 @@ int main(void) {
 #if UART_DEBUG
     printPIDValues(pidRoll.values); // Print PID Values
     printPIDValues(pidYaw.values);
-    printPIDValues(pidAltHold.values);
+    printPIDValues(pidSonarAltHold.values);
+    printPIDValues(pidBaroAltHold.values);
     printSettings(); // Print settings
 #endif
 

@@ -46,8 +46,10 @@ enum {
     GET_PID_ROLL_PITCH,
     SET_PID_YAW,
     GET_PID_YAW,
-    SET_PID_ALT_HOLD,
-    GET_PID_ALT_HOLD,
+    SET_PID_SONAR_ALT_HOLD,
+    GET_PID_SONAR_ALT_HOLD,
+    SET_PID_BARO_ALT_HOLD,
+    GET_PID_BARO_ALT_HOLD,
     SET_SETTINGS,
     GET_SETTINGS,
     SEND_ANGLES,
@@ -121,7 +123,8 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
             switch (msg.cmd) {
                 case SET_PID_ROLL_PITCH:
                 case SET_PID_YAW:
-                case SET_PID_ALT_HOLD:
+                case SET_PID_SONAR_ALT_HOLD:
+                case SET_PID_BARO_ALT_HOLD:
                     if (msg.length == sizeof(pid_values_bt_t)) { // Make sure that it has the right length
                         pid_values_t *pidValues = getPidValuesPointer(msg.cmd);
                         if (!pidValues)
@@ -152,7 +155,8 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
 
                 case GET_PID_ROLL_PITCH:
                 case GET_PID_YAW:
-                case GET_PID_ALT_HOLD:
+                case GET_PID_SONAR_ALT_HOLD:
+                case GET_PID_BARO_ALT_HOLD:
                     if (msg.length == 0 && getData(msg, NULL)) { // Check length and the checksum
                         pid_values_t *pidValues = getPidValuesPointer(msg.cmd);
                         if (!pidValues)
@@ -395,8 +399,10 @@ static pid_values_t* getPidValuesPointer(uint8_t cmd) {
         return &cfg.pidRollPitchValues;
     else if (cmd == SET_PID_YAW || cmd == GET_PID_YAW)
         return &cfg.pidYawValues;
-    else if (cmd == SET_PID_ALT_HOLD || cmd == GET_PID_ALT_HOLD)
-        return &cfg.pidAltHoldValues;
+    else if (cmd == SET_PID_SONAR_ALT_HOLD || cmd == GET_PID_SONAR_ALT_HOLD)
+        return &cfg.pidSonarAltHoldValues;
+    else if (cmd == SET_PID_BARO_ALT_HOLD || cmd == GET_PID_BARO_ALT_HOLD)
+        return &cfg.pidBaroAltHoldValues;
 
     return NULL;
 }

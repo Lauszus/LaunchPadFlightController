@@ -202,7 +202,7 @@ float updateAltitudeHold(float aux, altitude_t *altitude, float throttle, uint32
         setPoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, MAX_MOTOR_OUT, SONAR_MIN_DIST, SONAR_MAX_DIST);
 #endif
 
-        float altHoldOut = updatePID(&pidAltHold, setPoint, altitude->sonarDistance, dt);
+        float altHoldOut = updatePID(&pidSonarAltHold, setPoint, altitude->sonarDistance, dt);
         throttle = constrain(altHoldInitialThrottle + altHoldOut, MIN_MOTOR_OUT + MIN_MOTOR_OFFSET, MAX_MOTOR_OUT); // Throttle value is set to throttle when altitude hold were first activated plus output from PID controller
         /*UARTprintf("%u %d %d %d - %d %d %d %d\n", altHoldActive, (int32_t)altHoldThrottle, (int32_t)altHoldInitialThrottle, altHoldSetPoint,     (int32_t)setPoint, altitude->sonarDistance, (int32_t)altHoldOut, (int32_t)throttle);
         UARTFlushTx(false);*/
@@ -219,7 +219,7 @@ float updateAltitudeHold(float aux, altitude_t *altitude, float throttle, uint32
             altHoldInitialThrottle = throttle; // Save current throttle
             resetPIDAltHold();
         }
-        float altHoldOut = updatePID(&pidAltHold, altitudeSetPoint * 10.0f, altitude->altitudeLpf * 10.0f, dt); // Multiply by 10 in order to convert it from cm to mm
+        float altHoldOut = updatePID(&pidBaroAltHold, altitudeSetPoint * 10.0f, altitude->altitudeLpf * 10.0f, dt); // Multiply by 10 in order to convert it from cm to mm
         throttle = constrain(altHoldInitialThrottle + altHoldOut, MIN_MOTOR_OUT + MIN_MOTOR_OFFSET, MAX_MOTOR_OUT); // Throttle value is set to throttle when altitude hold were first activated plus output from PID controller
         /*UARTprintf1("%d %d %d %d %d\n", (int32_t)altitudeSetPoint, (int32_t)altitude->altitudeLpf, (int32_t)altHoldInitialThrottle, (int32_t)altHoldOut, (int32_t)throttle);
         UARTFlushTx1(false);*/
