@@ -15,8 +15,10 @@
  e-mail   :  lauszus@gmail.com
 */
 
-#if !defined(__logger_h__) && (STEP_ACRO_SELF_LEVEL || STEP_ALTITUDE_HOLD || STEP_HEADING_HOLD)
-#define __logger_h__
+#if !defined(__ak8963_h__) && USE_MAG
+#define __ak8963_h__
+
+#include <stdbool.h>
 
 #include "Types.h"
 
@@ -24,7 +26,9 @@
 extern "C" {
 #endif
 
-float stepResponse(bool active, float setPoint, float input, float step1, float step2, uint32_t interval, uint32_t now);
+bool initAK8963(void);
+bool dataReadyAK8963(void);
+void getAK8963Data(sensor_t *mag, bool calibrating);
 
 #ifdef __cplusplus
 }

@@ -1,4 +1,4 @@
-/* Copyright (C) 2015 Kristian Lauszus, TKJ Electronics. All rights reserved.
+/* Copyright (C) 2015 Kristian Sloth Lauszus. All rights reserved.
 
  This software may be distributed and modified under the terms of the GNU
  General Public License version 2 (GPL2) as published by the Free Software
@@ -10,9 +10,9 @@
  Contact information
  -------------------
 
- Kristian Lauszus, TKJ Electronics
- Web      :  http://www.tkjelectronics.com
- e-mail   :  kristianl@tkjelectronics.com
+ Kristian Sloth Lauszus
+ Web      :  http://www.lauszus.com
+ e-mail   :  lauszus@gmail.com
 */
 
 #include <stdint.h>
@@ -41,15 +41,18 @@
 #define GPIO_SONAR_TRIG_BASE        GPIO_PORTE_BASE
 #define GPIO_SONAR_TRIG             GPIO_PIN_0
 
-#define SYSCTL_PERIPH_ECHO          SYSCTL_PERIPH_GPIOB
-#define GPIO_SONAR_ECHO_BASE        GPIO_PORTB_BASE
-#define GPIO_SONAR_ECHO             GPIO_PIN_2
+#define SYSCTL_PERIPH_ECHO          SYSCTL_PERIPH_GPIOC
+#define GPIO_SONAR_ECHO_BASE        GPIO_PORTC_BASE
+#define GPIO_SONAR_ECHO             GPIO_PIN_5
 
 // Timer used to measure the width of the sonar echo pulse
-#define SYSCTL_PERIPH_SONAR_TIMER   SYSCTL_PERIPH_TIMER3
-#define GPIO_SONAR_ALTERNATE        GPIO_PB2_T3CCP0
-#define SONAR_TIMER_BASE            TIMER3_BASE
-#define SONAR_TIMER_INT             INT_TIMER3A
+#define SYSCTL_PERIPH_SONAR_TIMER   SYSCTL_PERIPH_WTIMER0
+#define GPIO_SONAR_ALTERNATE        GPIO_PC5_WT0CCP1
+#define SONAR_TIMER_BASE            WTIMER0_BASE
+#define SONAR_TIMER_INT             INT_WTIMER0B
+#define SONAR_TIMER                 TIMER_B
+#define SONAR_CAP_EVENT             TIMER_CAPB_EVENT
+#define SONAR_TIMER_CFG             TIMER_CFG_B_CAP_TIME_UP
 
 // Implemented based on: http://che126.che.caltech.edu/28015-PING-Sensor-Product-Guide-v2.0.pdf
 
@@ -60,8 +63,8 @@ static void SonarHandler(void) {
     static uint32_t prev = 0;
     static bool last_edge = false;
 
-    TimerIntClear(SONAR_TIMER_BASE, TIMER_CAPA_EVENT); // Clear interrupt
-    uint32_t curr = TimerValueGet(SONAR_TIMER_BASE, TIMER_A); // Read capture value
+    TimerIntClear(SONAR_TIMER_BASE, SONAR_CAP_EVENT); // Clear interrupt
+    uint32_t curr = TimerValueGet(SONAR_TIMER_BASE, SONAR_TIMER); // Read capture value
     bool edge = GPIOPinRead(GPIO_SONAR_ECHO_BASE, GPIO_SONAR_ECHO); // Read the GPIO pin
 
     if (last_edge && !edge) { // Check that we are going from a positive to falling edge
@@ -123,20 +126,20 @@ void initSonar(void) {
     GPIOPinConfigure(GPIO_SONAR_ALTERNATE); // Use alternate function
     GPIOPinTypeTimer(GPIO_SONAR_ECHO_BASE, GPIO_SONAR_ECHO); // Use pin with timer peripheral
 
-    // Split timers and enable timer A event up-count timer
-    TimerConfigure(SONAR_TIMER_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_CAP_TIME_UP);
+    // Split timers and enable timer event up-count timer
+    TimerConfigure(SONAR_TIMER_BASE, TIMER_CFG_SPLIT_PAIR | SONAR_TIMER_CFG);
 
-    // Configure the Timer A
-    TimerControlEvent(SONAR_TIMER_BASE, TIMER_A, TIMER_EVENT_BOTH_EDGES); // Interrupt on both edges
-    TimerIntRegister(SONAR_TIMER_BASE, TIMER_A, SonarHandler); // Register interrupt handler
-    TimerIntEnable(SONAR_TIMER_BASE, TIMER_CAPA_EVENT); // Enable timer capture A event interrupt
+    // Configure the Timer
+    TimerControlEvent(SONAR_TIMER_BASE, SONAR_TIMER, TIMER_EVENT_BOTH_EDGES); // Interrupt on both edges
+    TimerIntRegister(SONAR_TIMER_BASE, SONAR_TIMER, SonarHandler); // Register interrupt handler
+    TimerIntEnable(SONAR_TIMER_BASE, SONAR_CAP_EVENT); // Enable timer capture event interrupt
     IntPrioritySet(SONAR_TIMER_INT, 0); // Configure Timer interrupt priority as 0
     IntEnable(SONAR_TIMER_INT); // Enable Timer interrupt
 
     GPIOPinTypeGPIOOutput(GPIO_SONAR_TRIG_BASE, GPIO_SONAR_TRIG); // Set pin as output
     GPIOPinWrite(GPIO_SONAR_TRIG_BASE, GPIO_SONAR_TRIG, 0); // Set pin low
 
-    TimerEnable(SONAR_TIMER_BASE, TIMER_A); // Enable Timer A
+    TimerEnable(SONAR_TIMER_BASE, SONAR_TIMER); // Enable Timer
 }
 
 #endif // USE_SONAR

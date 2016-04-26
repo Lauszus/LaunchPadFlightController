@@ -1,5 +1,5 @@
 # LaunchPad Flight Controller
-#### Developed by Kristian Lauszus, 2015
+#### Developed by Kristian Sloth Lauszus, 2015
 _________
 [![Build Status](https://travis-ci.org/Lauszus/LaunchPadFlightController.svg)](https://travis-ci.org/Lauszus/LaunchPadFlightController)
 
@@ -7,55 +7,17 @@ This is a flight controller used for a quadcopter in X-configuration.
 
 It is written for the [Tiva C Series TM4C123G LaunchPad](http://www.ti.com/tool/EK-TM4C123GXL) running at 80 MHz.
 
-More information can be found at the following blog post: <http://blog.tkjelectronics.dk/2015/01/launchpad-flight-controller/>.
-
-# Build instructions
-
-In order to built this project you need to download Keil µVision IDE 5 or use [Make](http://www.gnu.org/software/make/).
-
-If you are using Keil µVision IDE 5, then simply open the [project file](LaunchPadFlightController.uvprojx).
-
-If you are using Make, then you will need to first download and install [gcc-arm-none-eabi](https://launchpad.net/gcc-arm-embedded/4.8/4.8-2014-q3-update) and then install [lm4tools](https://github.com/utzig/lm4tools).
-
-lm4tools can be installed like so:
-
-```bash
-$ git clone https://github.com/utzig/lm4tools.git
-$ cd lm4tools/
-$ cd lm4flash/ && make
-$ sudo cp lm4flash /usr/bin/
-$ cd ..
-$ cd lmicdiusb/ && make
-$ sudo cp lmicdi /usr/bin/
-```
-
-If you are on a Mac, I recommend installing gcc-arm-none-eabi using Homebrew like so:
-
-```bash
-$ brew tap PX4/homebrew-px4
-$ brew update
-$ brew install gcc-arm-none-eabi
-```
-
-OpenOCD can be installed via Homebrew as well:
-
-```bash
-$ brew install openocd
-```
-
-# Android application
-
-Android application is available at the following repository: <https://github.com/Lauszus/LaunchPadFlightControllerAndroid>.
-
-[![Screenshots](https://raw.githubusercontent.com/Lauszus/LaunchPadFlightControllerAndroid/master/android_screenshots.png)](https://github.com/Lauszus/LaunchPadFlightControllerAndroid)
+More information can be found at the following blog posts: <http://blog.tkjelectronics.dk/2015/01/launchpad-flight-controller> and <http://blog.tkjelectronics.dk/2015/08/bachelors-thesis-launchpad-flight-controller>.
 
 # Video demonstrations
 
 Some video demonstrations of the flight controller can be seen at my [YouTube channel](https://www.youtube.com/playlist?list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg).
 
-# GUI
+<a href="https://www.youtube.com/watch?v=HXX-2L1hKgI&index=1&list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg" target="_blank"><img src="http://img.youtube.com/vi/HXX-2L1hKgI/0.jpg" width="240" height="180" border="10" /></a>
 
-A simple GUI can be found inside the [GUI](GUI) directory. It can be used to visualize the orientation of the flight controller.
+# Report
+
+The report I wrote for my Bachelor's these can be found in the [docs](docs) folder. The 3D model and Matlab code can be found in there as well.
 
 # Features
 
@@ -63,7 +25,7 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
     - __AUX1:__ Use 3-POS switch for self level and heading hold. At first position both are off, at second position self level is on and at third position both are on
     - __AUX2:__ Use a 2-POS switch for altitude hold. Activated when switch is high. Note that self level mode must be activated for altitude hold to work
 * Store PID values, calibration values etc. in EEPROM
-* Gyro, accelerometer & Magnetometercalibration routine
+* Gyro, accelerometer & magnetometer calibration routine
     - Gyro is calibrated at startup
     - Accelerometer and magnetometer calibration routine can be activated in the code or by using the Android app
     - The magnetometer turns on the Blue LED while calibrating
@@ -71,8 +33,8 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
 * Arm/disarm using rudder
 * Status LEDs
 * Supports CPPM receivers
-* Gyro & accelerometer (MPU-6500)
-* Magnetometer (HMC5883L)
+* Gyro & accelerometer (MPU-6500 or MPU-9250)
+* Magnetometer (HMC5883L or AK8963 (inside MPU-9250))
 * Barometer (BMP180)
 * Ultrasound sensor aka sonar (HC-SR04)
 * [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid)
@@ -92,22 +54,22 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
 
 # Pinout
 
-| Pin  |    Connection  |
-|------|----------------|
-| PB6  |     Motor 1    |
-| PB7  |     Motor 2    |
-| PB4  |     Motor 3    |
-| PB5  |     Motor 4    |
-| PC6  |    CPPM input  |
-| PA6  |      SCL       |
-| PA7  |      SDA       |
-| PE3  |  MPU-6500 INT  |
-| PB2  |   Sonar echo   |
-| PE0  |  Sonar trigger |
-| PB0* |    UART1 RX    |
-| PB1* |    UART1 TX    |
-| PA5  |     Buzzer     |
-| PE4  |  HMC5883L DRDY |
+| Pin  |         Connection      |
+|------|-------------------------|
+| PB6  |          Motor 1        |
+| PB7  |          Motor 2        |
+| PB4  |          Motor 3        |
+| PB5  |          Motor 4        |
+| PC6  |         CPPM input      |
+| PA6  |           SCL           |
+| PA7  |           SDA           |
+| PE2  |  MPU-6500/MPU-9250 INT  |
+| PC5  |        Sonar echo       |
+| PE0  |       Sonar trigger     |
+| PB0* |         UART1 RX        |
+| PB1* |         UART1 TX        |
+| PD2  |          Buzzer         |
+| PE3  |       HMC5883L DRDY     |
 
 \* UART1 is connected to a HC-06 Bluetooth module running at a baudrate of 115200. __Not 5V tolerant!__, so make sure your Bluetooth module outputs 3.3 voltage level or use logic level converter.
 
@@ -121,8 +83,65 @@ It is a good idea to run the accelerometer, magnetometer and ESCs calibration ro
 
 __WARNING:__ Take propellers OFF when testing and calibrating ESCs!!
 
+# Android application
+
+Android application is available at the following repository: <https://github.com/Lauszus/LaunchPadFlightControllerAndroid>.
+
+[![Screenshots](https://raw.githubusercontent.com/Lauszus/LaunchPadFlightControllerAndroid/master/android_screenshots.png)](https://github.com/Lauszus/LaunchPadFlightControllerAndroid)
+
+# GUI
+
+A simple GUI can be found inside the [GUI](GUI) directory. It can be used to visualize the orientation of the flight controller.
+
+# Build instructions
+
+In order to built this project you need to download Keil µVision IDE 5 or use [Make](http://www.gnu.org/software/make/).
+
+If you are using Keil µVision IDE 5, then simply open the [project file](LaunchPadFlightController.uvprojx).
+
+If you are using Make, then you will need to first download and install [gcc-arm-none-eabi](https://launchpad.net/gcc-arm-embedded/4.8/4.8-2014-q3-update) and then install [lm4tools](https://github.com/utzig/lm4tools).
+
+lm4tools can be installed like so:
+
+```bash
+$ git clone https://github.com/utzig/lm4tools.git
+$ cd lm4tools/
+$ cd lm4flash/ && make
+$ sudo cp lm4flash /usr/bin/
+```
+
+If you are on a Mac, I recommend installing gcc-arm-none-eabi using [Homebrew](http://brew.sh) like so:
+
+```bash
+$ brew tap PX4/homebrew-px4
+$ brew update
+$ brew install gcc-arm-none-eabi
+```
+
+## Hardware debugging using OpenOCD
+
+OpenOCD can be installed via [Homebrew](http://brew.sh) as well:
+
+```bash
+$ brew install openocd
+```
+
+Now run the following commands:
+
+```bash
+$ openocd --file /usr/local/share/openocd/scripts/board/ek-tm4c123gxl.cfg
+
+$ arm-none-eabi-gdb gcc/LaunchPadFlightController.axf
+(gdb) target extended-remote :3333
+(gdb) monitor reset halt
+(gdb) load
+(gdb) monitor reset init
+```
+
+More information regarding hardware debugging can be found at the [Wiki](https://github.com/Lauszus/LaunchPadFlightController/wiki/Hardware-Debugging-In-Eclipse).
+
 # Credits
 
 A lot of the inspiration for this code came from [Cleanflight](https://github.com/cleanflight/cleanflight) and other open source flight controller projects.
 
-For more information send me an email at <kristianl@tkjelectronics.dk>.
+For more information send me an email at <lauszus@gmail.com>.

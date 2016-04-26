@@ -1,4 +1,4 @@
-/* Copyright (C) 2015 Kristian Lauszus, TKJ Electronics. All rights reserved.
+/* Copyright (C) 2015 Kristian Sloth Lauszus. All rights reserved.
 
  This software may be distributed and modified under the terms of the GNU
  General Public License version 2 (GPL2) as published by the Free Software
@@ -10,9 +10,9 @@
  Contact information
  -------------------
 
- Kristian Lauszus, TKJ Electronics
- Web      :  http://www.tkjelectronics.com
- e-mail   :  kristianl@tkjelectronics.com
+ Kristian Sloth Lauszus
+ Web      :  http://www.lauszus.com
+ e-mail   :  lauszus@gmail.com
 */
 
 #ifndef __mpu6500_h__
@@ -34,9 +34,10 @@ typedef struct {
 } mpu6500_t;
 
 void initMPU6500(mpu6500_t *mpu6500);
+void mpu6500BoardOrientation(sensorRaw_t *sensorRaw);
 bool dataReadyMPU6500(void);
 void getMPU6500Data(mpu6500_t *mpu6500);
-bool calibrateAcc(mpu6500_t *mpu6500);
+bool calibrateMPU6500Acc(mpu6500_t *mpu6500);
 
 #ifdef __cplusplus
 }

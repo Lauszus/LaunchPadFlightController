@@ -1,4 +1,4 @@
-/* Copyright (C) 2015 Kristian Lauszus, TKJ Electronics. All rights reserved.
+/* Copyright (C) 2015 Kristian Sloth Lauszus. All rights reserved.
 
  This software may be distributed and modified under the terms of the GNU
  General Public License version 2 (GPL2) as published by the Free Software
@@ -10,9 +10,9 @@
  Contact information
  -------------------
 
- Kristian Lauszus, TKJ Electronics
- Web      :  http://www.tkjelectronics.com
- e-mail   :  kristianl@tkjelectronics.com
+ Kristian Sloth Lauszus
+ Web      :  http://www.lauszus.com
+ e-mail   :  lauszus@gmail.com
 */
 
 #include <stdint.h>
@@ -24,9 +24,9 @@
 #include "Buzzer.h"
 #include "EEPROM.h"
 #include "HeadingHold.h"
-#include "HMC5883L.h"
 #include "I2C.h"
 #include "IMU.h"
+#include "Magnetometer.h"
 #include "MPU6500.h"
 #include "PPM.h"
 #include "PID.h"
@@ -46,13 +46,15 @@
 
 static angle_t angle; // Struct used to store angles
 static mpu6500_t mpu6500; // Gyro and accelerometer readings
-#if USE_MAG
-static hmc5883l_t hmc5883l; // Magnetometer readings
-#endif
+static sensor_t mag = { .data = { 1.0f, 0.0f, 0.0f } }; // If no magnetometer is used, then just use a vector with a x-component only
 
 int main(void) {
     // Set the clocking to run directly from the external crystal/oscillator and use PLL to run at 80 MHz
     SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_OSC_MAIN | SYSCTL_XTAL_16MHZ); // Set clock to 80 MHz (400 MHz(PLL) / 2 / 2.5 = 80 MHz)
+
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_LED); // Enable peripheral
+    SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
+    GPIOPinTypeGPIOOutput(GPIO_LED_BASE, GPIO_RED_LED | GPIO_BLUE_LED | GPIO_GREEN_LED); // Set red, blue and green LEDs as outputs
 
     initPID();
 #if UART_DEBUG
@@ -66,17 +68,13 @@ int main(void) {
     initI2C();
     initMPU6500(&mpu6500);
 #if USE_MAG
-    intHMC5883L(&hmc5883l);
+    initMag();
 #endif
 #if USE_SONAR || USE_BARO
     initAltitudeHold();
 #endif
     initBluetooth();
     IntMasterEnable(); // Enable all interrupts
-
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_LED); // Enable peripheral
-    SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
-    GPIOPinTypeGPIOOutput(GPIO_LED_BASE, GPIO_RED_LED | GPIO_BLUE_LED | GPIO_GREEN_LED); // Set red, blue and green LEDs as outputs
 
 #if UART_DEBUG
     UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", cfg.accZero.axis.X, cfg.accZero.axis.Y, cfg.accZero.axis.Z);
@@ -146,15 +144,8 @@ int main(void) {
                 getRXChannel(RX_THROTTLE_CHAN) > CHANNEL_MIN_CHECK)
 #endif
             runMotors = true;
-        else {
-#if USE_MAG
-            if (readBluetoothData(&mpu6500, &hmc5883l, &angle)) { // Read Bluetooth data if motors are not spinning
-#else
-            if (readBluetoothData(&mpu6500, &angle)) { // Read Bluetooth data if motors are not spinning
-#endif
-                beepBuzzer(); // Indicate if new values were set
-            }
-        }
+        else if (readBluetoothData(&mpu6500, &angle)) // Read Bluetooth data if motors are not spinning
+            beepBuzzer(); // Indicate if new values were set
 
         if (dataReadyMPU6500()) {
             uint32_t now = micros();
@@ -166,14 +157,9 @@ int main(void) {
             // Read IMU
             getMPU6500Data(&mpu6500); // Get accelerometer and gyroscope values
 #if USE_MAG
-            if (dataReadyHMC5883L()) // The HMC5883L update rate is very slow (15 Hz), so it does not matter that we sample inside here
-                getHMC5883LData(&hmc5883l, false); // Get magnetometer values with zero values subtracted
-            getAngles(&mpu6500, &hmc5883l.mag, &angle, dt); // Calculate pitch, roll and yaw
-#else
-            // If no magnetometer is used, then just define a vector with a x-component only
-            static sensor_t mag = { .data = { 1.0f, 0.0f, 0.0f } };
-            getAngles(&mpu6500, &mag, &angle, dt); // Calculate pitch, roll and yaw
+            getMagData(&mag, false); // Get magnetometer values with zero values subtracted
 #endif
+            getAngles(&mpu6500, &mag, &angle, dt); // Calculate pitch, roll and yaw
 
 #if USE_SONAR || USE_BARO
             static altitude_t altitude;
@@ -297,7 +283,6 @@ int main(void) {
 // TODO:
     // Altitude hold
         // Implement altitude hold using height estimated using barometer
-        // Use wide timer for sonar
         // Redo take off sequence
             // Ramp up motors slowly
     // Android App
@@ -315,3 +300,6 @@ int main(void) {
         // And they should also be on the same form to make it consistent
     // Store angles in radians as well
     // IMU driver should have MPU-6500 and HMC5883L instances, so they did not have to be in the main loop
+    // Make yaw right hand rotation
+    // Move all IMU related code into IMU driver
+        // Also make generic accGyro driver

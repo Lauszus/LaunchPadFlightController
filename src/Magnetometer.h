@@ -15,8 +15,8 @@
  e-mail   :  lauszus@gmail.com
 */
 
-#if !defined(__logger_h__) && (STEP_ACRO_SELF_LEVEL || STEP_ALTITUDE_HOLD || STEP_HEADING_HOLD)
-#define __logger_h__
+#if !defined(__magnetometer_h__) && USE_MAG
+#define __magnetometer_h__
 
 #include "Types.h"
 
@@ -24,7 +24,9 @@
 extern "C" {
 #endif
 
-float stepResponse(bool active, float setPoint, float input, float step1, float step2, uint32_t interval, uint32_t now);
+void initMag(void);
+bool getMagData(sensor_t *mag, bool calibrating);
+void calibrateMag(void);
 
 #ifdef __cplusplus
 }

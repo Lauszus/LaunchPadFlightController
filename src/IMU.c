@@ -1,4 +1,4 @@
-/* Copyright (C) 2015 Kristian Lauszus, TKJ Electronics. All rights reserved.
+/* Copyright (C) 2015 Kristian Sloth Lauszus. All rights reserved.
 
  This software may be distributed and modified under the terms of the GNU
  General Public License version 2 (GPL2) as published by the Free Software
@@ -10,9 +10,9 @@
  Contact information
  -------------------
 
- Kristian Lauszus, TKJ Electronics
- Web      :  http://www.tkjelectronics.com
- e-mail   :  kristianl@tkjelectronics.com
+ Kristian Sloth Lauszus
+ Web      :  http://www.lauszus.com
+ e-mail   :  lauszus@gmail.com
 */
 
 // Inspired by: https://github.com/cleanflight/cleanflight/blob/78a4476506c06315d7296a010a2c7ba003146b44/src/main/flight/imu.c
@@ -101,9 +101,9 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
     for (uint8_t axis = 0; axis < 3; axis++)
         gyroAngle.data[axis] += mpu6500->gyroRate.data[axis] * dt; // Gyro angle is only used for debugging
 
-    UARTprintf("%d\t%d\t", (int16_t)gyroAngle.roll, (int16_t)angle->roll);
-    UARTprintf("%d\t%d\t", (int16_t)gyroAngle.pitch, (int16_t)angle->pitch);
-    UARTprintf("%d\t%d\n", (int16_t)gyroAngle.yaw, (int16_t)angle->yaw);
+    UARTprintf("%d\t%d\t", (int16_t)gyroAngle.axis.roll, (int16_t)angle->axis.roll);
+    UARTprintf("%d\t%d\t", (int16_t)gyroAngle.axis.pitch, (int16_t)angle->axis.pitch);
+    UARTprintf("%d\t%d\n", (int16_t)gyroAngle.axis.yaw, (int16_t)angle->axis.yaw);
     UARTFlushTx(false);
 #endif
 }

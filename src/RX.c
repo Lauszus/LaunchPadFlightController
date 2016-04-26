@@ -1,4 +1,4 @@
-/* Copyright (C) 2015 Kristian Lauszus, TKJ Electronics. All rights reserved.
+/* Copyright (C) 2015 Kristian Sloth Lauszus. All rights reserved.
 
  This software may be distributed and modified under the terms of the GNU
  General Public License version 2 (GPL2) as published by the Free Software
@@ -10,9 +10,9 @@
  Contact information
  -------------------
 
- Kristian Lauszus, TKJ Electronics
- Web      :  http://www.tkjelectronics.com
- e-mail   :  kristianl@tkjelectronics.com
+ Kristian Sloth Lauszus
+ Web      :  http://www.lauszus.com
+ e-mail   :  lauszus@gmail.com
 */
 
 #include <stdint.h>
@@ -58,7 +58,7 @@ static void CaptureHandler(void) {
         channelIndex = 0; // Reset channel index
         validRXData = true;
         for (uint8_t i = 0; i < RX_NUM_CHANNELS; i++) {
-            if (rxChannel[i] == 0) // Make sure that all are above 0
+            if (rxChannel[i] < 500 || rxChannel[i] > 2500) // Make sure that all are within a valid range
                 validRXData = false;
         }
         if (validRXData)
