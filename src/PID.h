@@ -41,7 +41,7 @@ float updatePID(pid_t *pid, float setPoint, float input, float dt);
 void resetPIDRollPitchYaw(void);
 void resetPIDAltHold(void);
 
-extern pid_t pidRoll, pidPitch, pidYaw, pidAltHold;
+extern pid_t pidRoll, pidPitch, pidYaw, pidSonarAltHold, pidBaroAltHold;
 
 #ifdef __cplusplus
 }

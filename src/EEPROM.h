@@ -28,7 +28,7 @@ extern "C" {
 typedef struct {
     // Can be set by the user
     pid_values_t pidRollPitchValues, pidYawValues; // Use same PID values for both pitch and roll, but different values for yaw
-    pid_values_t pidAltHoldValues; // PID values for altitude hold
+    pid_values_t pidSonarAltHoldValues, pidBaroAltHoldValues; // PID values for altitude hold
     float angleKp; // Self level mode Kp value
     float headKp; // Heading mode Kp value
     uint8_t maxAngleInclination; // Max angle in self level mode

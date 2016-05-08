@@ -94,7 +94,8 @@ int main(void) {
 #if UART_DEBUG
     printPIDValues(pidRoll.values); // Print PID Values
     printPIDValues(pidYaw.values);
-    printPIDValues(pidAltHold.values);
+    printPIDValues(pidSonarAltHold.values);
+    printPIDValues(pidBaroAltHold.values);
     printSettings(); // Print settings
 #endif
 
@@ -225,9 +226,9 @@ int main(void) {
 
 #if USE_SONAR || USE_BARO
                 if (altitudeMode)
-                    throttle = updateAltitudeHold(&altitude, throttle, now, dt);
+                    throttle = updateAltitudeHold(getRXChannel(RX_AUX2_CHAN), &altitude, throttle, now, dt);
                 else
-                    resetAltitudeHold();
+                    resetAltitudeHold(&altitude);
 #endif
 
                 float motors[4]; // Motor 0 is bottom right, motor 1 is top right, motor 2 is bottom left and motor 3 is top left
@@ -263,7 +264,7 @@ int main(void) {
                 writePPMAllOff();
                 resetPIDRollPitchYaw();
 #if USE_SONAR || USE_BARO
-                resetAltitudeHold();
+                resetAltitudeHold(&altitude);
 #endif
 #if USE_MAG
                 resetHeadingHold(&angle);
