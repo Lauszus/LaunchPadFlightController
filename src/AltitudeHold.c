@@ -23,12 +23,13 @@
 #include <stdlib.h>
 #include <math.h>
 
-#if USE_SONAR || USE_BARO
+#if USE_SONAR || USE_BARO || USE_LIDAR_LITE
 
 #include "AltitudeHold.h"
 #include "BMP180.h"
 #include "Buzzer.h"
 #include "IMU.h"
+#include "LidarLiteV3.h"
 #include "MPU6500.h"
 #include "StepResponse.h"
 #include "PID.h"
@@ -55,6 +56,9 @@ void initAltitudeHold(void) {
 #if USE_SONAR
     initSonar();
 #endif
+#if USE_LIDAR_LITE
+    initLidarLite();
+#endif
 #if USE_BARO
     initBMP180(&bmp180);
 #endif
@@ -67,7 +71,7 @@ void initAltitudeHold(void) {
 // TODO: LPF mpu6500->accBodyFrame.axis.Z
 // TODO: Maybe the altitude should only be run when new barometer values have been read and then just use a moving average on the acceleration data
 // TODO: Reset acceleration estimate when unarmed, as we can assumed that it is at rest
-void getAltitude(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, uint32_t __attribute__((unused)) now, float dt) {
+void getAltitude(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6500, altitude_t __attribute__((unused)) *altitude, uint32_t __attribute__((unused)) now, float __attribute__((unused)) dt) {
 #if USE_SONAR
     if (triggerSonar()) { // Trigger sonar
 #if USE_BARO
@@ -86,6 +90,11 @@ void getAltitude(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, uint3
         UARTFlushTx1(false);
 #endif
     }
+#endif
+
+#if USE_LIDAR_LITE
+    if (triggerLidarLite()) // Trigger lidar lite
+        altitude->lidarLiteDistance = getLidarLiteDistance(angle);
 #endif
 
 #if USE_BARO
@@ -118,7 +127,7 @@ void getAltitude(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, uint3
 #if USE_SONAR && 1
     // TODO: Add smooth transaction between sonar and barometer
     static float altitudeBaroOffset;
-    if (altitude->sonarDistance > 0 && altitude->sonarDistance < /*2000*/100) {
+    if (altitude->sonarDistance >= 0 && altitude->sonarDistance < /*2000*/100) {
         float sonarHeight = (float)altitude->sonarDistance / 10.0f; // Convert sonar distance to cm
         altitudeBaroOffset = baroAltitude - sonarHeight; // Set altitude offset
         baroAltitude = sonarHeight; // Set altitude estimate equal to sonar height
@@ -229,7 +238,7 @@ float updateAltitudeHold(float aux, altitude_t *altitude, float throttle, uint32
     return throttle;
 }
 
-void resetAltitudeHold(altitude_t *altitude) {
+void resetAltitudeHold(altitude_t __attribute__((unused)) *altitude) {
     altHoldActive = false;
 #if USE_BARO
     altitudeSetPoint = altitude->altitudeLpf;

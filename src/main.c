@@ -70,7 +70,7 @@ int main(void) {
 #if USE_MAG
     initMag();
 #endif
-#if USE_SONAR || USE_BARO
+#if USE_SONAR || USE_BARO || USE_LIDAR_LITE
     initAltitudeHold();
 #endif
     initBluetooth();
@@ -303,3 +303,6 @@ int main(void) {
     // Make yaw right hand rotation
     // Move all IMU related code into IMU driver
         // Also make generic accGyro driver
+    // Implement altitude hold using LIDAR-Lite v3
+        // Read mode control pin
+        // Experiment with different configurations
