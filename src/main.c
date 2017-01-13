@@ -304,5 +304,4 @@ int main(void) {
     // Move all IMU related code into IMU driver
         // Also make generic accGyro driver
     // Implement altitude hold using LIDAR-Lite v3
-        // Read mode control pin
         // Experiment with different configurations

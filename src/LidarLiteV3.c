@@ -59,9 +59,9 @@ void initLidarLite(void) {
     i2cWrite(LIDAR_LITE_ADDRESS, LIDAR_LITE_ACQ_COMMAND, 0x00); //  Reset FPGA, all registers return to default values
     delay(22); // Wait 22 ms after reset according to datasheet
 
-    // Default configuration except use mode control pin is set high when busy
+    // Default configuration
     i2cWrite(LIDAR_LITE_ADDRESS, LIDAR_LITE_SIG_COUNT_VAL, 0x80); // Maximum acquisition count
-    i2cWrite(LIDAR_LITE_ADDRESS, LIDAR_LITE_ACQ_CONFIG_REG, 0x08/* | 0x01*/); // Use default value and use enable "Status output mode"
+    i2cWrite(LIDAR_LITE_ADDRESS, LIDAR_LITE_ACQ_CONFIG_REG, 0x08); // Disable measurement quick termination
     i2cWrite(LIDAR_LITE_ADDRESS, LIDAR_LITE_THRESHOLD_BYPASS, 0x00); // Use default valid measurement detection algorithm
 }
 
