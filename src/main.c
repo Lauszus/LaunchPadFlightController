@@ -189,7 +189,7 @@ int main(void) {
                 if (angleMode) { // Angle mode
                     const uint8_t maxAngleInclination =
 #if USE_SONAR
-                            altitudeMode ? cfg.maxAngleInclinationSonar :
+                            altitudeMode ? cfg.maxAngleInclinationDistSensor :
 #endif
                             cfg.maxAngleInclination; // If in altitude mode the angle has to be limited to the capability of the sonar
 

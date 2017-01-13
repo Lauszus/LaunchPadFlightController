@@ -84,7 +84,7 @@ bool triggerLidarLite(void) {
 
 // Returns the distance in mm. Range is 0-40000 mm or -1 if the value is invalid.
 int32_t getLidarLiteDistance(angle_t *angle) {
-    if (fmaxf(fabsf(angle->axis.roll), fabsf(angle->axis.pitch)) > cfg.maxAngleInclinationSonar) // Return -1 if it is tilted more than the maximum tilt angle
+    if (fmaxf(fabsf(angle->axis.roll), fabsf(angle->axis.pitch)) > cfg.maxAngleInclinationDistSensor) // Return -1 if it is tilted more than the maximum tilt angle
         return -1;
 
     uint8_t i2cBuffer[2]; // Buffer for I2C data
