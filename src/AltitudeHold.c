@@ -42,8 +42,15 @@
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
 
-#define SONAR_MIN_DIST 50   // Limit minimum value to 5cm
-#define SONAR_MAX_DIST 1500 // Limit maximum altitude to 1.5m which is in practice the limit of the sonar
+#if USE_SONAR
+#define SONAR_MIN_DIST 50    // Limit minimum value to 5 cm
+#define SONAR_MAX_DIST 1500  // Limit maximum altitude to 1.5 m which is in practice the limit of the sonar
+#endif
+
+#if USE_LIDAR_LITE
+#define LIDAR_MIN_DIST 1000  // Limit minimum value to 1 m
+#define LIDAR_MAX_DIST 40000 // Limit maximum altitude to 40 m
+#endif
 
 #if USE_BARO
 static bmp180_t bmp180; // Barometer readings
@@ -71,7 +78,7 @@ void initAltitudeHold(void) {
 // TODO: LPF mpu6500->accBodyFrame.axis.Z
 // TODO: Maybe the altitude should only be run when new barometer values have been read and then just use a moving average on the acceleration data
 // TODO: Reset acceleration estimate when unarmed, as we can assumed that it is at rest
-void getAltitude(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6500, altitude_t __attribute__((unused)) *altitude, uint32_t __attribute__((unused)) now, float __attribute__((unused)) dt) {
+void getAltitude(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6500, altitude_t *altitude, uint32_t __attribute__((unused)) now, float __attribute__((unused)) dt) {
 #if USE_SONAR
     if (triggerSonar()) { // Trigger sonar
 #if USE_BARO
@@ -95,6 +102,31 @@ void getAltitude(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6500, alt
 #if USE_LIDAR_LITE
     if (triggerLidarLite()) // Trigger lidar lite
         altitude->lidarLiteDistance = getLidarLiteDistance(angle);
+#endif
+
+#if USE_SONAR && USE_LIDAR_LITE
+    if (altitude->sonarDistance >= 0 && altitude->sonarDistance <= LIDAR_MIN_DIST) // Use only sonar measurement when below the minimum distance of the LIDAR-Lite v3
+        altitude->distance = altitude->sonarDistance;
+    else if (altitude->lidarLiteDistance >= SONAR_MAX_DIST) // Use LIDAR-Lite v3 measurement if we exceed the maximum limit of the sonar
+        altitude->distance = altitude->lidarLiteDistance;
+    else {
+        if (altitude->sonarDistance < 0) // Invalid result
+            altitude->distance = altitude->lidarLiteDistance; // So use LIDAR-Lite v3 only, this might actually set the distance to -1 if the LIDAR is also returning an invalid result, but this is handled in the altitude hold code
+        else if (altitude->lidarLiteDistance < 0) // Invalid result
+            altitude->distance = altitude->sonarDistance; // Same the other way around
+        else { // Combine the measurements from both sensors
+            const float dist_coef = (float)(constrain(altitude->distance, LIDAR_MIN_DIST, SONAR_MAX_DIST) - LIDAR_MIN_DIST) / (float)(SONAR_MAX_DIST - LIDAR_MIN_DIST); // Constrain in case distance was not previously set and then calculate value in the range [0,1]
+            altitude->distance = (float)altitude->sonarDistance * (1.0f - dist_coef) + (float)altitude->lidarLiteDistance * dist_coef; // Make smooth transaction between the two sensors
+        }
+    }
+#elif USE_SONAR
+    altitude->distance = altitude->sonarDistance; // Only sonar distance is available
+#elif USE_LIDAR_LITE
+    altitude->distance = altitude->lidarLiteDistance; // Only LIDAR-Lite v3 is available
+#endif // USE_SONAR && USE_LIDAR_LITE
+#if 0
+    UARTprintf("Distance: %d.%02u\n", (int32_t)altitude->distance, (uint32_t)(abs(altitude->distance * 100.0f) % 100));
+    UARTFlushTx(false);
 #endif
 
 #if USE_BARO
@@ -164,16 +196,17 @@ void getAltitude(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6500, alt
 #endif // USE_BARO
 }
 
+// TODO: Handle if distance is -1 in a better way
 float updateAltitudeHold(float aux, altitude_t *altitude, float throttle, uint32_t __attribute__((unused)) now, float dt) {
     static const float MIN_MOTOR_OFFSET = (MAX_MOTOR_OUT - MIN_MOTOR_OUT) * 0.05f; // Add 5% to minimum, so the motors are never completely shut off
     static float altHoldInitialThrottle = -30.0f; // Throttle when altitude hold was activated
 
-#if USE_SONAR
+#if USE_SONAR || USE_LIDAR_LITE
     static const float throttle_noise_lpf = 1000.0f; // TODO: Set via app
     static float altHoldThrottle; // Low pass filtered throttle input
     static int16_t altHoldSetPoint; // Altitude hold set point
 
-    if (aux < 60 && altitude->sonarDistance >= 0/* && altitude->sonarDistance > 2000*/) { // Make sure the distance is valid
+    if (aux < 60 && altitude->distance >= 0) { // Make sure the distance is valid
         if (!altHoldActive) { // We just went from deactivated to active
             altHoldActive = true;
             resetPIDAltHold();
@@ -184,7 +217,13 @@ float updateAltitudeHold(float aux, altitude_t *altitude, float throttle, uint32
                 altHoldSetPoint = 1000; // Set to 1m
                 altHoldInitialThrottle = -30.0f; // Set the throttle value to where is approximately hovers
             } else {
-                altHoldSetPoint = constrain(altitude->sonarDistance, SONAR_MIN_DIST, SONAR_MAX_DIST); // Constrain set point to the min and max allowed
+#if USE_SONAR && USE_LIDAR_LITE
+                altHoldSetPoint = constrain(altitude->distance, SONAR_MIN_DIST, LIDAR_MAX_DIST); // Constrain set point to the min and max allowed
+#elif USE_SONAR
+                altHoldSetPoint = constrain(altitude->distance, SONAR_MIN_DIST, SONAR_MAX_DIST); // Constrain set point to the min and max allowed
+#elif USE_LIDAR_LITE
+                altHoldSetPoint = constrain(altitude->distance, LIDAR_MIN_DIST, LIDAR_MAX_DIST); // Constrain set point to the min and max allowed
+#endif // USE_SONAR && USE_LIDAR_LITE
                 altHoldInitialThrottle = throttle; // Save current throttle
             }
         }
@@ -202,24 +241,36 @@ float updateAltitudeHold(float aux, altitude_t *altitude, float throttle, uint32
 
         float setPoint;
 #if !STEP_ALTITUDE_HOLD
+#if USE_SONAR && USE_LIDAR_LITE
+        if (altHoldThrottle < altHoldInitialThrottle)
+            setPoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, altHoldInitialThrottle, SONAR_MIN_DIST, altHoldSetPoint);
+        else
+            setPoint = mapf(altHoldThrottle, altHoldInitialThrottle, MAX_MOTOR_OUT, altHoldSetPoint, LIDAR_MAX_DIST);
+#elif USE_SONAR
         if (altHoldThrottle < altHoldInitialThrottle)
             setPoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, altHoldInitialThrottle, SONAR_MIN_DIST, altHoldSetPoint);
         else
             setPoint = mapf(altHoldThrottle, altHoldInitialThrottle, MAX_MOTOR_OUT, altHoldSetPoint, SONAR_MAX_DIST);
+#elif USE_LIDAR_LITE
+        if (altHoldThrottle < altHoldInitialThrottle)
+            setPoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, altHoldInitialThrottle, LIDAR_MIN_DIST, altHoldSetPoint);
+        else
+            setPoint = mapf(altHoldThrottle, altHoldInitialThrottle, MAX_MOTOR_OUT, altHoldSetPoint, LIDAR_MAX_DIST);
+#endif // USE_SONAR && USE_LIDAR_LITE
 #else
         // This code is only used when logging is used, so it is easy to map between distance and throttle values
         setPoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, MAX_MOTOR_OUT, SONAR_MIN_DIST, SONAR_MAX_DIST);
-#endif
+#endif // !STEP_ALTITUDE_HOLD
 
-        float altHoldOut = updatePID(&pidSonarAltHold, setPoint, altitude->sonarDistance, dt);
+        float altHoldOut = updatePID(&pidSonarAltHold, setPoint, altitude->distance, dt);
         throttle = constrain(altHoldInitialThrottle + altHoldOut, MIN_MOTOR_OUT + MIN_MOTOR_OFFSET, MAX_MOTOR_OUT); // Throttle value is set to throttle when altitude hold were first activated plus output from PID controller
-        /*UARTprintf("%u %d %d %d - %d %d %d %d\n", altHoldActive, (int32_t)altHoldThrottle, (int32_t)altHoldInitialThrottle, altHoldSetPoint,     (int32_t)setPoint, altitude->sonarDistance, (int32_t)altHoldOut, (int32_t)throttle);
+        /*UARTprintf("%u %d %d %d - %d %d %d %d\n", altHoldActive, (int32_t)altHoldThrottle, (int32_t)altHoldInitialThrottle, altHoldSetPoint,     (int32_t)setPoint, altitude->distance, (int32_t)altHoldOut, (int32_t)throttle);
         UARTFlushTx(false);*/
     }
 #if USE_BARO
     else
 #endif // USE_BARO
-#endif // USE_SONAR
+#endif // USE_SONAR || USE_LIDAR_LITE
 
 #if USE_BARO
     if (aux > 60/* && altitude->sonarDistance > 2000*/) {
@@ -245,4 +296,4 @@ void resetAltitudeHold(altitude_t __attribute__((unused)) *altitude) {
 #endif // USE_BARO
 }
 
-#endif // USE_SONAR || USE_BARO
+#endif // USE_SONAR || USE_BARO || USE_LIDAR_LITE

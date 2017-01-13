@@ -35,6 +35,9 @@ typedef struct {
 #if USE_LIDAR_LITE
     int32_t lidarLiteDistance; // Distance in mm
 #endif
+#if USE_SONAR || USE_LIDAR_LITE
+    float distance; // Fusioned distance from sonar and LIDAR-Lite v3 in mm
+#endif
 } altitude_t;
 
 void initAltitudeHold(void);
