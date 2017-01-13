@@ -1,7 +1,7 @@
 # LaunchPad Flight Controller
 #### Developed by Kristian Sloth Lauszus, 2015
 _________
-[![Build Status](https://travis-ci.org/Lauszus/LaunchPadFlightController.svg)](https://travis-ci.org/Lauszus/LaunchPadFlightController)
+[![Build Status](https://travis-ci.org/Lauszus/LaunchPadFlightController.svg?branch=master)](https://travis-ci.org/Lauszus/LaunchPadFlightController)
 
 This is a flight controller used for a quadcopter in X-configuration.
 
