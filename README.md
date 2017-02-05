@@ -83,7 +83,17 @@ Make sure that roll increases when tilting quadcopter to the right, pitch increa
 
 It is a good idea to run the accelerometer, magnetometer and ESCs calibration routines before flying the aircraft.
 
+## Calibrating the ESCs
+
 __WARNING:__ Take propellers OFF when testing and calibrating ESCs!!
+
+In order calibrate the ESCs you need to do the following procedure:
+
+1. Power up the board while holding down both hardware switches. The blue LED will come on, indicating that the ESCs will be calibrated at next power up.
+2. Turn the board off my disconnecting the battery.
+3. Now apply power while holding down the two hardware switches. The board will send out the maximum and minimum pulses to the ESCs and thus calibrating them. When calibration is done the blue LED will be turned off and a long beep will be played.
+
+The calibration is canceled if the buttons are not held down during the whole procedure or the reset is not performed by a power on reset. The former allows the user to cancel the calibration at any time by releasing the switches and the latter prevents the user from accidentally resetting the board without also resetting the ESCs, for instance by pressing the reset button on the board.
 
 # Android application
 
