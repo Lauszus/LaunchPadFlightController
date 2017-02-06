@@ -13,7 +13,7 @@ More information can be found at the following blog posts: <http://blog.tkjelect
 
 Some video demonstrations of the flight controller can be seen at my [YouTube channel](https://www.youtube.com/playlist?list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg).
 
-<a href="https://www.youtube.com/watch?v=HXX-2L1hKgI&index=1&list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg" target="_blank"><img src="http://img.youtube.com/vi/HXX-2L1hKgI/0.jpg" width="240" height="180" border="10" /></a>
+<a href="https://www.youtube.com/watch?v=HXX-2L1hKgI&index=1&list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg" target="_blank"><img src="http://img.youtube.com/vi/HXX-2L1hKgI/0.jpg" width="400" height="300" border="10" /></a>
 
 # Report
 
@@ -71,39 +71,53 @@ The report I wrote for my Bachelor's these can be found in the [docs](docs) fold
 | PD2  |          Buzzer         |
 | PE3  |       HMC5883L DRDY     |
 
-\* UART1 is connected to a HC-06 Bluetooth module running at a baudrate of 115200. __Not 5V tolerant!__, so make sure your Bluetooth module outputs 3.3 voltage level or use a logic level converter.
+\* UART1 is connected to an HC-06 Bluetooth module running at a baudrate of 115200. __Not 5V tolerant!__, so make sure your Bluetooth module outputs 3.3 voltage level or use a logic level converter.
 
-The MPU-6500/MPU-9250, HMC5883L, BMP180 are connected via I2C if they are used.
+The MPU-6500/MPU-9250, HMC5883L, BMP180 are connected via I<sup>2</sup>C if they are used.
 
 # Notes
 
-Note that the motor layout follows the Naze32 in x-configuration i.e. motor 1 is bottom right, motor 2 is top right, motor 3 is bottom left and motor 4 is top left when looking from the back.
+The motor layout follows the Naze32 in x-configuration i.e. motor 1 is bottom right, motor 2 is top right, motor 3 is bottom left and motor 4 is top left when looking from the back.
 
-Make sure that roll increases when tilting quadcopter to the right, pitch increases when pitching quadcopter downward and yaw increases when rotation quadcopter clockwise.
+Make sure that roll increases when tilting quadcopter to the right, pitch increases when pitching quadcopter downward and yaw increases when rotation quadcopter clockwise. This can be displayed using the graph menu in the [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid).
 
-It is a good idea to run the accelerometer, magnetometer and ESCs calibration routines before flying the aircraft.
+## Initial setup
 
-## Calibrating the ESCs
+1. Locate the line ```#define ONESHOT125 1``` in [PPM.c](src/PPM.c) and set line to 0 if your ESCs does not support OneShot125, if you are in doubt, then set the value to 0.
+2. Configure the orientation of the MPU-9250/6500 and HMC5883L, so they corresponds to your setup. This is done inside ```mpu6500BoardOrientation``` and ```hmc5883lBoardOrientation``` in [MPU6500.c](src/MPU6500.c) and [HMC5883L.c](src/HMC5883L.c) respectively.
+    * The x-axis should be facing forward, the y-axis should be facing to the left and the z-axis should be facing upward. Typically the axis is indicated on the breakout board for the sensor.
+
+### Calibrating the ESCs
 
 __WARNING:__ Take propellers OFF when testing and calibrating ESCs!!
 
 In order calibrate the ESCs you need to do the following procedure:
 
 1. Power up the board while holding down both hardware switches. The blue LED will come on, indicating that the ESCs will be calibrated at next power up.
-2. Turn the board off my disconnecting the battery.
-3. Now apply power while holding down the two hardware switches. The board will send out the maximum and minimum pulses to the ESCs and thus calibrating them. When calibration is done the blue LED will be turned off and a long beep will be played.
+2. Turn the board off by disconnecting the battery.
+3. Now apply power while holding down the two hardware switches. The board will send out the maximum and minimum pulses to the ESCs and thus calibrating them. When the ESC calibration is done the blue LED will be turned off and a long beep will be played.
 
 The calibration is canceled if the buttons are not held down during the whole procedure or the reset is not performed by a power on reset. The former allows the user to cancel the calibration at any time by releasing the switches and the latter prevents the user from accidentally resetting the board without also resetting the ESCs, for instance by pressing the reset button on the board.
+
+### Calibrating accelerometer and magnetometer
+
+The last step is to calibrate the accelerometer and magnetometer. The accelerometer is calibrated by putting the quadcopter horizontal and activating the calibration routine via the [Android application's](https://github.com/Lauszus/LaunchPadFlightControllerAndroid) settings menu. It is important that the quadcopter is kept still while running the accelerometer calibration routine. When the calibration is done a long beep will be played using the onboard buzzer.
+
+The magnetometer calibration routine is activated similar to the accelerometer by using the [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid). The blue LED will turn on, indicating that the calibration procedure is activated. Now rotate the quadcopter along all three axis slowly in order to find the minimum and maximum values. The user has 30 seconds to rotate the quadcopter. Once the calibration is done the blue LED will be turned off and a long beep will be played.
+
+It is a good idea to confirm that the estimated angles are all correct by using the graph menu in the [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid).
+
+There is no need to calibrate the gyroscope, as this is done at every startup.
 
 # Android application
 
 Android application is available at the following repository: <https://github.com/Lauszus/LaunchPadFlightControllerAndroid>.
 
-[![Screenshots](https://raw.githubusercontent.com/Lauszus/LaunchPadFlightControllerAndroid/master/android_screenshots.png)](https://github.com/Lauszus/LaunchPadFlightControllerAndroid)
+<a href="https://github.com/Lauszus/LaunchPadFlightControllerAndroid"><img src="https://raw.githubusercontent.com/Lauszus/LaunchPadFlightControllerAndroid/master/android_screenshots.png" width=600/></a>
 
 # GUI
 
-A simple GUI can be found inside the [GUI](GUI) directory. It can be used to visualize the orientation of the flight controller.
+A simple GUI can be found inside the [GUI](GUI) directory. It can be used to visualise the orientation of the flight controller.
 
 # Build instructions
 
