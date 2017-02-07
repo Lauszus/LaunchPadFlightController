@@ -111,7 +111,9 @@ There is no need to calibrate the gyroscope, as this is done at every startup.
 
 # Android application
 
-Android application is available at the following repository: <https://github.com/Lauszus/LaunchPadFlightControllerAndroid>.
+<a href="http://play.google.com/store/apps/details?id=com.lauszus.launchpadflightcontrollerandroid.app"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" alt="Google Play" width="200px"/></a>
+
+The Android source code is available at the following repository: <https://github.com/Lauszus/LaunchPadFlightControllerAndroid>.
 
 <a href="https://github.com/Lauszus/LaunchPadFlightControllerAndroid"><img src="https://raw.githubusercontent.com/Lauszus/LaunchPadFlightControllerAndroid/master/android_screenshots.png" width=600/></a>
 
