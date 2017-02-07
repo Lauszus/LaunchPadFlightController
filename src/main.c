@@ -84,13 +84,6 @@ int main(void) {
     UARTprintf("Magnetometer zero values: %d\t%d\t%d\n", (int16_t)cfg.magZero.axis.X, (int16_t)cfg.magZero.axis.Y, (int16_t)cfg.magZero.axis.Z);
 #endif
 
-#if 0 // Set to 1 in order to run the ESC calibration routine at next power cycle
-    // WARNING: Do this with propellers off!!
-    // Also set CALIBRATE_ESC_ACTIVATED to 1 inside PPM.c
-    calibrateESCs(true); // ESCs will be calibrated on next power cycle
-    UARTprintf("Calibrating ESCs on next power cycle\n");
-#endif
-
 #if UART_DEBUG
     printPIDValues(pidRoll.values); // Print PID Values
     printPIDValues(pidYaw.values);
@@ -295,7 +288,6 @@ int main(void) {
             // Auto take off and land in altitude hold mode
         // Show distance in graph as well
     // Add disarm timer
-    // Check that both buttons are held in while calibrating ESCs
     // All filters should depend on dt as well, so loop time does not affect them
         // And they should also be on the same form to make it consistent
     // Store angles in radians as well

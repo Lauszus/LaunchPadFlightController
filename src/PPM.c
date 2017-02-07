@@ -21,16 +21,26 @@
 #include "Buzzer.h"
 #include "EEPROM.h"
 #include "PID.h"
+#include "Pins.h"
 #include "PPM.h"
 #include "Time.h"
 
 #include "inc/hw_memmap.h"
+#include "inc/tm4c123gh6pm.h"
 #include "driverlib/gpio.h"
 #include "driverlib/pin_map.h"
 #include "driverlib/pwm.h"
 #include "driverlib/sysctl.h"
 
-#define CALIBRATE_ESC_ACTIVATED 0
+#if UART_DEBUG
+#include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
+#endif
+
+#define SYSCTL_PERIPH_SW    SYSCTL_PERIPH_GPIOF
+#define GPIO_SW_BASE        GPIO_PORTF_BASE
+#define GPIO_SW1            GPIO_PIN_4
+#define GPIO_SW2            GPIO_PIN_0
+
 #define ONESHOT125 1
 
 #if ONESHOT125
@@ -50,12 +60,22 @@ static void syncMotors(void);
 
 // Sets calibrating flag in EEPROM
 // Calibration routine will be run next time power is applied if flag is true
-void calibrateESCs(bool flag) {
+static void calibrateESCs(bool flag) {
     cfg.calibrateESCs = flag; // Set flag
     updateConfig(); // Write new value to EEPROM
 }
 
 void initPPM(void) {
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_SW); // Enable peripheral
+    SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
+#ifdef PART_TM4C123GH6PM
+    GPIO_PORTF_LOCK_R = GPIO_LOCK_KEY; // Unlocks the GPIO_CR register
+    GPIO_PORTF_CR_R |= GPIO_SW2; // Allow changes to PF0
+    GPIO_PORTF_LOCK_R = 0; // Lock register again
+#endif
+    GPIOPinTypeGPIOInput(GPIO_SW_BASE, GPIO_SW1 | GPIO_SW2); // Set both switches as inputs
+    GPIOPadConfigSet(GPIO_SW_BASE, GPIO_SW1 | GPIO_SW2, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU); // Turn on pull-ups
+
 #if ONESHOT125
     SysCtlPWMClockSet(SYSCTL_PWMDIV_2); // Set divider to 2
 #else
@@ -96,37 +116,75 @@ void initPPM(void) {
     // Enable the outputs
     PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT | PWM_OUT_1_BIT | PWM_OUT_2_BIT | PWM_OUT_3_BIT, true);
 
-    if (cfg.calibrateESCs) {
-#if CALIBRATE_ESC_ACTIVATED
-        #warning "Take propellers off and then only apply power from the battery once and then unplug the battery after calibration procedure is done!"
-        // ESCs are calibrated by sending out the maximum pulse when power is applied and then sending lowest pulse afterwards
-        for (uint8_t i = 0; i < 4; i++)
-            writePPMUs(i, PPM_MAX);
-#if ONESHOT125
-        syncMotors();
-#endif
-        delay(4000); // Wait 4s - TODO: Make sure both buttons are held in
-        for (uint8_t i = 0; i < 4; i++)
-            writePPMUs(i, PPM_MIN);
-#if ONESHOT125
-        syncMotors();
-#endif
-        delay(3000);
-        buzzerLongBeep();
-#else // CALIBRATE_ESC_ACTIVATED
-        writePPMAllOff();
-#endif
-        calibrateESCs(false); // Set back to false
+    writePPMAllOff();
 
-        while (1) {
-            // Prevent user from flying
+    if (GPIOPinRead(GPIO_SW_BASE, GPIO_SW1 | GPIO_SW2) == 0) { // Check if both switches are pressed
+        if (cfg.calibrateESCs) { // Check if arming flag is set
+            calibrateESCs(false); // Set back to false
+            uint32_t resetCause = SysCtlResetCauseGet();
+            SysCtlResetCauseClear(resetCause); // Clear all reset causes
+            if (resetCause == SYSCTL_CAUSE_POR) { // Make sure that reset was caused by a power on reset only
+                GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED
+#if UART_DEBUG
+                UARTprintf("Calibrating ESCs!\nSending out maximum pulse\n");
+#endif
+                // ESCs are calibrated by sending out the maximum pulse when power is applied and then sending lowest pulse afterwards
+                for (uint8_t i = 0; i < 4; i++)
+                    writePPMUs(i, PPM_MAX);
+#if ONESHOT125
+                syncMotors();
+#endif
+                uint32_t start = micros();
+                while ((int32_t)(micros() - start) < 6000*1000UL) { // Wait 6s
+                    if (GPIOPinRead(GPIO_SW_BASE, GPIO_SW1 | GPIO_SW2) != 0) { // Abort if the user releases any of the switches
+#if UART_DEBUG
+                        UARTprintf("Aborting ESC calibration!\n");
+#endif
+                        writePPMAllOff(); // Turn off motors
+                        buzzer(true); // Turn on buzzer
+                        while (1) {
+                            // Prevent user from flying
+                        }
+                    }
+                };
+#if UART_DEBUG
+                UARTprintf("Sending out minimum pulse\n");
+#endif
+                for (uint8_t i = 0; i < 4; i++)
+                    writePPMUs(i, PPM_MIN);
+#if ONESHOT125
+                syncMotors();
+#endif
+                delay(6000); // Wait 6s
+#if UART_DEBUG
+                UARTprintf("Calibrating of the ESCs was successful\n");
+#endif
+                GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED
+                beepLongBuzzer();
+                while (1) {
+                    // Prevent user from flying
+                }
+            }
+#if UART_DEBUG
+            else
+                UARTprintf("Calibration aborted. Reset was not due to a power on reset!\n");
+#endif
+        } else {
+#if UART_DEBUG
+            UARTprintf("Calibrating ESCs on next power cycle\nTake propellers off and then apply power from the battery while holding the two hardware switches\nUnplug the battery when the calibration procedure is done\n");
+#endif
+            calibrateESCs(true); // ESCs will be calibrated on next power cycle
+            GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, GPIO_BLUE_LED); // Turn on blue LED
+            while (1) {
+                // Prevent user from flying
+            }
         }
-    } else
-        writePPMAllOff();
-
-#if ONESHOT125
-    syncMotors();
+    } else if (cfg.calibrateESCs) { // Clear ESC calibration flag
+#if UART_DEBUG
+        UARTprintf("Calibrating of ESCs canceled!\n");
 #endif
+        calibrateESCs(false);
+    }
 }
 
 // Turn off all motors
