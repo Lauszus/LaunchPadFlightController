@@ -81,6 +81,8 @@ The motor layout follows the Naze32 in x-configuration i.e. motor 1 is bottom ri
 
 Make sure that roll increases when tilting quadcopter to the right, pitch increases when pitching quadcopter downward and yaw increases when rotation quadcopter clockwise. This can be displayed using the graph menu in the [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid).
 
+The flight controller is armed by having the throttle low and the rudder to the right. The flight controller is disarmed again by having the throttle low and the rudder to the left.
+
 ## Initial setup
 
 1. Locate the line ```#define ONESHOT125 1``` in [PPM.c](src/PPM.c) and set line to 0 if your ESCs does not support OneShot125, if you are in doubt, then set the value to 0.
