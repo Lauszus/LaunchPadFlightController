@@ -41,7 +41,9 @@
 #define GPIO_SW1            GPIO_PIN_4
 #define GPIO_SW2            GPIO_PIN_0
 
+#ifndef ONESHOT125
 #define ONESHOT125 1
+#endif
 
 #if ONESHOT125
     #define PPM_MIN 1250 // The values in OneShot125 are in 0.1 us steps to increase the resolution
