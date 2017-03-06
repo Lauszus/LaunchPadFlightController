@@ -29,7 +29,6 @@ extern "C" {
 void initPPM(void);
 void writePPMAllOff(void);
 void updateMotorsAll(float *values);
-void calibrateESCs(bool flag);
 
 float mapf(float x, float in_min, float in_max, float out_min, float out_max);
 
