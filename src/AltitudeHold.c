@@ -102,11 +102,12 @@ void getAltitude(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, uint3
             .axis = {
                     .roll = -angle->axis.roll * DEG_TO_RAD,
                     .pitch = -angle->axis.pitch * DEG_TO_RAD,
-                    .yaw = angle->axis.yaw * DEG_TO_RAD, // Yaw angle is already inverted
+                    .yaw = -angle->axis.yaw * DEG_TO_RAD,
             }
     };
     sensor_t accInertialFrame = mpu6500->accBodyFrame;
     rotateV(&accInertialFrame, &rotAngle);
+    float accelerationZ = -accInertialFrame.axis.Z; // Since the z-axis is pointing downward we invert it
 
     /* Estimate altitude and velocity using barometer */
     static float baro_noise_lpf = 0.95f; // TODO: Set via app
@@ -131,7 +132,7 @@ void getAltitude(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, uint3
     /* Estimate altitude and velocity using acceleration */
     // Fist subtract 1g datasheet value, so it is reading 0g when it is flat, then the value is actually converted into g's, then into m/s^2 and finally into cm/s^2
     static const float gravitationalAcceleration = 9.80665f; // See: https://en.wikipedia.org/wiki/Gravitational_acceleration
-    altitude->acceleration = (float)(accInertialFrame.axis.Z - mpu6500->accScaleFactor) / mpu6500->accScaleFactor * gravitationalAcceleration * 100.0f;
+    altitude->acceleration = (float)(accelerationZ - mpu6500->accScaleFactor) / mpu6500->accScaleFactor * gravitationalAcceleration * 100.0f;
 
     float accDt = altitude->acceleration * dt; // Limit number of multiplications
     float accVelocity = altitude->velocity + accDt; // Estimate velocity using acceleration

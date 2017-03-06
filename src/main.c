@@ -166,7 +166,7 @@ int main(void) {
             // Motors routine
             if (runMotors) {
                 float aileron = getRXChannel(RX_AILERON_CHAN);
-                float elevator = getRXChannel(RX_ELEVATOR_CHAN);
+                float elevator = -getRXChannel(RX_ELEVATOR_CHAN); // Invert so it follows the right hand rule for the NED-coordinate system
                 float rudder = getRXChannel(RX_RUDDER_CHAN);
                 //UARTprintf("%d\t%d\t%d\n", (int16_t)aileron, (int16_t)elevator, (int16_t)rudder);
 
@@ -213,7 +213,7 @@ int main(void) {
 
                 float rollOut = updatePID(&pidRoll, setPointRoll, mpu6500.gyroRate.axis.roll, dt);
                 float pitchOut = updatePID(&pidPitch, setPointPitch, mpu6500.gyroRate.axis.pitch, dt);
-                float yawOut = updatePID(&pidYaw, setPointYaw, -mpu6500.gyroRate.axis.yaw, dt); // Gyro rate is inverted, so it works well with RC yaw control input
+                float yawOut = updatePID(&pidYaw, setPointYaw, mpu6500.gyroRate.axis.yaw, dt);
 
                 float throttle = getRXChannel(RX_THROTTLE_CHAN);
 
@@ -234,10 +234,10 @@ int main(void) {
                 motors[2] += rollOut;
                 motors[3] += rollOut;
 
-                motors[0] += pitchOut;
-                motors[1] -= pitchOut;
-                motors[2] += pitchOut;
-                motors[3] -= pitchOut;
+                motors[0] -= pitchOut;
+                motors[1] += pitchOut;
+                motors[2] -= pitchOut;
+                motors[3] += pitchOut;
 
                 motors[0] -= yawOut;
                 motors[1] += yawOut;
@@ -288,10 +288,11 @@ int main(void) {
             // Auto take off and land in altitude hold mode
         // Show distance in graph as well
     // Add disarm timer
+        // Watchdog timer as well
     // All filters should depend on dt as well, so loop time does not affect them
         // And they should also be on the same form to make it consistent
     // Store angles in radians as well
     // IMU driver should have MPU-6500 and HMC5883L instances, so they did not have to be in the main loop
-    // Make yaw right hand rotation
     // Move all IMU related code into IMU driver
         // Also make generic accGyro driver
+    // Add RX calibration routine

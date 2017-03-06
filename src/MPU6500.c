@@ -57,13 +57,13 @@ bool dataReadyMPU6500(void) {
 }
 
 // X-axis should be facing forward
-// Y-axis should be facing to the left
-// Z-axis should be facing upward
+// Y-axis should be facing to the right
+// Z-axis should be facing downward
 void mpu6500BoardOrientation(sensorRaw_t *sensorRaw) {
     sensorRaw_t sensorRawTemp = *sensorRaw;
     sensorRaw->axis.X = -sensorRawTemp.axis.Y;
-    sensorRaw->axis.Y = sensorRawTemp.axis.X;
-    sensorRaw->axis.Z = sensorRawTemp.axis.Z;
+    sensorRaw->axis.Y = -sensorRawTemp.axis.X;
+    sensorRaw->axis.Z = -sensorRawTemp.axis.Z;
 }
 
 // Returns accelerometer and gyro data with zero values subtracted
@@ -71,9 +71,9 @@ void getMPU6500Data(mpu6500_t *mpu6500) {
     uint8_t buf[14];
     i2cReadData(MPU6500_ADDRESS, MPU6500_ACCEL_XOUT_H, buf, 14); // Note that we can't write directly into mpu6500_t, because of endian conflict. So it has to be done manually
 
-    mpu6500->acc.axis.X = (int16_t)((buf[0] << 8) | buf[1]);
-    mpu6500->acc.axis.Y = (int16_t)((buf[2] << 8) | buf[3]);
-    mpu6500->acc.axis.Z = (int16_t)((buf[4] << 8) | buf[5]);
+    mpu6500->acc.axis.X = -((int16_t)((buf[0] << 8) | buf[1])); // The MPU-6500/MPU-9250 assumes that it reads +1g when pointing away from gravity, so we have to invert the values
+    mpu6500->acc.axis.Y = -((int16_t)((buf[2] << 8) | buf[3]));
+    mpu6500->acc.axis.Z = -((int16_t)((buf[4] << 8) | buf[5]));
 
     mpu6500->gyro.axis.X = (int16_t)((buf[8] << 8) | buf[9]);
     mpu6500->gyro.axis.Y = (int16_t)((buf[10] << 8) | buf[11]);
@@ -87,6 +87,12 @@ void getMPU6500Data(mpu6500_t *mpu6500) {
         mpu6500->gyro.data[axis] -= gyroZero.data[axis]; // Subtract gyro zero values
         mpu6500->gyroRate.data[axis] = (float)mpu6500->gyro.data[axis] / mpu6500->gyroScaleFactor; // Convert to deg/s
     }
+/*
+    // Acceleration should be positive when aligned with the gravity vector and gyro should follow the right hand rule
+    UARTprintf("%d\t%d\t%d\t", mpu6500->acc.axis.X, mpu6500->acc.axis.Y, mpu6500->acc.axis.Z);
+    UARTprintf("%d\t%d\t%d\n", mpu6500->gyro.axis.X, mpu6500->gyro.axis.Y, mpu6500->gyro.axis.Z);
+    UARTFlushTx(false);
+*/
 }
 
 static bool checkMinMax(int32_t *array, uint8_t length, int16_t maxDifference) { // Used to check that the flight controller is not moved while calibrating
@@ -147,9 +153,8 @@ static bool calibrateMPU6500Gyro(void) {
 
 bool calibrateMPU6500Acc(mpu6500_t *mpu6500) {
     bool rcode = calibrateSensor(&cfg.accZero, MPU6500_ACCEL_XOUT_H, 100); // 100 / 4096 ~= 0.02g
-    cfg.accZero.axis.Z -= mpu6500->accScaleFactor; // Z-axis is reading +1g when horizontal, so we subtract 1g from the value found
-
     if (!rcode) {
+        cfg.accZero.axis.Z += mpu6500->accScaleFactor; // Z-axis is reading +1g when horizontal, so we add 1g to the value, as the accelerometer is inverted in the MPU-6500/MPU-9250
 #if UART_DEBUG
         UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", cfg.accZero.axis.X, cfg.accZero.axis.Y, cfg.accZero.axis.Z);
 #endif
