@@ -21,6 +21,8 @@
 #include "EEPROM.h"
 #include "PID.h"
 
+#define M_PIf   3.14159265358979323846f
+
 pid_t pidRoll, pidPitch, pidYaw, pidSonarAltHold, pidBaroAltHold;
 
 void initPID(void) {
@@ -44,24 +46,24 @@ float updatePID(pid_t *pid, float setPoint, float input, float dt) {
     pid->iTerm = constrain(pid->iTerm, -pid->values->integrationLimit, pid->values->integrationLimit); // Limit the integrated error - prevents windup
 
     // D-term
+    // Use exponential smoothing: https://en.wikipedia.org/wiki/Exponential_smoothing
     float deltaError = (error - pid->lastError) / dt; // Calculate difference and compensate for difference in time by dividing by dt
     pid->lastError = error;
-    // Use moving average here to reduce noise
-    float deltaSum = pid->deltaError1 + pid->deltaError2 + deltaError;
-    pid->deltaError2 = pid->deltaError1;
-    pid->deltaError1 = deltaError;
-    float dTerm = pid->values->Kd * deltaSum;
+    float tau = 1.0f/(2.0f*M_PIf*pid->values->Fc); // Time constant
+    float alpha = dt/(tau + dt); // See (10) in http://techteach.no/simview/lowpass_filter/doc/filter_algorithm.pdf
+    pid->derivative = pid->derivative + alpha * (deltaError - pid->derivative); // y(n) = y(n-1) + alpha*(u(n) - y(n-1))
+    float dTerm = pid->values->Kd * pid->derivative;
 
     return pTerm + pid->iTerm + dTerm; // Return sum
 }
 
 void resetPIDRollPitchYaw(void) {
-    pidRoll.iTerm = pidRoll.lastError = pidRoll.deltaError1 = pidRoll.deltaError2 = 0.0f;
-    pidPitch.iTerm = pidPitch.lastError = pidPitch.deltaError1 = pidPitch.deltaError2 = 0.0f;
-    pidYaw.iTerm = pidYaw.lastError = pidYaw.deltaError1 = pidYaw.deltaError2 = 0.0f;
+    pidRoll.iTerm = pidRoll.lastError = pidRoll.derivative = 0.0f;
+    pidPitch.iTerm = pidPitch.lastError = pidPitch.derivative = 0.0f;
+    pidYaw.iTerm = pidYaw.lastError = pidYaw.derivative = 0.0f;
 }
 
 void resetPIDAltHold(void) {
-    pidSonarAltHold.iTerm = pidSonarAltHold.lastError = pidSonarAltHold.deltaError1 = pidSonarAltHold.deltaError2 = 0.0f;
-    pidBaroAltHold.iTerm = pidBaroAltHold.lastError = pidBaroAltHold.deltaError1 = pidBaroAltHold.deltaError2 = 0.0f;
+    pidSonarAltHold.iTerm = pidSonarAltHold.lastError = pidSonarAltHold.derivative = 0.0f;
+    pidBaroAltHold.iTerm = pidBaroAltHold.lastError = pidBaroAltHold.derivative = 0.0f;
 }

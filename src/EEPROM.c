@@ -27,7 +27,7 @@
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
 
-static const uint32_t configVersion = 18; // Must be bumped every time config_t is changed
+static const uint32_t configVersion = 19; // Must be bumped every time config_t is changed
 config_t cfg;
 
 void initEEPROM(void) {
@@ -66,21 +66,25 @@ void setDefaultConfig(void) {
     cfg.pidRollPitchValues.Ki = 1.65f;
     cfg.pidRollPitchValues.Kd = 0.00040f;
     cfg.pidRollPitchValues.integrationLimit = 5.85f; // Prevent windup
+    cfg.pidRollPitchValues.Fc = 100.0f; // 100 Hz
 
     cfg.pidYawValues.Kp = 1.000f;
     cfg.pidYawValues.Ki = 6.00f;
     cfg.pidYawValues.Kd = 0.00040f;
     cfg.pidYawValues.integrationLimit = 10.0f; // Prevent windup
+    cfg.pidYawValues.Fc = 100.0f; // 100 Hz
 
     cfg.pidSonarAltHoldValues.Kp = 0.040f;
     cfg.pidSonarAltHoldValues.Ki = 0.03f;
     cfg.pidSonarAltHoldValues.Kd = 0.00330f;
     cfg.pidSonarAltHoldValues.integrationLimit = 10.0f; // Prevent windup
+    cfg.pidSonarAltHoldValues.Fc = 100.0f; // 100 Hz
 
     cfg.pidBaroAltHoldValues.Kp = 0.006f;
     cfg.pidBaroAltHoldValues.Ki = 0.00f;
     cfg.pidBaroAltHoldValues.Kd = 0.00450f;
     cfg.pidBaroAltHoldValues.integrationLimit = 10.0f; // Prevent windup
+    cfg.pidBaroAltHoldValues.Fc = 100.0f; // 100 Hz
 
     resetPIDRollPitchYaw();
     resetPIDAltHold();
