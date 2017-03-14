@@ -289,12 +289,6 @@ int main(void) {
         // Show distance in graph as well
     // Add disarm timer
         // Watchdog timer as well
-    // All filters should depend on dt as well, so loop time does not affect them
-        // And they should also be on the same form to make it consistent
-            // https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/navigation.c#L171-L174
-            // tau = 1.0f/(2.0f*Pi*Fc)
-            // alpha = dt/(tau + dt)
-            // y(n) = y(n-1) + alpha*(u-y(n-1))
     // Store angles in radians as well
     // IMU driver should have MPU-6500 and HMC5883L instances, so they did not have to be in the main loop
     // Move all IMU related code into IMU driver

@@ -28,7 +28,7 @@ extern "C" {
 typedef struct {
     float Kp, Ki, Kd; // PID variables
     float integrationLimit;
-    float Fc; // Cutoff frequency
+    float Fc; // Cutoff frequency in Hz
 } pid_values_t;
 
 typedef struct {

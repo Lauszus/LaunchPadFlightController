@@ -20,8 +20,7 @@
 
 #include "EEPROM.h"
 #include "PID.h"
-
-#define M_PIf   3.14159265358979323846f
+#include "Types.h"
 
 pid_t pidRoll, pidPitch, pidYaw, pidSonarAltHold, pidBaroAltHold;
 
