@@ -113,7 +113,11 @@ void getAltitude(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, uint3
     /* Estimate altitude and velocity using barometer */
     // Low-pass filter altitude estimate - see: https://en.wikipedia.org/wiki/Exponential_smoothing
     static const float baro_lpf_Fc = 8.38f; // Cutoff frequency in Hz - TODO: Set in Android app
+#ifdef DEBUG
+    const float baro_lpf_tau = 1.0f/(2.0f*M_PIf*baro_lpf_Fc); // tau = 1.0f/(2.0f*Pi*Fc) = .019
+#else
     static const float baro_lpf_tau = 1.0f/(2.0f*M_PIf*baro_lpf_Fc); // tau = 1.0f/(2.0f*Pi*Fc) = .019
+#endif
     const float baro_alpha = dt/(baro_lpf_tau + dt); // alpha = dt/(tau + dt) = .05
 
     static float baroAltitude;
@@ -151,7 +155,11 @@ void getAltitude(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, uint3
 
     // Low-pass filter altitude estimate - see: https://en.wikipedia.org/wiki/Exponential_smoothing
     static const float altitude_lpf_Fc = .80f; // Cutoff frequency in Hz - TODO: Set in Android app
+#ifdef DEBUG
+    const float altitude_lpf_tau = 1.0f/(2.0f*M_PIf*altitude_lpf_Fc); // tau = 1.0f/(2.0f*Pi*Fc) = .199
+#else
     static const float altitude_lpf_tau = 1.0f/(2.0f*M_PIf*altitude_lpf_Fc); // tau = 1.0f/(2.0f*Pi*Fc) = .199
+#endif
     const float altitude_alpha = dt/(altitude_lpf_tau + dt); // alpha = dt/(tau + dt) = .005
     altitude->altitudeLpf = altitude->altitudeLpf + altitude_alpha*(altitude->altitude - altitude->altitudeLpf); // y(n) = y(n-1) + alpha*(u(n) - y(n-1))
 
@@ -169,7 +177,11 @@ float updateAltitudeHold(float aux, altitude_t *altitude, float throttle, uint32
 
 #if USE_SONAR
     static const float throttle_lpf_Fc = .158995947f; // Cutoff frequency in Hz - TODO: Set in Android app
+#ifdef DEBUG
+    const float throttle_lpf_tau = 1.0f/(2.0f*M_PIf*throttle_lpf_Fc); // tau = 1.0f/(2.0f*Pi*Fc) = 1.001
+#else
     static const float throttle_lpf_tau = 1.0f/(2.0f*M_PIf*throttle_lpf_Fc); // tau = 1.0f/(2.0f*Pi*Fc) = 1.001
+#endif
     const float throttle_alpha = dt/(throttle_lpf_tau + dt); // alpha = dt/(tau + dt) = .001
 
     static float altHoldThrottle; // Low pass filtered throttle input

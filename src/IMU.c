@@ -41,7 +41,11 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
     static const float invGyroComplimentaryFilterFactor = (1.0f / (gyro_cmpf_factor + 1.0f));
 #endif
     static const float acc_lpf_Fc = 53.05f; // Cutoff frequency in Hz - TODO: Set in Android app
+#ifdef DEBUG
+    const float acc_lpf_tau = 1.0f/(2.0f*M_PIf*acc_lpf_Fc); // tau = 1.0f/(2.0f*Pi*Fc) = .0030
+#else
     static const float acc_lpf_tau = 1.0f/(2.0f*M_PIf*acc_lpf_Fc); // tau = 1.0f/(2.0f*Pi*Fc) = .0030
+#endif
     const float acc_alpha = dt/(acc_lpf_tau + dt); // alpha = dt/(tau + dt) = .25
 
     static sensor_t accLPF; // Accelerometer values after low pass filter
