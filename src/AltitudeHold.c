@@ -97,18 +97,6 @@ void getAltitude(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, uint3
 #endif
     }
 
-    /* Rotate body frame into inertial frame */
-    angle_t rotAngle = {
-            .axis = {
-                    .roll = -angle->axis.roll * DEG_TO_RAD,
-                    .pitch = -angle->axis.pitch * DEG_TO_RAD,
-                    .yaw = -angle->axis.yaw * DEG_TO_RAD,
-            }
-    };
-    sensor_t accInertialFrame = mpu6500->accBodyFrame;
-    rotateV(&accInertialFrame, &rotAngle);
-    float accelerationZ = -accInertialFrame.axis.Z; // Since the z-axis is pointing downward we invert it
-
     /* Estimate altitude and velocity using barometer */
     static float baro_noise_lpf = 0.95f; // TODO: Set via app
     static float baroAltitude;
@@ -129,10 +117,23 @@ void getAltitude(angle_t *angle, mpu6500_t *mpu6500, altitude_t *altitude, uint3
 
     float baroVelocity = (baroAltitude - lastBaroAltitude) / dt; // Estimate baro velocity
 
+    /* Rotate body frame into inertial frame */
+    angle_t rotAngle = {
+            .axis = {
+                    .roll = -angle->axis.roll * DEG_TO_RAD,
+                    .pitch = -angle->axis.pitch * DEG_TO_RAD,
+                    .yaw = -angle->axis.yaw * DEG_TO_RAD,
+            }
+    };
+    sensor_t accInertialFrame = mpu6500->accBodyFrame;
+    rotateV(&accInertialFrame, &rotAngle);
+
     /* Estimate altitude and velocity using acceleration */
-    // Fist subtract 1g datasheet value, so it is reading 0g when it is flat, then the value is actually converted into g's, then into m/s^2 and finally into cm/s^2
-    static const float gravitationalAcceleration = 9.80665f; // See: https://en.wikipedia.org/wiki/Gravitational_acceleration
-    altitude->acceleration = (float)(accelerationZ - mpu6500->accScaleFactor) / mpu6500->accScaleFactor * gravitationalAcceleration * 100.0f;
+    // Subtract subtract 1g datasheet value, so it reads 0g when it is flat and invert z-axis so it is pointing upward
+    float accelerationZ = -(accInertialFrame.axis.Z - mpu6500->accScaleFactor);
+    // Convert into g's, then into m/s^2 and finally into cm/s^2
+    static const float gravitationalAcceleration = 9.80665f * 100.0f; // See: https://en.wikipedia.org/wiki/Gravitational_acceleration
+    altitude->acceleration = accelerationZ / mpu6500->accScaleFactor * gravitationalAcceleration;
 
     float accDt = altitude->acceleration * dt; // Limit number of multiplications
     float accVelocity = altitude->velocity + accDt; // Estimate velocity using acceleration
