@@ -76,8 +76,8 @@ bool initAK8963(void) {
 }
 
 // X-axis should be facing forward
-// Y-axis should be facing to the left
-// Z-axis should be facing upward
+// Y-axis should be facing to the right
+// Z-axis should be facing downward
 static void ak8963BoardOrientation(sensorRaw_t *sensorRaw) {
     // Note that the AK8963 is aligned differently compared to the MPU-9250 - see: http://store.invensense.com/datasheets/invensense/MPU9250REV1.0.pdf page 38
     // x -> y
@@ -107,7 +107,11 @@ void getAK8963Data(sensor_t *mag, bool calibrating) {
     }
 
     ak8963BoardOrientation(&magRaw); // Apply board orientation
-
+/*
+    // The value should be positive when pointing at north
+    UARTprintf("%d\t%d\t%d\n", magRaw.axis.X, magRaw.axis.Y, magRaw.axis.Z);
+    UARTFlushTx(false);
+*/
     for (uint8_t axis = 0; axis < 3; axis++) {
         mag->data[axis] = magRaw.data[axis];
         if (!calibrating) // If we are not calibrating, then subtract zero values

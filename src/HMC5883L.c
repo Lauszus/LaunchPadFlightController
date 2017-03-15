@@ -101,13 +101,13 @@ static void drdyHandler(void) {
 }
 
 // X-axis should be facing forward
-// Y-axis should be facing to the left
-// Z-axis should be facing upward
+// Y-axis should be facing to the right
+// Z-axis should be facing downward
 static void hmc5883lBoardOrientation(sensor_t *sensor) {
     sensor_t sensorTemp = *sensor;
     sensor->axis.X = sensorTemp.axis.Y;
-    sensor->axis.Y = sensorTemp.axis.X;
-    sensor->axis.Z = -sensorTemp.axis.Z;
+    sensor->axis.Y = -sensorTemp.axis.X;
+    sensor->axis.Z = sensorTemp.axis.Z;
 }
 
 static void getHMC5883LDataRaw(sensorRaw_t *magRaw) {
@@ -125,7 +125,11 @@ void getHMC5883LData(sensor_t *mag, bool calibrating) {
         mag->data[axis] = (float)hmc5883l.magRaw.data[axis] * hmc5883l.magGain.data[axis]; // Apply gain
 
     hmc5883lBoardOrientation(mag); // Apply board orientation
-
+/*
+    // The value should be positive when pointing at north
+    UARTprintf("%d\t%d\t%d\n", hmc5883l.magRaw.axis.X, hmc5883l.magRaw.axis.Y, hmc5883l.magRaw.axis.Z);
+    UARTFlushTx(false);
+*/
     if (!calibrating) { // If we are not calibrating, then subtract zero values
         for (uint8_t axis = 0; axis < 3; axis++)
             mag->data[axis] -= cfg.magZero.data[axis]; // Subtract zero value stored in EEPROM

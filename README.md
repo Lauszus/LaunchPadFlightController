@@ -17,7 +17,7 @@ Some video demonstrations of the flight controller can be seen at my [YouTube ch
 
 # Report
 
-The report I wrote for my Bachelor's these can be found in the [docs](docs) folder. The 3D model and Matlab code can be found in there as well.
+The report I wrote for my Bachelor's thesis can be found in the [docs](docs) folder. The 3D model and Matlab code can be found in there as well.
 
 # Features
 
@@ -81,7 +81,7 @@ The MPU-6500/MPU-9250, HMC5883L, BMP180 and LIDAR-Lite v3 are connected via I<su
 
 The motor layout follows the Naze32 in x-configuration i.e. motor 1 is bottom right, motor 2 is top right, motor 3 is bottom left and motor 4 is top left when looking from the back.
 
-Make sure that roll increases when tilting quadcopter to the right, pitch increases when pitching quadcopter downward and yaw increases when rotation quadcopter clockwise. This can be displayed using the graph menu in the [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid).
+Make sure that roll increases when tilting quadcopter to the right, pitch increases when pitching quadcopter upward and yaw increases when rotation quadcopter clockwise. This can be displayed using the graph menu in the [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid).
 
 The flight controller is armed by having the throttle low and the rudder to the right. The flight controller is disarmed again by having the throttle low and the rudder to the left.
 
@@ -89,7 +89,7 @@ The flight controller is armed by having the throttle low and the rudder to the 
 
 1. Locate the line ```#define ONESHOT125 1``` in [PPM.c](src/PPM.c) and set line to 0 if your ESCs does not support OneShot125, if you are in doubt, then set the value to 0.
 2. Configure the orientation of the MPU-9250/6500 and HMC5883L, so they corresponds to your setup. This is done inside ```mpu6500BoardOrientation``` and ```hmc5883lBoardOrientation``` in [MPU6500.c](src/MPU6500.c) and [HMC5883L.c](src/HMC5883L.c) respectively.
-    * The x-axis should be facing forward, the y-axis should be facing to the left and the z-axis should be facing upward. Typically the axis is indicated on the breakout board for the sensor.
+    * The x-axis should be facing forward, the y-axis should be facing to the right and the z-axis should be facing downward. Typically the axis is indicated on the breakout board for the sensor.
 
 ### Calibrating the ESCs
 
