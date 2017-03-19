@@ -133,7 +133,7 @@ int main(void) {
         bool runMotors = false;
         if (armed &&
 #if USE_SONAR
-                (getRXChannel(RX_THROTTLE_CHAN) > CHANNEL_MIN_CHECK || altitudeMode)) // If in altitude mode, keep motors spinning anyway
+                (getRXChannel(RX_THROTTLE_CHAN) > CHANNEL_MIN_CHECK || altitudeMode)) // If in altitude mode using sonar, keep motors spinning anyway
 #else
                 getRXChannel(RX_THROTTLE_CHAN) > CHANNEL_MIN_CHECK)
 #endif
@@ -155,7 +155,7 @@ int main(void) {
 #endif
             getAngles(&mpu6500, &mag, &angle, dt); // Calculate pitch, roll and yaw
 
-#if USE_SONAR || USE_BARO
+#if USE_SONAR || USE_BARO || USE_LIDAR_LITE
             static altitude_t altitude;
             getAltitude(&angle, &mpu6500, &altitude, now, dt);
 #endif
@@ -181,7 +181,7 @@ int main(void) {
                 const float setPointYaw = rudder * cfg.stickScalingYaw; // Yaw is always gyro controlled
                 if (angleMode) { // Angle mode
                     const uint8_t maxAngleInclination =
-#if USE_SONAR
+#if USE_SONAR || USE_LIDAR_LITE
                             altitudeMode ? cfg.maxAngleInclinationDistSensor :
 #endif
                             cfg.maxAngleInclination; // If in altitude mode the angle has to be limited to the capability of the sonar
@@ -217,7 +217,7 @@ int main(void) {
 
                 float throttle = getRXChannel(RX_THROTTLE_CHAN);
 
-#if USE_SONAR || USE_BARO
+#if USE_SONAR || USE_BARO || USE_LIDAR_LITE
                 if (altitudeMode)
                     throttle = updateAltitudeHold(getRXChannel(RX_AUX2_CHAN), &altitude, throttle, now, dt);
                 else
@@ -256,7 +256,7 @@ int main(void) {
             } else {
                 writePPMAllOff();
                 resetPIDRollPitchYaw();
-#if USE_SONAR || USE_BARO
+#if USE_SONAR || USE_BARO || USE_LIDAR_LITE
                 resetAltitudeHold(&altitude);
 #endif
 #if USE_MAG
