@@ -125,7 +125,9 @@ void getAltitude(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6500, alt
     altitude->distance = altitude->lidarLiteDistance; // Only LIDAR-Lite v3 is available
 #endif // USE_SONAR && USE_LIDAR_LITE
 #if 0
-    UARTprintf("Distance: %d.%02u\n", (int32_t)altitude->distance, (uint32_t)(abs(altitude->distance * 100.0f) % 100));
+    UARTprintf("Distance: %d.%02u\t%d.%02u\t%d.%02u\n", (int32_t)altitude->sonarDistance, (uint32_t)(abs(altitude->sonarDistance * 100.0f) % 100),
+                                                        (int32_t)altitude->lidarLiteDistance, (uint32_t)(abs(altitude->lidarLiteDistance * 100.0f) % 100),
+                                                        (int32_t)altitude->distance, (uint32_t)(abs(altitude->distance * 100.0f) % 100));
     UARTFlushTx(false);
 #endif
 
@@ -191,7 +193,7 @@ void getAltitude(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6500, alt
     altitude->altitudeLpf = altitude_lpf * altitude->altitudeLpf + (1.0f - altitude_lpf) * altitude->altitude; // Low-pass filter altitude estimate
 
     //UARTprintf1("%d\t%d\n", (int32_t)baroAltitude, (int32_t)baroVelocity);
-    //UARTprintf1("%d\t%d\t%d\n", (int32_t)accAltitude, (int32_t)accVelocity, (int32_t)altitude->acceleration);
+    //UARTprintf1("%d\t%d\t%d\t%d\n", (int32_t)accAltitude, (int32_t)accVelocity, (int32_t)altitude->acceleration, (int32_t)accelerationZ);
     //UARTprintf1("%d\t%d\t%d\t%d\n", (int32_t)altitude->altitudeLpf, (int32_t)altitude->altitude, (int32_t)altitude->velocity, (int32_t)altitude->acceleration);
     //UARTFlushTx1(false);
 
@@ -208,7 +210,7 @@ float updateAltitudeHold(float aux, altitude_t *altitude, float throttle, uint32
     static float altHoldThrottle; // Low pass filtered throttle input
     static int16_t altHoldSetPoint; // Altitude hold set point
 
-    if (aux < 60 && altitude->distance >= 0) { // Make sure the distance is valid
+    if (aux < 50 && altitude->distance >= 0) { // Make sure the distance is valid
         if (!altHoldActive) { // We just went from deactivated to active
             altHoldActive = true;
             resetPIDAltHold();
@@ -275,7 +277,7 @@ float updateAltitudeHold(float aux, altitude_t *altitude, float throttle, uint32
 #endif // USE_SONAR || USE_LIDAR_LITE
 
 #if USE_BARO
-    if (aux > 60/* && altitude->sonarDistance > 2000*/) {
+    if (aux >= 50/* && altitude->sonarDistance > 2000*/) {
         if (!altHoldActive) { // We just went from deactivated to active
             altHoldActive = true;
             altHoldInitialThrottle = throttle; // Save current throttle

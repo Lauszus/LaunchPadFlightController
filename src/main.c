@@ -125,8 +125,8 @@ int main(void) {
 #if USE_MAG
         bool headMode = angleMode && getRXChannel(RX_AUX1_CHAN) > 50; // Make sure angle mode is activated in heading hold mode
 #endif
-#if USE_SONAR || USE_BARO
-        bool altitudeMode = angleMode && getRXChannel(RX_AUX2_CHAN) > 0; // Make sure angle mode is activated in altitude hold mode
+#if USE_SONAR || USE_BARO || USE_LIDAR_LITE
+        bool altitudeMode = angleMode && getRXChannel(RX_AUX2_CHAN) > -10; // Make sure angle mode is activated in altitude hold mode
 #endif
 
         // Don't spin motors if the throttle is low
