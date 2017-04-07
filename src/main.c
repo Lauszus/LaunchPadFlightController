@@ -71,7 +71,7 @@ int main(void) {
 #if USE_MAG
     initMag();
 #endif
-#if USE_SONAR || USE_BARO
+#if USE_SONAR || USE_BARO || USE_LIDAR_LITE
     initAltitudeHold();
 #endif
 #if USE_FLOW_SENSOR
@@ -86,13 +86,6 @@ int main(void) {
 
 #if UART_DEBUG && USE_MAG
     UARTprintf("Magnetometer zero values: %d\t%d\t%d\n", (int16_t)cfg.magZero.axis.X, (int16_t)cfg.magZero.axis.Y, (int16_t)cfg.magZero.axis.Z);
-#endif
-
-#if 0 // Set to 1 in order to run the ESC calibration routine at next power cycle
-    // WARNING: Do this with propellers off!!
-    // Also set CALIBRATE_ESC_ACTIVATED to 1 inside PPM.c
-    calibrateESCs(true); // ESCs will be calibrated on next power cycle
-    UARTprintf("Calibrating ESCs on next power cycle\n");
 #endif
 
 #if UART_DEBUG
@@ -136,15 +129,15 @@ int main(void) {
 #if USE_MAG
         bool headMode = angleMode && getRXChannel(RX_AUX1_CHAN) > 50; // Make sure angle mode is activated in heading hold mode
 #endif
-#if USE_SONAR || USE_BARO
-        bool altitudeMode = angleMode && getRXChannel(RX_AUX2_CHAN) > 0; // Make sure angle mode is activated in altitude hold mode
+#if USE_SONAR || USE_BARO || USE_LIDAR_LITE
+        bool altitudeMode = angleMode && getRXChannel(RX_AUX2_CHAN) > -10; // Make sure angle mode is activated in altitude hold mode
 #endif
 
         // Don't spin motors if the throttle is low
         bool runMotors = false;
         if (armed &&
 #if USE_SONAR
-                (getRXChannel(RX_THROTTLE_CHAN) > CHANNEL_MIN_CHECK || altitudeMode)) // If in altitude mode, keep motors spinning anyway
+                (getRXChannel(RX_THROTTLE_CHAN) > CHANNEL_MIN_CHECK || altitudeMode)) // If in altitude mode using sonar, keep motors spinning anyway
 #else
                 getRXChannel(RX_THROTTLE_CHAN) > CHANNEL_MIN_CHECK)
 #endif
@@ -166,7 +159,7 @@ int main(void) {
 #endif
             getAngles(&mpu6500, &mag, &angle, dt); // Calculate pitch, roll and yaw
 
-#if USE_SONAR || USE_BARO
+#if USE_SONAR || USE_BARO || USE_LIDAR_LITE
             static altitude_t altitude;
             getAltitude(&angle, &mpu6500, &altitude, now, dt);
 #endif
@@ -177,7 +170,7 @@ int main(void) {
             // Motors routine
             if (runMotors) {
                 float aileron = getRXChannel(RX_AILERON_CHAN);
-                float elevator = getRXChannel(RX_ELEVATOR_CHAN);
+                float elevator = -getRXChannel(RX_ELEVATOR_CHAN); // Invert so it follows the right hand rule for the NED-coordinate system
                 float rudder = getRXChannel(RX_RUDDER_CHAN);
                 //UARTprintf("%d\t%d\t%d\n", (int16_t)aileron, (int16_t)elevator, (int16_t)rudder);
 
@@ -188,12 +181,12 @@ int main(void) {
                     resetHeadingHold(&angle);
 #endif
 
-                float setPointRoll, setPointPitch; // Roll and pitch control can both be gyro or accelerometer based
-                const float setPointYaw = rudder * cfg.stickScalingYaw; // Yaw is always gyro controlled
+                float setpointRoll, setpointPitch; // Roll and pitch control can both be gyro or accelerometer based
+                const float setpointYaw = rudder * cfg.stickScalingYaw; // Yaw is always gyro controlled
                 if (angleMode) { // Angle mode
                     const uint8_t maxAngleInclination =
-#if USE_SONAR
-                            altitudeMode ? cfg.maxAngleInclinationSonar :
+#if USE_SONAR || USE_LIDAR_LITE
+                            altitudeMode ? cfg.maxAngleInclinationDistSensor :
 #endif
                             cfg.maxAngleInclination; // If in altitude mode the angle has to be limited to the capability of the sonar
 
@@ -203,32 +196,32 @@ int main(void) {
                     static const uint32_t interval = 1e6; // 1s between steps
                     aileron = stepResponse(getRXChannel(RX_AUX2_CHAN) > 0, aileron, angle.axis.roll, step1, step2, interval, now);
 #endif
-                    setPointRoll = constrain(aileron, -maxAngleInclination, maxAngleInclination) - angle.axis.roll;
-                    setPointPitch = constrain(elevator, -maxAngleInclination, maxAngleInclination) - angle.axis.pitch;
-                    setPointRoll *= cfg.angleKp; // A cascaded P controller is used in self level mode, as the output from the P controller is then used as the set point for the acro PID controller
-                    setPointPitch *= cfg.angleKp;
+                    setpointRoll = constrain(aileron, -maxAngleInclination, maxAngleInclination) - angle.axis.roll;
+                    setpointPitch = constrain(elevator, -maxAngleInclination, maxAngleInclination) - angle.axis.pitch;
+                    setpointRoll *= cfg.angleKp; // A cascaded P controller is used in self level mode, as the output from the P controller is then used as the set point for the acro PID controller
+                    setpointPitch *= cfg.angleKp;
                 } else { // Acro mode
-                    setPointRoll = aileron * cfg.stickScalingRollPitch;
-                    setPointPitch = elevator * cfg.stickScalingRollPitch;
+                    setpointRoll = aileron * cfg.stickScalingRollPitch;
+                    setpointPitch = elevator * cfg.stickScalingRollPitch;
 
 #if STEP_ACRO_SELF_LEVEL
                     static const float step1 = 0; // Start at 0 degrees/s
                     static const float step2 = 15; // Rotate 15 degrees/s
                     static const uint32_t interval = 1e6; // 1s between steps
-                    setPointRoll = stepResponse(getRXChannel(RX_AUX2_CHAN) > 0, setPointRoll, mpu6500.gyroRate.axis.roll, step1, step2, interval, now);
+                    setpointRoll = stepResponse(getRXChannel(RX_AUX2_CHAN) > 0, setpointRoll, mpu6500.gyroRate.axis.roll, step1, step2, interval, now);
 #endif
                 }
 
-                /*UARTprintf("%d\t%d\n", (int16_t)setPointRoll, (int16_t)setPointPitch);
+                /*UARTprintf("%d\t%d\n", (int16_t)setpointRoll, (int16_t)setpointPitch);
                 UARTFlushTx(false);*/
 
-                float rollOut = updatePID(&pidRoll, setPointRoll, mpu6500.gyroRate.axis.roll, dt);
-                float pitchOut = updatePID(&pidPitch, setPointPitch, mpu6500.gyroRate.axis.pitch, dt);
-                float yawOut = updatePID(&pidYaw, setPointYaw, -mpu6500.gyroRate.axis.yaw, dt); // Gyro rate is inverted, so it works well with RC yaw control input
+                float rollOut = updatePID(&pidRoll, setpointRoll, mpu6500.gyroRate.axis.roll, dt);
+                float pitchOut = updatePID(&pidPitch, setpointPitch, mpu6500.gyroRate.axis.pitch, dt);
+                float yawOut = updatePID(&pidYaw, setpointYaw, mpu6500.gyroRate.axis.yaw, dt);
 
                 float throttle = getRXChannel(RX_THROTTLE_CHAN);
 
-#if USE_SONAR || USE_BARO
+#if USE_SONAR || USE_BARO || USE_LIDAR_LITE
                 if (altitudeMode)
                     throttle = updateAltitudeHold(getRXChannel(RX_AUX2_CHAN), &altitude, throttle, now, dt);
                 else
@@ -245,10 +238,10 @@ int main(void) {
                 motors[2] += rollOut;
                 motors[3] += rollOut;
 
-                motors[0] += pitchOut;
-                motors[1] -= pitchOut;
-                motors[2] += pitchOut;
-                motors[3] -= pitchOut;
+                motors[0] -= pitchOut;
+                motors[1] += pitchOut;
+                motors[2] -= pitchOut;
+                motors[3] += pitchOut;
 
                 motors[0] -= yawOut;
                 motors[1] += yawOut;
@@ -267,7 +260,7 @@ int main(void) {
             } else {
                 writePPMAllOff();
                 resetPIDRollPitchYaw();
-#if USE_SONAR || USE_BARO
+#if USE_SONAR || USE_BARO || USE_LIDAR_LITE
                 resetAltitudeHold(&altitude);
 #endif
 #if USE_MAG
@@ -294,17 +287,20 @@ int main(void) {
         // Set magnetic declination
         // Set acc_lpf_factor, gyro_cmpf_factor, gyro_cmpfm_factor, baro_noise_lpf and throttle_noise_lpf + add explanation
         // Set headMaxAngle
-        // Set altHoldSetPoint and altHoldInitialThrottle for altitude hold mode
+        // Set altHoldSetpoint and altHoldInitialThrottle for altitude hold mode
         // Control drone using virtual joystick
             // Auto take off and land in altitude hold mode
         // Show distance in graph as well
     // Add disarm timer
-    // Check that both buttons are held in while calibrating ESCs
+        // Watchdog timer as well
     // All filters should depend on dt as well, so loop time does not affect them
         // And they should also be on the same form to make it consistent
+            // https://github.com/cleanflight/cleanflight/blob/master/src/main/flight/navigation.c#L171-L174
+            // tau = 1.0f/(2.0f*Pi*Fc)
+            // alpha = dt/(tau + dt)
+            // y(n) = y(n-1) + alpha*(u-y(n-1))
     // Store angles in radians as well
     // IMU driver should have MPU-6500 and HMC5883L instances, so they did not have to be in the main loop
-    // Make yaw right hand rotation
     // Move all IMU related code into IMU driver
         // Also make generic accGyro driver
     // Use SPI for MPU-9250/6500
@@ -313,3 +309,7 @@ int main(void) {
         // Implement "update_conversion_factors"
         // Implement 'dataReadyADNS3080'
         // Send pixel data as raw data instead of ASCII characters
+    // LIDAR-Lite v3
+        // Experiment with different configurations
+        // Use seperate PID values for sonar and Lidar
+    // Add RX calibration routine

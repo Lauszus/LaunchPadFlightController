@@ -32,7 +32,7 @@
 typedef struct {
     uint32_t counter;
     uint32_t timeStamp;
-    float setPoint;
+    float setpoint;
     float input;
 } step_t;
 
@@ -40,12 +40,12 @@ static void logData(step_t *step) {
     UARTprintf1("%u,%u,%d.%02u,%d.%02u\n",
                                         step->counter,
                                         step->timeStamp,
-                                        (int16_t)step->setPoint, (uint16_t)(abs(step->setPoint * 100.0f) % 100),
+                                        (int16_t)step->setpoint, (uint16_t)(abs(step->setpoint * 100.0f) % 100),
                                         (int16_t)step->input, (uint16_t)(abs(step->input * 100.0f) % 100));
     UARTFlushTx1(false);
 }
 
-float stepResponse(bool active, float setPoint, float input, float step1, float step2, uint32_t interval, uint32_t now) {
+float stepResponse(bool active, float setpoint, float input, float step1, float step2, uint32_t interval, uint32_t now) {
     static uint8_t state;
 
     if (active) {
@@ -56,25 +56,25 @@ float stepResponse(bool active, float setPoint, float input, float step1, float 
             case 0:
                 startTime = stateTimer = now; // Set initial value
                 step.counter = 0; // Reset counter
-                setPoint = step1;
+                setpoint = step1;
                 state = 1;
                 break;
             case 1:
-                setPoint = step1;
+                setpoint = step1;
                 if ((int32_t)(now - stateTimer) >= interval) {
                     stateTimer = now;
                     state = 2;
                 }
                 break;
             case 2:
-                setPoint = step2;
+                setpoint = step2;
                 if ((int32_t)(now - stateTimer) >= interval) {
                     stateTimer = now;
                     state = 3;
                 }
                 break;
             case 3:
-                setPoint = step1;
+                setpoint = step1;
                 if ((int32_t)(now - stateTimer) >= interval)
                     state = 4;
                 break;
@@ -90,7 +90,7 @@ float stepResponse(bool active, float setPoint, float input, float step1, float 
 
             step.counter++;
             step.timeStamp = now - startTime;
-            step.setPoint = setPoint;
+            step.setpoint = setpoint;
             step.input = input;
 
             logData(&step);
@@ -101,7 +101,7 @@ float stepResponse(bool active, float setPoint, float input, float step1, float 
         GPIOPinWrite(GPIO_LED_BASE, GPIO_BLUE_LED, 0); // Turn off blue LED
     }
 
-    return setPoint;
+    return setpoint;
 }
 
 #endif

@@ -1,7 +1,7 @@
 # LaunchPad Flight Controller
 #### Developed by Kristian Sloth Lauszus, 2015
 _________
-[![Build Status](https://travis-ci.org/Lauszus/LaunchPadFlightController.svg)](https://travis-ci.org/Lauszus/LaunchPadFlightController)
+[![Build Status](https://travis-ci.org/Lauszus/LaunchPadFlightController.svg?branch=master)](https://travis-ci.org/Lauszus/LaunchPadFlightController)
 
 This is a flight controller used for a quadcopter in X-configuration.
 
@@ -13,17 +13,17 @@ More information can be found at the following blog posts: <http://blog.tkjelect
 
 Some video demonstrations of the flight controller can be seen at my [YouTube channel](https://www.youtube.com/playlist?list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg).
 
-<a href="https://www.youtube.com/watch?v=HXX-2L1hKgI&index=1&list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg" target="_blank"><img src="http://img.youtube.com/vi/HXX-2L1hKgI/0.jpg" width="240" height="180" border="10" /></a>
+<a href="https://www.youtube.com/watch?v=HXX-2L1hKgI&index=1&list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg" target="_blank"><img src="http://img.youtube.com/vi/HXX-2L1hKgI/0.jpg" width="400" height="300" border="10" /></a>
 
 # Report
 
-The report I wrote for my Bachelor's these can be found in the [docs](docs) folder. The 3D model and Matlab code can be found in there as well.
+The report I wrote for my Bachelor's thesis can be found in the [docs](docs) folder. The 3D model and Matlab code can be found in there as well.
 
 # Features
 
 * Rate mode, self level mode, heading hold and altitude hold
     - __AUX1:__ Use 3-POS switch for self level and heading hold. At first position both are off, at second position self level is on and at third position both are on
-    - __AUX2:__ Use a 3-POS switch for altitude hold. Note that self level mode must be activated for altitude hold to work! At first position altitude hold is turned off, at second position altitude hold will use the distance measured using the sonar and at the third position altitude hold will be using the altitude estimated using the barometer and accelerometer
+    - __AUX2:__ Use a 3-POS switch for altitude hold. Note that self level mode must be activated for altitude hold to work! At first position altitude hold is turned off, at second position altitude hold will use the distance measured using the sonar and/or LIDAR-Lite v3 and at the third position altitude hold will be using the altitude estimated using the barometer and accelerometer
 * Store PID values, calibration values etc. in EEPROM
 * Gyro, accelerometer & magnetometer calibration routine
     - Gyro is calibrated at startup
@@ -37,6 +37,8 @@ The report I wrote for my Bachelor's these can be found in the [docs](docs) fold
 * Magnetometer (HMC5883L or AK8963 (inside MPU-9250))
 * Barometer (BMP180)
 * Ultrasound sensor aka sonar (HC-SR04)
+* [LIDAR-Lite v3](https://buy.garmin.com/en-US/US/p/557294)
+    - Connect a 680 µF electrolytic capacitor from 5V to GND
 * [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid)
 * OneShot125 ESC support
 * Buzzer feedback
@@ -71,29 +73,57 @@ The report I wrote for my Bachelor's these can be found in the [docs](docs) fold
 | PD2  |          Buzzer         |
 | PE3  |       HMC5883L DRDY     |
 
-\* UART1 is connected to a HC-06 Bluetooth module running at a baudrate of 115200. __Not 5V tolerant!__, so make sure your Bluetooth module outputs 3.3 voltage level or use a logic level converter.
+\* UART1 is connected to an HC-06 Bluetooth module running at a baudrate of 115200. __Not 5V tolerant!__, so make sure your Bluetooth module outputs 3.3 voltage level or use a logic level converter.
 
-The MPU-6500/MPU-9250, HMC5883L, BMP180 are connected via I2C if they are used.
+The MPU-6500/MPU-9250, HMC5883L, BMP180 and LIDAR-Lite v3 are connected via I<sup>2</sup>C if they are used.
 
 # Notes
 
-Note that the motor layout follows the Naze32 in x-configuration i.e. motor 1 is bottom right, motor 2 is top right, motor 3 is bottom left and motor 4 is top left when looking from the back.
+The motor layout follows the Naze32 in x-configuration i.e. motor 1 is bottom right, motor 2 is top right, motor 3 is bottom left and motor 4 is top left when looking from the back.
 
-Make sure that roll increases when tilting quadcopter to the right, pitch increases when pitching quadcopter downward and yaw increases when rotation quadcopter clockwise.
+Make sure that roll increases when tilting quadcopter to the right, pitch increases when pitching quadcopter upward and yaw increases when rotation quadcopter clockwise. This can be displayed using the graph menu in the [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid).
 
-It is a good idea to run the accelerometer, magnetometer and ESCs calibration routines before flying the aircraft.
+The flight controller is armed by having the throttle low and the rudder to the right. The flight controller is disarmed again by having the throttle low and the rudder to the left.
+
+## Initial setup
+
+1. Locate the line ```#define ONESHOT125 1``` in [PPM.c](src/PPM.c) and set line to 0 if your ESCs does not support OneShot125, if you are in doubt, then set the value to 0.
+2. Configure the orientation of the MPU-9250/6500 and HMC5883L, so they corresponds to your setup. This is done inside ```mpu6500BoardOrientation``` and ```hmc5883lBoardOrientation``` in [MPU6500.c](src/MPU6500.c) and [HMC5883L.c](src/HMC5883L.c) respectively.
+    * The x-axis should be facing forward, the y-axis should be facing to the right and the z-axis should be facing downward. Typically the axis is indicated on the breakout board for the sensor.
+
+### Calibrating the ESCs
 
 __WARNING:__ Take propellers OFF when testing and calibrating ESCs!!
 
+In order calibrate the ESCs you need to do the following procedure:
+
+1. Power up the board while holding down both hardware switches. The blue LED will come on, indicating that the ESCs will be calibrated at next power up.
+2. Turn the board off by disconnecting the battery.
+3. Now apply power while holding down the two hardware switches. The board will send out the maximum and minimum pulses to the ESCs and thus calibrating them. When the ESC calibration is done the blue LED will be turned off and a long beep will be played.
+
+The calibration is canceled if the buttons are not held down during the whole procedure or the reset is not performed by a power on reset. The former allows the user to cancel the calibration at any time by releasing the switches and the latter prevents the user from accidentally resetting the board without also resetting the ESCs, for instance by pressing the reset button on the board.
+
+### Calibrating accelerometer and magnetometer
+
+The last step is to calibrate the accelerometer and magnetometer. The accelerometer is calibrated by putting the quadcopter horizontal and activating the calibration routine via the [Android application's](https://github.com/Lauszus/LaunchPadFlightControllerAndroid) settings menu. It is important that the quadcopter is kept still while running the accelerometer calibration routine. When the calibration is done a long beep will be played using the onboard buzzer.
+
+The magnetometer calibration routine is activated similar to the accelerometer by using the [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid). The blue LED will turn on, indicating that the calibration procedure is activated. Now rotate the quadcopter along all three axis slowly in order to find the minimum and maximum values. The user has 30 seconds to rotate the quadcopter. Once the calibration is done the blue LED will be turned off and a long beep will be played.
+
+It is a good idea to confirm that the estimated angles are all correct by using the graph menu in the [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid).
+
+There is no need to calibrate the gyroscope, as this is done at every startup.
+
 # Android application
 
-Android application is available at the following repository: <https://github.com/Lauszus/LaunchPadFlightControllerAndroid>.
+<a href="http://play.google.com/store/apps/details?id=com.lauszus.launchpadflightcontrollerandroid.app"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" alt="Google Play" width="200px"/></a>
 
-[![Screenshots](https://raw.githubusercontent.com/Lauszus/LaunchPadFlightControllerAndroid/master/android_screenshots.png)](https://github.com/Lauszus/LaunchPadFlightControllerAndroid)
+The Android source code is available at the following repository: <https://github.com/Lauszus/LaunchPadFlightControllerAndroid>.
+
+<a href="https://github.com/Lauszus/LaunchPadFlightControllerAndroid"><img src="https://raw.githubusercontent.com/Lauszus/LaunchPadFlightControllerAndroid/master/android_screenshots.png" width=600/></a>
 
 # GUI
 
-A simple GUI can be found inside the [GUI](GUI) directory. It can be used to visualize the orientation of the flight controller.
+A simple GUI can be found inside the [GUI](GUI) directory. It can be used to visualise the orientation of the flight controller.
 
 # Build instructions
 

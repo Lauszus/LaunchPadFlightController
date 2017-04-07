@@ -1,4 +1,4 @@
-/* Copyright (C) 2015 Kristian Sloth Lauszus. All rights reserved.
+/* Copyright (C) 2016 Kristian Sloth Lauszus. All rights reserved.
 
  This software may be distributed and modified under the terms of the GNU
  General Public License version 2 (GPL2) as published by the Free Software
@@ -15,20 +15,18 @@
  e-mail   :  lauszus@gmail.com
 */
 
-#ifndef __imu_h__
-#define __imu_h__
-
-#include "MPU6500.h"
-
-#define DEG_TO_RAD  0.017453292519943295769236907684886f
-#define RAD_TO_DEG  57.295779513082320876798154814105f
+#if !defined(__lidarlitev3_h__) && USE_LIDAR_LITE
+#define __lidarlitev3_h__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt);
-void rotateV(sensor_t *v, const angle_t *angle);
+#include "Types.h"
+
+void initLidarLite(void);
+bool triggerLidarLite(void);
+int32_t getLidarLiteDistance(angle_t *angle);
 
 #ifdef __cplusplus
 }

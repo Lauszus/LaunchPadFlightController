@@ -27,7 +27,7 @@
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
 
-static const uint32_t configVersion = 17; // Must be bumped every time config_t is changed
+static const uint32_t configVersion = 18; // Must be bumped every time config_t is changed
 config_t cfg;
 
 void initEEPROM(void) {
@@ -88,7 +88,7 @@ void setDefaultConfig(void) {
     cfg.angleKp = 4.50f;
     cfg.headKp = 0.65f;
     cfg.maxAngleInclination = 50; // Max angle in self level mode
-    cfg.maxAngleInclinationSonar = 25; // Max angle when using sonar in altitude hold mode
+    cfg.maxAngleInclinationDistSensor = 25; // Max angle when using sonar or LIDAR-Lite v3 in altitude hold mode
     cfg.stickScalingRollPitch = 4.69f;
     cfg.stickScalingYaw = 2.0f;
 

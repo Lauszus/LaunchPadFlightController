@@ -31,7 +31,7 @@ static float calculateHeading(angle_t *angle, sensor_t *mag);
 
 // Accelerometer readings can be in any scale, but gyro rate needs to be in deg/s
 // Make sure that roll increases when tilting quadcopter to the right, pitch increases
-// when pitching quadcopter downward and yaw increases when rotating quadcopter clockwise.
+// when pitching quadcopter upward and yaw increases when rotating quadcopter clockwise.
 void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
     static const float acc_lpf_factor = 4.0f;
     static const float gyro_cmpf_factor = 600.0f;
@@ -101,6 +101,7 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
     for (uint8_t axis = 0; axis < 3; axis++)
         gyroAngle.data[axis] += mpu6500->gyroRate.data[axis] * dt; // Gyro angle is only used for debugging
 
+    // Make sure the data goes in the same direction
     UARTprintf("%d\t%d\t", (int16_t)gyroAngle.axis.roll, (int16_t)angle->axis.roll);
     UARTprintf("%d\t%d\t", (int16_t)gyroAngle.axis.pitch, (int16_t)angle->axis.pitch);
     UARTprintf("%d\t%d\n", (int16_t)gyroAngle.axis.yaw, (int16_t)angle->axis.yaw);
@@ -109,7 +110,6 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
 }
 
 // See: http://www.freescale.com/files/sensors/doc/app_note/AN4248.pdf eq. 22
-// Note heading is inverted, so it increases when rotating clockwise. This is done so it works well with the RC yaw control input
 static float calculateHeading(angle_t *angle, sensor_t *mag) {
 #if USE_MAG
     #ifndef DEBUG
@@ -131,9 +131,9 @@ static float calculateHeading(angle_t *angle, sensor_t *mag) {
     float Bfy = mag->axis.Z * sinx - mag->axis.Y * cosx;
     float Bfx = mag->axis.X * cosy + mag->axis.Y * siny * sinx + mag->axis.Z * siny * cosx;
 #if USE_MAG
-    float heading = -(atan2f(Bfy, Bfx) * RAD_TO_DEG + magneticDeclination); // Return heading
+    float heading = atan2f(Bfy, Bfx) * RAD_TO_DEG + magneticDeclination; // Return heading
 #else
-    float heading = -(atan2f(Bfy, Bfx) * RAD_TO_DEG); // Return heading
+    float heading = atan2f(Bfy, Bfx) * RAD_TO_DEG; // Return heading
 #endif
 
     if (heading < 0) // Convert heading range to 0-360
@@ -142,10 +142,11 @@ static float calculateHeading(angle_t *angle, sensor_t *mag) {
 }
 
 // Rotate accelerometer coordinate axis by a delta angle from gyroscope
+// Rotates from NED to body frame using the xyz-convention
 // See: http://mathworld.wolfram.com/RotationMatrix.html,
 // http://en.wikipedia.org/wiki/Rotation_formalisms_in_three_dimensions#Euler_angles_.28x-y-z_extrinsic.29_.E2.86.92_Rotation_matrix and
 // https://engineering.purdue.edu/~bethel/rot2.pdf
-void rotateV(sensor_t *v, angle_t *angle) {
+void rotateV(sensor_t *v, const angle_t *angle) {
     sensor_t v_tmp = *v;
 
     float cosx = cosf(angle->axis.roll);
