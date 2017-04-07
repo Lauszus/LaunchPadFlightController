@@ -299,6 +299,7 @@ int main(void) {
     // IMU driver should have MPU-6500 and HMC5883L instances, so they did not have to be in the main loop
     // Move all IMU related code into IMU driver
         // Also make generic accGyro driver
-    // Implement altitude hold using LIDAR-Lite v3
+    // LIDAR-Lite v3
         // Experiment with different configurations
+        // Use seperate PID values for sonar and Lidar
     // Add RX calibration routine
