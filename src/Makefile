@@ -39,10 +39,13 @@ UART_DEBUG ?= 0
 USE_MAG ?= 1
 USE_BARO ?= 1
 USE_SONAR ?= 1
+USE_LIDAR_LITE ?= 1
 ONESHOT125 ?= 1
 STEP_ACRO_SELF_LEVEL ?= 0
 STEP_ALTITUDE_HOLD ?= 0
 STEP_HEADING_HOLD ?= 0
+
+BUILD_FLAGS = -DUART_DEBUG=$(UART_DEBUG) -DUSE_MAG=$(USE_MAG) -DUSE_BARO=$(USE_BARO) -DUSE_SONAR=$(USE_SONAR) -DUSE_LIDAR_LITE=$(USE_LIDAR_LITE) -DONESHOT125=$(ONESHOT125)
 
 #
 # The base directory for TivaWare.
@@ -68,6 +71,7 @@ PROJECT_OBJ = $(COMPILER)/$(TARGET).axf
 # The default rule, which causes the project to be built.
 #
 all: $(COMPILER) $(PROJECT_OBJ)
+	@echo "\n  Build flags: $(BUILD_FLAGS)\n"
 	@$(PREFIX)-size $(PROJECT_OBJ)
 
 #
@@ -107,10 +111,17 @@ ENTRY_$(TARGET) = ResetISR
 #
 # CFLAGS passed to the compiler.
 #
-CFLAGSgcc =  -DTARGET_IS_BLIZZARD_RB1 -DUART_BUFFERED -DUART_BUFFERED1 -DUART_DEBUG=$(UART_DEBUG)
-CFLAGSgcc += -DUSE_MAG=$(USE_MAG) -DUSE_BARO=$(USE_BARO) -DUSE_SONAR=$(USE_SONAR) -DONESHOT125=$(ONESHOT125)
+CFLAGSgcc =  -DTARGET_IS_BLIZZARD_RB1 -DUART_BUFFERED -DUART_BUFFERED1
+CFLAGSgcc += $(BUILD_FLAGS)
 CFLAGSgcc += -DSTEP_ACRO_SELF_LEVEL=$(STEP_ACRO_SELF_LEVEL) -DSTEP_ALTITUDE_HOLD=$(STEP_ALTITUDE_HOLD) -DSTEP_HEADING_HOLD=$(STEP_HEADING_HOLD)
 CFLAGSgcc += -Wdouble-promotion -Wunsafe-loop-optimizations -Wunused-parameter
+
+#
+# Make all warnings into errors when building using Travis CI
+#
+ifdef TRAVIS_CI
+CFLAGSgcc += -Werror
+endif
 
 #
 # Rebuild everything when makefile changes.

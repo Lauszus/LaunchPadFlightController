@@ -363,7 +363,7 @@
             <useXO>0</useXO>
             <VariousControls>
               <MiscControls></MiscControls>
-              <Define>rvmdk PART_TM4C123GH6PM UART_BUFFERED UART_BUFFERED1 UART_DEBUG=0 USE_MAG=1 USE_BARO=1 USE_SONAR=1 STEP_ACRO_SELF_LEVEL=0 STEP_ALTITUDE_HOLD=0 STEP_HEADING_HOLD=0</Define>
+              <Define>rvmdk PART_TM4C123GH6PM UART_BUFFERED UART_BUFFERED1 UART_DEBUG=0 USE_MAG=1 USE_BARO=1 USE_SONAR=1 USE_LIDAR_LITE=1 STEP_ACRO_SELF_LEVEL=0 STEP_ALTITUDE_HOLD=0 STEP_HEADING_HOLD=0</Define>
               <Undefine></Undefine>
               <IncludePath>.\lib</IncludePath>
             </VariousControls>
@@ -532,6 +532,11 @@
               <FileName>Magnetomer.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\src\Magnetomer.c</FilePath>
+            </File>
+            <File>
+              <FileName>LidarLiteV3.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\src\LidarLiteV3.c</FilePath>
             </File>
           </Files>
         </Group>

@@ -33,8 +33,8 @@ void initPID(void) {
     pidBaroAltHold.values = &cfg.pidBaroAltHoldValues;
 }
 
-float updatePID(pid_t *pid, float setPoint, float input, float dt) {
-    float error = setPoint - input;
+float updatePID(pid_t *pid, float setpoint, float input, float dt) {
+    float error = setpoint - input;
 
     // P-term
     float pTerm = pid->values->Kp * error;

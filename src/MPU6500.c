@@ -182,7 +182,7 @@ void initMPU6500(mpu6500_t *mpu6500) {
 #endif
     } else {
 #if UART_DEBUG
-        UARTprintf("Could not find MPU-6500 or MPU-9250: %2X\n", i2cBuffer[0]);
+        UARTprintf("Could not find MPU-6500 or MPU-9250: %02X\n", i2cBuffer[0]);
 #endif
         while (1);
     }

@@ -1,4 +1,4 @@
-/* Copyright (C) 2015 Kristian Sloth Lauszus. All rights reserved.
+/* Copyright (C) 2016 Kristian Sloth Lauszus. All rights reserved.
 
  This software may be distributed and modified under the terms of the GNU
  General Public License version 2 (GPL2) as published by the Free Software
@@ -15,16 +15,18 @@
  e-mail   :  lauszus@gmail.com
 */
 
-#if !defined(__logger_h__) && (STEP_ACRO_SELF_LEVEL || STEP_ALTITUDE_HOLD || STEP_HEADING_HOLD)
-#define __logger_h__
-
-#include "Types.h"
+#if !defined(__lidarlitev3_h__) && USE_LIDAR_LITE
+#define __lidarlitev3_h__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-float stepResponse(bool active, float setpoint, float input, float step1, float step2, uint32_t interval, uint32_t now);
+#include "Types.h"
+
+void initLidarLite(void);
+bool triggerLidarLite(void);
+int32_t getLidarLiteDistance(angle_t *angle);
 
 #ifdef __cplusplus
 }

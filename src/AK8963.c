@@ -58,7 +58,7 @@ bool initAK8963(void) {
     uint8_t id = i2cRead(AK8963_ADDRESS, AK8963_WIA); // Read "WIA" register
     if (id != AK8963_WIA_ID) {
 #if 0 && UART_DEBUG
-        UARTprintf("Could not find AK8963: %2X\n", id);
+        UARTprintf("Could not find AK8963: %02X\n", id);
 #endif
         return false;
     }

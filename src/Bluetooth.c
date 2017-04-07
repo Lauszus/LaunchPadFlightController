@@ -70,7 +70,7 @@ typedef struct {
 
 typedef struct {
     uint16_t angleKp, headKp; // Values multiplied by 100
-    uint8_t maxAngleInclination, maxAngleInclinationSonar; // Inclination angle in degrees
+    uint8_t maxAngleInclination, maxAngleInclinationDistSensor; // Inclination angle in degrees
     uint16_t stickScalingRollPitch, stickScalingYaw; // Stick scaling values multiplied by 100
 } __attribute__((packed)) settings_t;
 
@@ -186,7 +186,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
                             cfg.angleKp = settings.angleKp / 100.0f;
                             cfg.headKp = settings.headKp / 100.0f;
                             cfg.maxAngleInclination = settings.maxAngleInclination;
-                            cfg.maxAngleInclinationSonar = settings.maxAngleInclinationSonar;
+                            cfg.maxAngleInclinationDistSensor = settings.maxAngleInclinationDistSensor;
                             cfg.stickScalingRollPitch = settings.stickScalingRollPitch / 100.0f;
                             cfg.stickScalingYaw = settings.stickScalingYaw / 100.0f;
                             updateConfig();
@@ -213,7 +213,7 @@ bool readBluetoothData(mpu6500_t *mpu6500, angle_t *angle) {
                         settings.angleKp = cfg.angleKp * 100.0f;
                         settings.headKp = cfg.headKp * 100.0f;
                         settings.maxAngleInclination = cfg.maxAngleInclination;
-                        settings.maxAngleInclinationSonar = cfg.maxAngleInclinationSonar;
+                        settings.maxAngleInclinationDistSensor = cfg.maxAngleInclinationDistSensor;
                         settings.stickScalingRollPitch = cfg.stickScalingRollPitch * 100.0f;
                         settings.stickScalingYaw = cfg.stickScalingYaw * 100.0f;
                         sendData(msg, (uint8_t*)&settings);
