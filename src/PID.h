@@ -37,7 +37,7 @@ typedef struct {
 } pid_t;
 
 void initPID(void);
-float updatePID(pid_t *pid, float setPoint, float input, float dt);
+float updatePID(pid_t *pid, float setpoint, float input, float dt);
 void resetPIDRollPitchYaw(void);
 void resetPIDAltHold(void);
 

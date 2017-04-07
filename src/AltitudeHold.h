@@ -15,7 +15,7 @@
  e-mail   :  lauszus@gmail.com
 */
 
-#if !defined(__altitude_h__) && (USE_SONAR || USE_BARO)
+#if !defined(__altitude_h__) && (USE_SONAR || USE_BARO || USE_LIDAR_LITE)
 #define __altitude_h__
 
 #include "MPU6500.h"
@@ -31,6 +31,12 @@ typedef struct {
 #endif
 #if USE_SONAR
     int16_t sonarDistance; // Distance in mm
+#endif
+#if USE_LIDAR_LITE
+    int32_t lidarLiteDistance; // Distance in mm
+#endif
+#if USE_SONAR || USE_LIDAR_LITE
+    float distance; // Fusioned distance from sonar and LIDAR-Lite v3 in mm
 #endif
 } altitude_t;
 
