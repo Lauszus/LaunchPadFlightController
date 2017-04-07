@@ -177,8 +177,8 @@ int main(void) {
                     resetHeadingHold(&angle);
 #endif
 
-                float setPointRoll, setPointPitch; // Roll and pitch control can both be gyro or accelerometer based
-                const float setPointYaw = rudder * cfg.stickScalingYaw; // Yaw is always gyro controlled
+                float setpointRoll, setpointPitch; // Roll and pitch control can both be gyro or accelerometer based
+                const float setpointYaw = rudder * cfg.stickScalingYaw; // Yaw is always gyro controlled
                 if (angleMode) { // Angle mode
                     const uint8_t maxAngleInclination =
 #if USE_SONAR || USE_LIDAR_LITE
@@ -192,28 +192,28 @@ int main(void) {
                     static const uint32_t interval = 1e6; // 1s between steps
                     aileron = stepResponse(getRXChannel(RX_AUX2_CHAN) > 0, aileron, angle.axis.roll, step1, step2, interval, now);
 #endif
-                    setPointRoll = constrain(aileron, -maxAngleInclination, maxAngleInclination) - angle.axis.roll;
-                    setPointPitch = constrain(elevator, -maxAngleInclination, maxAngleInclination) - angle.axis.pitch;
-                    setPointRoll *= cfg.angleKp; // A cascaded P controller is used in self level mode, as the output from the P controller is then used as the set point for the acro PID controller
-                    setPointPitch *= cfg.angleKp;
+                    setpointRoll = constrain(aileron, -maxAngleInclination, maxAngleInclination) - angle.axis.roll;
+                    setpointPitch = constrain(elevator, -maxAngleInclination, maxAngleInclination) - angle.axis.pitch;
+                    setpointRoll *= cfg.angleKp; // A cascaded P controller is used in self level mode, as the output from the P controller is then used as the set point for the acro PID controller
+                    setpointPitch *= cfg.angleKp;
                 } else { // Acro mode
-                    setPointRoll = aileron * cfg.stickScalingRollPitch;
-                    setPointPitch = elevator * cfg.stickScalingRollPitch;
+                    setpointRoll = aileron * cfg.stickScalingRollPitch;
+                    setpointPitch = elevator * cfg.stickScalingRollPitch;
 
 #if STEP_ACRO_SELF_LEVEL
                     static const float step1 = 0; // Start at 0 degrees/s
                     static const float step2 = 15; // Rotate 15 degrees/s
                     static const uint32_t interval = 1e6; // 1s between steps
-                    setPointRoll = stepResponse(getRXChannel(RX_AUX2_CHAN) > 0, setPointRoll, mpu6500.gyroRate.axis.roll, step1, step2, interval, now);
+                    setpointRoll = stepResponse(getRXChannel(RX_AUX2_CHAN) > 0, setpointRoll, mpu6500.gyroRate.axis.roll, step1, step2, interval, now);
 #endif
                 }
 
-                /*UARTprintf("%d\t%d\n", (int16_t)setPointRoll, (int16_t)setPointPitch);
+                /*UARTprintf("%d\t%d\n", (int16_t)setpointRoll, (int16_t)setpointPitch);
                 UARTFlushTx(false);*/
 
-                float rollOut = updatePID(&pidRoll, setPointRoll, mpu6500.gyroRate.axis.roll, dt);
-                float pitchOut = updatePID(&pidPitch, setPointPitch, mpu6500.gyroRate.axis.pitch, dt);
-                float yawOut = updatePID(&pidYaw, setPointYaw, mpu6500.gyroRate.axis.yaw, dt);
+                float rollOut = updatePID(&pidRoll, setpointRoll, mpu6500.gyroRate.axis.roll, dt);
+                float pitchOut = updatePID(&pidPitch, setpointPitch, mpu6500.gyroRate.axis.pitch, dt);
+                float yawOut = updatePID(&pidYaw, setpointYaw, mpu6500.gyroRate.axis.yaw, dt);
 
                 float throttle = getRXChannel(RX_THROTTLE_CHAN);
 
@@ -283,7 +283,7 @@ int main(void) {
         // Set magnetic declination
         // Set acc_lpf_factor, gyro_cmpf_factor, gyro_cmpfm_factor, baro_noise_lpf and throttle_noise_lpf + add explanation
         // Set headMaxAngle
-        // Set altHoldSetPoint and altHoldInitialThrottle for altitude hold mode
+        // Set altHoldSetpoint and altHoldInitialThrottle for altitude hold mode
         // Control drone using virtual joystick
             // Auto take off and land in altitude hold mode
         // Show distance in graph as well

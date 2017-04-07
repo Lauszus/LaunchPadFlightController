@@ -54,7 +54,7 @@
 
 #if USE_BARO
 static bmp180_t bmp180; // Barometer readings
-static float altitudeSetPoint;
+static float altitudeSetpoint;
 #endif
 
 static bool altHoldActive;
@@ -208,7 +208,7 @@ float updateAltitudeHold(float aux, altitude_t *altitude, float throttle, uint32
 #if USE_SONAR || USE_LIDAR_LITE
     static const float throttle_noise_lpf = 1000.0f; // TODO: Set via app
     static float altHoldThrottle; // Low pass filtered throttle input
-    static int16_t altHoldSetPoint; // Altitude hold set point
+    static int16_t altHoldSetpoint; // Altitude hold set point
 
     if (aux < 50 && altitude->distance >= 0) { // Make sure the distance is valid
         if (!altHoldActive) { // We just went from deactivated to active
@@ -218,22 +218,22 @@ float updateAltitudeHold(float aux, altitude_t *altitude, float throttle, uint32
 
             if (altHoldInitialThrottle < CHANNEL_MIN_CHECK) { // If throttle is very low, just set an initial value, so it still works
                 // TODO: Don't hardcode these values
-                altHoldSetPoint = 1000; // Set to 1m
+                altHoldSetpoint = 1000; // Set to 1m
                 altHoldInitialThrottle = -30.0f; // Set the throttle value to where is approximately hovers
             } else {
 #if USE_SONAR && USE_LIDAR_LITE
-                altHoldSetPoint = constrain(altitude->distance, SONAR_MIN_DIST, LIDAR_MAX_DIST); // Constrain set point to the min and max allowed
+                altHoldSetpoint = constrain(altitude->distance, SONAR_MIN_DIST, LIDAR_MAX_DIST); // Constrain set point to the min and max allowed
 #elif USE_SONAR
-                altHoldSetPoint = constrain(altitude->distance, SONAR_MIN_DIST, SONAR_MAX_DIST); // Constrain set point to the min and max allowed
+                altHoldSetpoint = constrain(altitude->distance, SONAR_MIN_DIST, SONAR_MAX_DIST); // Constrain set point to the min and max allowed
 #elif USE_LIDAR_LITE
-                altHoldSetPoint = constrain(altitude->distance, LIDAR_MIN_DIST, LIDAR_MAX_DIST); // Constrain set point to the min and max allowed
+                altHoldSetpoint = constrain(altitude->distance, LIDAR_MIN_DIST, LIDAR_MAX_DIST); // Constrain set point to the min and max allowed
 #endif // USE_SONAR && USE_LIDAR_LITE
                 altHoldInitialThrottle = throttle; // Save current throttle
             }
         }
 
 #if STEP_ALTITUDE_HOLD
-        (void)altHoldSetPoint; // Suppress warning
+        (void)altHoldSetpoint; // Suppress warning
         const float input = mapf(altitude->sonarDistance, SONAR_MIN_DIST, SONAR_MAX_DIST, MIN_MOTOR_OUT, MAX_MOTOR_OUT);
         const float step1 = mapf(500, SONAR_MIN_DIST, SONAR_MAX_DIST, MIN_MOTOR_OUT, MAX_MOTOR_OUT); // Start at 50cm
         const float step2 = mapf(1000, SONAR_MIN_DIST, SONAR_MAX_DIST, MIN_MOTOR_OUT, MAX_MOTOR_OUT); // Go to 1m
@@ -243,32 +243,32 @@ float updateAltitudeHold(float aux, altitude_t *altitude, float throttle, uint32
 
         altHoldThrottle = altHoldThrottle * (1.0f - (1.0f / throttle_noise_lpf)) + throttle * (1.0f / throttle_noise_lpf); // LPF throttle input
 
-        float setPoint;
+        float setpoint;
 #if !STEP_ALTITUDE_HOLD
 #if USE_SONAR && USE_LIDAR_LITE
         if (altHoldThrottle < altHoldInitialThrottle)
-            setPoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, altHoldInitialThrottle, SONAR_MIN_DIST, altHoldSetPoint);
+            setpoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, altHoldInitialThrottle, SONAR_MIN_DIST, altHoldSetpoint);
         else
-            setPoint = mapf(altHoldThrottle, altHoldInitialThrottle, MAX_MOTOR_OUT, altHoldSetPoint, LIDAR_MAX_DIST);
+            setpoint = mapf(altHoldThrottle, altHoldInitialThrottle, MAX_MOTOR_OUT, altHoldSetpoint, LIDAR_MAX_DIST);
 #elif USE_SONAR
         if (altHoldThrottle < altHoldInitialThrottle)
-            setPoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, altHoldInitialThrottle, SONAR_MIN_DIST, altHoldSetPoint);
+            setpoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, altHoldInitialThrottle, SONAR_MIN_DIST, altHoldSetpoint);
         else
-            setPoint = mapf(altHoldThrottle, altHoldInitialThrottle, MAX_MOTOR_OUT, altHoldSetPoint, SONAR_MAX_DIST);
+            setpoint = mapf(altHoldThrottle, altHoldInitialThrottle, MAX_MOTOR_OUT, altHoldSetpoint, SONAR_MAX_DIST);
 #elif USE_LIDAR_LITE
         if (altHoldThrottle < altHoldInitialThrottle)
-            setPoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, altHoldInitialThrottle, LIDAR_MIN_DIST, altHoldSetPoint);
+            setpoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, altHoldInitialThrottle, LIDAR_MIN_DIST, altHoldSetpoint);
         else
-            setPoint = mapf(altHoldThrottle, altHoldInitialThrottle, MAX_MOTOR_OUT, altHoldSetPoint, LIDAR_MAX_DIST);
+            setpoint = mapf(altHoldThrottle, altHoldInitialThrottle, MAX_MOTOR_OUT, altHoldSetpoint, LIDAR_MAX_DIST);
 #endif // USE_SONAR && USE_LIDAR_LITE
 #else
         // This code is only used when logging is used, so it is easy to map between distance and throttle values
-        setPoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, MAX_MOTOR_OUT, SONAR_MIN_DIST, SONAR_MAX_DIST);
+        setpoint = mapf(altHoldThrottle, MIN_MOTOR_OUT, MAX_MOTOR_OUT, SONAR_MIN_DIST, SONAR_MAX_DIST);
 #endif // !STEP_ALTITUDE_HOLD
 
-        float altHoldOut = updatePID(&pidSonarAltHold, setPoint, altitude->distance, dt);
+        float altHoldOut = updatePID(&pidSonarAltHold, setpoint, altitude->distance, dt);
         throttle = constrain(altHoldInitialThrottle + altHoldOut, MIN_MOTOR_OUT + MIN_MOTOR_OFFSET, MAX_MOTOR_OUT); // Throttle value is set to throttle when altitude hold were first activated plus output from PID controller
-        /*UARTprintf("%u %d %d %d - %d %d %d %d\n", altHoldActive, (int32_t)altHoldThrottle, (int32_t)altHoldInitialThrottle, altHoldSetPoint,     (int32_t)setPoint, altitude->distance, (int32_t)altHoldOut, (int32_t)throttle);
+        /*UARTprintf("%u %d %d %d - %d %d %d %d\n", altHoldActive, (int32_t)altHoldThrottle, (int32_t)altHoldInitialThrottle, altHoldSetpoint,     (int32_t)setpoint, altitude->distance, (int32_t)altHoldOut, (int32_t)throttle);
         UARTFlushTx(false);*/
     }
 #if USE_BARO
@@ -283,9 +283,9 @@ float updateAltitudeHold(float aux, altitude_t *altitude, float throttle, uint32
             altHoldInitialThrottle = throttle; // Save current throttle
             resetPIDAltHold();
         }
-        float altHoldOut = updatePID(&pidBaroAltHold, altitudeSetPoint * 10.0f, altitude->altitudeLpf * 10.0f, dt); // Multiply by 10 in order to convert it from cm to mm
+        float altHoldOut = updatePID(&pidBaroAltHold, altitudeSetpoint * 10.0f, altitude->altitudeLpf * 10.0f, dt); // Multiply by 10 in order to convert it from cm to mm
         throttle = constrain(altHoldInitialThrottle + altHoldOut, MIN_MOTOR_OUT + MIN_MOTOR_OFFSET, MAX_MOTOR_OUT); // Throttle value is set to throttle when altitude hold were first activated plus output from PID controller
-        /*UARTprintf1("%d %d %d %d %d\n", (int32_t)altitudeSetPoint, (int32_t)altitude->altitudeLpf, (int32_t)altHoldInitialThrottle, (int32_t)altHoldOut, (int32_t)throttle);
+        /*UARTprintf1("%d %d %d %d %d\n", (int32_t)altitudeSetpoint, (int32_t)altitude->altitudeLpf, (int32_t)altHoldInitialThrottle, (int32_t)altHoldOut, (int32_t)throttle);
         UARTFlushTx1(false);*/
     }
 #endif // USE_BARO
@@ -296,7 +296,7 @@ float updateAltitudeHold(float aux, altitude_t *altitude, float throttle, uint32
 void resetAltitudeHold(altitude_t __attribute__((unused)) *altitude) {
     altHoldActive = false;
 #if USE_BARO
-    altitudeSetPoint = altitude->altitudeLpf;
+    altitudeSetpoint = altitude->altitudeLpf;
 #endif // USE_BARO
 }
 
