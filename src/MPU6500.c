@@ -154,7 +154,11 @@ static bool calibrateMPU6500Gyro(void) {
 bool calibrateMPU6500Acc(mpu6500_t *mpu6500) {
     bool rcode = calibrateSensor(&cfg.accZero, MPU6500_ACCEL_XOUT_H, 100); // 100 / 4096 ~= 0.02g
     if (!rcode) {
-        cfg.accZero.axis.Z += mpu6500->accScaleFactor; // Z-axis is reading +1g when horizontal, so we add 1g to the value, as the accelerometer is inverted in the MPU-6500/MPU-9250
+        // The MPU-6500/MPU-9250 assumes that it reads +1g when pointing away from gravity, so we have to invert the values
+        cfg.accZero.axis.X = -cfg.accZero.axis.X;
+        cfg.accZero.axis.Y = -cfg.accZero.axis.Y;
+        cfg.accZero.axis.Z = -cfg.accZero.axis.Z;
+        cfg.accZero.axis.Z -= mpu6500->accScaleFactor; // Z-axis should be reading +1g when horizontal, so we subtract 1g from the value
 #if UART_DEBUG
         UARTprintf("Accelerometer zero values: %d\t%d\t%d\n", cfg.accZero.axis.X, cfg.accZero.axis.Y, cfg.accZero.axis.Z);
 #endif
