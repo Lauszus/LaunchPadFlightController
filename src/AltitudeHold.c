@@ -78,7 +78,7 @@ void initAltitudeHold(void) {
 
 // TODO: LPF mpu6500->accBodyFrame.axis.Z
 // TODO: Maybe the altitude should only be run when new barometer values have been read and then just use a moving average on the acceleration data
-// TODO: Reset acceleration estimate when unarmed, as we can assumed that it is at rest
+// TODO: Reset acceleration estimate when unarmed, as we can assumed that it is at rest, same goes for BMP180 ground altitude
 void getAltitude(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6500, altitude_t *altitude, uint32_t __attribute__((unused)) now, float __attribute__((unused)) dt) {
 #if USE_SONAR
     if (triggerSonar()) { // Trigger sonar
