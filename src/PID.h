@@ -28,12 +28,13 @@ extern "C" {
 typedef struct {
     float Kp, Ki, Kd; // PID variables
     float integrationLimit;
+    float Fc; // Cutoff frequency in Hz
 } pid_values_t;
 
 typedef struct {
     pid_values_t *values; // Use pointer to pid_values_t struct that are saved in the EEPROM
     float iTerm;
-    float lastError, deltaError1, deltaError2;
+    float lastError, derivative;
 } pid_t;
 
 void initPID(void);

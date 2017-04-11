@@ -22,6 +22,8 @@
 extern "C" {
 #endif
 
+#define M_PIf   3.14159265358979323846f
+
 typedef union {
     struct {
         int16_t X, Y, Z;

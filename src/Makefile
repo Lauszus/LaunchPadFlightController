@@ -80,6 +80,7 @@ all: $(COMPILER) $(PROJECT_OBJ)
 #
 clean:
 	@rm -rf $(COMPILER) $(wildcard *~)
+	@rm -f $(ROOT)/utils/*.{o,d}
 
 #
 # The rule to build and flash the object file.

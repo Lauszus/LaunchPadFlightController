@@ -36,6 +36,7 @@
 #include "PPM.h"
 #include "RX.h"
 #include "Sonar.h"
+#include "Types.h"
 #include "uartstdio1.h" // Add "UART_BUFFERED1" to preprocessor - it uses a modified version of uartstdio, so it can be used with another UART interface
 
 #if UART_DEBUG
@@ -77,7 +78,7 @@ void initAltitudeHold(void) {
 
 // TODO: LPF mpu6500->accBodyFrame.axis.Z
 // TODO: Maybe the altitude should only be run when new barometer values have been read and then just use a moving average on the acceleration data
-// TODO: Reset acceleration estimate when unarmed, as we can assumed that it is at rest
+// TODO: Reset acceleration estimate when unarmed, as we can assumed that it is at rest, same goes for BMP180 ground altitude
 void getAltitude(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6500, altitude_t *altitude, uint32_t __attribute__((unused)) now, float __attribute__((unused)) dt) {
 #if USE_SONAR
     if (triggerSonar()) { // Trigger sonar
@@ -141,11 +142,18 @@ void getAltitude(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6500, alt
     }
 
     /* Estimate altitude and velocity using barometer */
-    static float baro_noise_lpf = 0.95f; // TODO: Set via app
-    static float baroAltitude;
+    // Low-pass filter altitude estimate - see: https://en.wikipedia.org/wiki/Exponential_smoothing
+    static const float baro_lpf_Fc = 8.38f; // Cutoff frequency in Hz - TODO: Set in Android app
+#ifdef DEBUG
+    const float baro_lpf_tau = 1.0f/(2.0f*M_PIf*baro_lpf_Fc); // tau = 1.0f/(2.0f*Pi*Fc) = .019
+#else
+    static const float baro_lpf_tau = 1.0f/(2.0f*M_PIf*baro_lpf_Fc); // tau = 1.0f/(2.0f*Pi*Fc) = .019
+#endif
+    const float baro_alpha = dt/(baro_lpf_tau + dt); // alpha = dt/(tau + dt) = .05
 
+    static float baroAltitude;
     float lastBaroAltitude = baroAltitude;
-    baroAltitude = baro_noise_lpf * baroAltitude + (1.0f - baro_noise_lpf) * (bmp180.absoluteAltitude - bmp180.groundAltitude); // LPF to reduce baro noise
+    baroAltitude = baroAltitude + baro_alpha*((bmp180.absoluteAltitude - bmp180.groundAltitude) - baroAltitude); // y(n) = y(n-1) + alpha*(u(n) - y(n-1))
 
 #if USE_SONAR && 1
     // TODO: Add smooth transaction between sonar and barometer
@@ -189,8 +197,15 @@ void getAltitude(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6500, alt
     static const float altitude_cf = 0.965f; // TODO: Set in Android app
     altitude->altitude = altitude_cf * accAltitude + (1 - altitude_cf) * baroAltitude; // Estimate altitude using complimentary filter
 
-    static const float altitude_lpf = 0.995f; // TODO: Set in Android app
-    altitude->altitudeLpf = altitude_lpf * altitude->altitudeLpf + (1.0f - altitude_lpf) * altitude->altitude; // Low-pass filter altitude estimate
+    // Low-pass filter altitude estimate - see: https://en.wikipedia.org/wiki/Exponential_smoothing
+    static const float altitude_lpf_Fc = .80f; // Cutoff frequency in Hz - TODO: Set in Android app
+#ifdef DEBUG
+    const float altitude_lpf_tau = 1.0f/(2.0f*M_PIf*altitude_lpf_Fc); // tau = 1.0f/(2.0f*Pi*Fc) = .199
+#else
+    static const float altitude_lpf_tau = 1.0f/(2.0f*M_PIf*altitude_lpf_Fc); // tau = 1.0f/(2.0f*Pi*Fc) = .199
+#endif
+    const float altitude_alpha = dt/(altitude_lpf_tau + dt); // alpha = dt/(tau + dt) = .005
+    altitude->altitudeLpf = altitude->altitudeLpf + altitude_alpha*(altitude->altitude - altitude->altitudeLpf); // y(n) = y(n-1) + alpha*(u(n) - y(n-1))
 
     //UARTprintf1("%d\t%d\n", (int32_t)baroAltitude, (int32_t)baroVelocity);
     //UARTprintf1("%d\t%d\t%d\t%d\n", (int32_t)accAltitude, (int32_t)accVelocity, (int32_t)altitude->acceleration, (int32_t)accelerationZ);
@@ -206,7 +221,14 @@ float updateAltitudeHold(float aux, altitude_t *altitude, float throttle, uint32
     static float altHoldInitialThrottle = -30.0f; // Throttle when altitude hold was activated
 
 #if USE_SONAR || USE_LIDAR_LITE
-    static const float throttle_noise_lpf = 1000.0f; // TODO: Set via app
+    static const float throttle_lpf_Fc = .158995947f; // Cutoff frequency in Hz - TODO: Set in Android app
+#ifdef DEBUG
+    const float throttle_lpf_tau = 1.0f/(2.0f*M_PIf*throttle_lpf_Fc); // tau = 1.0f/(2.0f*Pi*Fc) = 1.001
+#else
+    static const float throttle_lpf_tau = 1.0f/(2.0f*M_PIf*throttle_lpf_Fc); // tau = 1.0f/(2.0f*Pi*Fc) = 1.001
+#endif
+    const float throttle_alpha = dt/(throttle_lpf_tau + dt); // alpha = dt/(tau + dt) = .001
+
     static float altHoldThrottle; // Low pass filtered throttle input
     static int16_t altHoldSetpoint; // Altitude hold set point
 
@@ -241,7 +263,8 @@ float updateAltitudeHold(float aux, altitude_t *altitude, float throttle, uint32
         throttle = stepResponse(getRXChannel(RX_AUX2_CHAN) > 90, throttle, input, step1, step2, interval, now);
 #endif
 
-        altHoldThrottle = altHoldThrottle * (1.0f - (1.0f / throttle_noise_lpf)) + throttle * (1.0f / throttle_noise_lpf); // LPF throttle input
+        // Apply exponential smoothing: https://en.wikipedia.org/wiki/Exponential_smoothing
+        altHoldThrottle = altHoldThrottle + throttle_alpha*(throttle - altHoldThrottle); // y(n) = y(n-1) + alpha*(u(n) - y(n-1))
 
         float setpoint;
 #if !STEP_ALTITUDE_HOLD

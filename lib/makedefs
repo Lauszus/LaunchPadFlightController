@@ -170,7 +170,7 @@ CFLAGS+=${patsubst %,-I%,${subst :, ,${IPATH}}}
 #
 # The rule for building the object file from each C source file.
 #
-${COMPILER}${SUFFIX}/%.o: %.c
+${COMPILER}${SUFFIX}/%.o %.o: %.c
 	@if [ 'x${VERBOSE}' = x ];                            \
 	 then                                                 \
 	     echo "  CC    ${<}";                             \
