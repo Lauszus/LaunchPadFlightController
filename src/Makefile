@@ -116,7 +116,7 @@ ENTRY_$(TARGET) = ResetISR
 CFLAGSgcc =  -DTARGET_IS_BLIZZARD_RB1 -DUART_BUFFERED -DUART_BUFFERED1
 CFLAGSgcc += $(BUILD_FLAGS)
 CFLAGSgcc += -DSTEP_ACRO_SELF_LEVEL=$(STEP_ACRO_SELF_LEVEL) -DSTEP_ALTITUDE_HOLD=$(STEP_ALTITUDE_HOLD) -DSTEP_HEADING_HOLD=$(STEP_HEADING_HOLD)
-CFLAGSgcc += -Wdouble-promotion -Wunsafe-loop-optimizations -Wunused-parameter
+CFLAGSgcc += -Wdouble-promotion -Wunsafe-loop-optimizations -Wunused-parameter -Woverflow
 
 #
 # Make all warnings into errors when building using Travis CI
