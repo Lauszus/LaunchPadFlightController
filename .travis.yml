@@ -27,8 +27,12 @@ install:
     - wget "https://launchpad.net/gcc-arm-embedded/4.8/4.8-2014-q3-update/+download/gcc-arm-none-eabi-4_8-2014q3-20140805-linux.tar.bz2"
     - tar -xf gcc-arm-none-eabi-4_8-2014q3-20140805-linux.tar.bz2
     - export PATH=$PATH:$PWD/gcc-arm-none-eabi-4_8-2014q3/bin
+    - nvm install 7
+    - npm install -g eclint
 
-before_script: arm-none-eabi-gcc --version
+before_script:
+    - eclint check README.md src/*
+    - arm-none-eabi-gcc --version
 
 script:
     - cd src/ && make -j2
