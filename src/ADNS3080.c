@@ -23,6 +23,7 @@
 #if USE_FLOW_SENSOR
 
 #include "ADNS3080.h"
+#include "Config.h"
 #include "SPI.h"
 #include "Time.h"
 
@@ -51,25 +52,22 @@
 // Id returned by ADNS3080_PRODUCT_ID register
 #define ADNS3080_PRODUCT_ID_VALUE      0x17
 
-#define GPIO_RESET_PERIPH              SYSCTL_PERIPH_GPIOF
-#define GPIO_RESET_BASE                GPIO_PORTF_BASE
-#define GPIO_RESET_PIN                 GPIO_PIN_4
 
 // Registers should be bitwise OR with this value when writing
 #define ADNS3080_WRITE_REG_VALUE       0x80
 
 static void reset(void) {
-    GPIOPinWrite(GPIO_RESET_BASE, GPIO_RESET_PIN, GPIO_RESET_PIN); // Set high
+    GPIOPinWrite(GPIO_ADNS3080_RESET_BASE, GPIO_ADNS3080_RESET_PIN, GPIO_ADNS3080_RESET_PIN); // Set high
     delayMicroseconds(10);
-    GPIOPinWrite(GPIO_RESET_BASE, GPIO_RESET_PIN, 0); // Set low
+    GPIOPinWrite(GPIO_ADNS3080_RESET_BASE, GPIO_ADNS3080_RESET_PIN, 0); // Set low
     delayMicroseconds(500); // Wait for sensor to get ready
 }
 
 void initADNS3080(void) {
     // Set reset pin as output
-    SysCtlPeripheralEnable(GPIO_RESET_PERIPH); // Enable GPIO peripheral
+    SysCtlPeripheralEnable(GPIO_ADNS3080_RESET_PERIPH); // Enable GPIO peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
-    GPIOPinTypeGPIOOutput(GPIO_RESET_BASE, GPIO_RESET_PIN); // Set as output
+    GPIOPinTypeGPIOOutput(GPIO_ADNS3080_RESET_BASE, GPIO_ADNS3080_RESET_PIN); // Set as output
     reset();
 
     uint8_t id = spiRead(ADNS3080_PRODUCT_ID);

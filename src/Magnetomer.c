@@ -22,10 +22,10 @@
 
 #include "AK8963.h"
 #include "Buzzer.h"
+#include "Config.h"
 #include "EEPROM.h"
 #include "HMC5883L.h"
 #include "Magnetometer.h"
-#include "Pins.h"
 #include "Time.h"
 
 #include "driverlib/gpio.h"

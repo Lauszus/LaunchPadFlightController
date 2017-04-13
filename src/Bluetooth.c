@@ -21,6 +21,7 @@
 
 #include "Bluetooth.h"
 #include "Buzzer.h"
+#include "Config.h"
 #include "EEPROM.h"
 #include "Magnetometer.h"
 #include "MPU6500.h"
@@ -28,12 +29,7 @@
 #include "UART.h"
 #include "uartstdio1.h" // Add "UART_BUFFERED1" to preprocessor - it uses a modified version of uartstdio, so it can be used with another UART interface
 
-#include "inc/hw_memmap.h"
-#include "inc/hw_ints.h"
 #include "driverlib/gpio.h"
-#include "driverlib/interrupt.h"
-#include "driverlib/pin_map.h"
-#include "driverlib/sysctl.h"
 #include "driverlib/uart.h"
 #if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor - this is used to print to the terminal
@@ -92,23 +88,22 @@ static uint8_t getCheckSum(uint8_t *data, size_t length);
 static pid_values_t* getPidValuesPointer(uint8_t cmd);
 
 void initBluetooth(void) {
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOB); // Enable the GPIO port containing the pins that will be used.
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_BLUETOOTH); // Enable the GPIO port containing the pins that will be used.
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 
     // Configure the GPIO pin muxing for the UART function.
     // This is only necessary if your part supports GPIO pin function muxing.
     // Study the data sheet to see which functions are allocated per pin.
-    GPIOPinConfigure(GPIO_PB0_U1RX);
-    GPIOPinConfigure(GPIO_PB1_U1TX);
+    GPIOPinConfigure(GPIO_RX_BLUETOOTH);
+    GPIOPinConfigure(GPIO_TX_BLUETOOTH);
 
-    // Since GPIO B0 and B1 are used for the UART function, they must be
-    // configured for use as a peripheral function (instead of GPIO).
-    GPIOPinTypeUART(GPIO_PORTB_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+    // Configure GPIO for use as a peripheral function (instead of GPIO).
+    GPIOPinTypeUART(GPIO_BLUETOOTH_PIN_BASE, GPIO_RX_PIN_BLUETOOTH | GPIO_TX_PIN_BLUETOOTH);
 
-    UARTStdioConfig1(1, 115200, SysCtlClockGet()); // Mode is set to 8N1 on UART1
+    UARTStdioConfig1(GPIO_UART_NR_BLUETOOTH, 115200, SysCtlClockGet()); // Mode is set to 8N1 at 115200
     UARTEchoSet1(false);
 
-    while (UARTBusy(UART1_BASE)) {
+    while (UARTBusy(GPIO_UART_BASE_BLUETOOTH)) {
         // Wait until UART is ready
     }
 }

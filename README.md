@@ -1,5 +1,5 @@
 # LaunchPad Flight Controller
-#### Developed by Kristian Sloth Lauszus, 2015
+#### Developed by Kristian Sloth Lauszus, 2015-2017
 _________
 [![Build Status](https://travis-ci.org/Lauszus/LaunchPadFlightController.svg?branch=master)](https://travis-ci.org/Lauszus/LaunchPadFlightController)
 
@@ -76,6 +76,8 @@ The report I wrote for my Bachelor's thesis can be found in the [docs](docs) fol
 \* UART1 is connected to an HC-06 Bluetooth module running at a baudrate of 115200. __Not 5V tolerant!__, so make sure your Bluetooth module outputs 3.3 voltage level or use a logic level converter.
 
 The MPU-6500/MPU-9250, HMC5883L, BMP180 and LIDAR-Lite v3 are connected via I<sup>2</sup>C if they are used.
+
+All pins are defined in [src/Config.h](src/Config.h) and can be overriden by creating a file called "Config_custom.h" in the [src](src) directory allowing you to redefine the values.
 
 # Notes
 

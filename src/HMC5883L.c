@@ -22,6 +22,7 @@
 
 #if USE_MAG
 
+#include "Config.h"
 #include "EEPROM.h"
 #include "HMC5883L.h"
 #include "I2C.h"
@@ -30,9 +31,7 @@
 
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
-#include "driverlib/sysctl.h"
 #include "inc/hw_ints.h"
-#include "inc/hw_memmap.h"
 #if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
@@ -76,10 +75,6 @@
 #define SELF_TEST_HIGH_LIMIT            (575.0f / 390.0f) // High limit when Gain = 5 (4.7 Ga)
 #define GAIN_13_GA_LSB_GAIN             1090.0f // Gain (LSB/Gauss) for 1.3 Ga gain (default)
 #define GAIN_25_GA_LSB_GAIN             660.0f  // Gain (LSB/Gauss) for 2.5 Ga gain
-
-#define GPIO_HMC5883L_DRDY_PERIPH       SYSCTL_PERIPH_GPIOE
-#define GPIO_HMC5883L_DRDY_BASE         GPIO_PORTE_BASE
-#define GPIO_HMC5883L_DRDY_PIN          GPIO_PIN_3
 
 static struct hmc5883l_t {
     sensorRaw_t magRaw; // Raw magnetometer readings

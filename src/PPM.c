@@ -19,9 +19,9 @@
 #include <stdbool.h>
 
 #include "Buzzer.h"
+#include "Config.h"
 #include "EEPROM.h"
 #include "PID.h"
-#include "Pins.h"
 #include "PPM.h"
 #include "Time.h"
 
@@ -35,11 +35,6 @@
 #if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
-
-#define SYSCTL_PERIPH_SW    SYSCTL_PERIPH_GPIOF
-#define GPIO_SW_BASE        GPIO_PORTF_BASE
-#define GPIO_SW1            GPIO_PIN_4
-#define GPIO_SW2            GPIO_PIN_0
 
 #ifndef ONESHOT125
 #define ONESHOT125 1

@@ -21,7 +21,7 @@
 
 #if STEP_ACRO_SELF_LEVEL || STEP_ALTITUDE_HOLD || STEP_HEADING_HOLD
 
-#include "Pins.h"
+#include "Config.h"
 #include "StepResponse.h"
 #include "Time.h"
 #include "uartstdio1.h" // Add "UART_BUFFERED1" to preprocessor - it uses a modified version of uartstdio, so it can be used with another UART interface
