@@ -20,8 +20,8 @@
 
 #if USE_FLOW_SENSOR
 
-#include "Time.h"
 #include "SPI.h"
+#include "Time.h"
 
 #include "inc/hw_memmap.h"
 #include "driverlib/gpio.h"
@@ -64,48 +64,63 @@ void initSPI(void) {
 }
 
 void spiWrite(uint8_t regAddr, uint8_t data) {
-    spiWriteData(regAddr, &data, 1);
+    spiWriteDataBuffer(&regAddr, 1, &data, 1);
 }
 
-void spiWriteData(uint8_t regAddr, uint8_t *data, uint8_t length) {
+void spiWriteData(uint8_t regAddr, const uint8_t *data, uint8_t length) {
+    spiWriteDataBuffer(&regAddr, 1, data, length);
+}
+
+void spiWriteDataBuffer(const uint8_t *header, uint16_t headerLength, const uint8_t *data, uint32_t dataLength) {
     spiSelect(true);
 
-    // First send data
-    SSIDataPut(SSI0_BASE, regAddr | 0x80); // Indicate write operation
-    delayMicroseconds(75); // Wait minimum 75 us in case writing to Motion or Motion_Burst registers
-    for (uint8_t i = 0; i < length; i++)
-        SSIDataPut(SSI0_BASE, data[i]); // Write data
-
-    // Response is just thrown away
+    // First send header
     uint32_t buf;
-    SSIDataGet(SSI0_BASE, &buf);
-    for (uint8_t i = 0; i < length; i++)
-        SSIDataGet(SSI0_BASE, &buf);
+    for (uint16_t i = 0; i < headerLength; i++) {
+        SSIDataPut(SSI0_BASE, header[i]); // Write header
+        SSIDataGet(SSI0_BASE, &buf); // Response is just thrown away
+#if USE_FLOW_SENSOR
+        delayMicroseconds(75); // Wait minimum 75 us in case writing to Motion or Motion_Burst registers
+#endif
+    }
+
+    // Then send data
+    for (uint32_t i = 0; i < dataLength; i++) {
+        SSIDataPut(SSI0_BASE, data[i]); // Write data
+        SSIDataGet(SSI0_BASE, &buf); // Response is just thrown away
+    }
 
     spiSelect(false);
 }
 
 uint8_t spiRead(uint8_t regAddr) {
     uint8_t data;
-    spiReadData(regAddr, &data, 1);
+    spiReadDataBuffer(&regAddr, 1, &data, 1);
     return data;
 }
 
 void spiReadData(uint8_t regAddr, uint8_t *data, uint8_t length) {
+    spiReadDataBuffer(&regAddr, 1, data, length);
+}
+
+void spiReadDataBuffer(const uint8_t *sendData, uint16_t sendLength, uint8_t *recvData, uint32_t recvLength) {
     spiSelect(true);
 
     // First send data
-    SSIDataPut(SSI0_BASE, regAddr); // Send register address
-    delayMicroseconds(75); // Wait minimum 75 us in case writing to Motion or Motion_Burst registers
-    for (uint8_t i = 0; i < length; i++)
-        SSIDataPut(SSI0_BASE, 0); // Send 0
+    uint32_t buf;
+    for (uint16_t i = 0; i < sendLength; i++) {
+        SSIDataPut(SSI0_BASE, sendData[i]);
+        SSIDataGet(SSI0_BASE, &buf); // Throw away response
+#if USE_FLOW_SENSOR
+        delayMicroseconds(75); // Wait minimum 75 us in case writing to Motion or Motion_Burst registers
+#endif
+    }
 
     // Read the received response
-    uint32_t buf;
-    SSIDataGet(SSI0_BASE, &buf); // The first data is just thrown away
-    for (uint8_t i = 0; i < length; i++) {
-        SSIDataGet(SSI0_BASE, &buf); // Receive rest of the data
-        data[i] = buf;
+    for (uint32_t i = 0; i < recvLength; i++) {
+        SSIDataPut(SSI0_BASE, 0); // Send 0
+        SSIDataGet(SSI0_BASE, &buf); // Receive response
+        recvData[i] = buf;
     }
 
     spiSelect(false);

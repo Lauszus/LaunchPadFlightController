@@ -33,6 +33,7 @@
 #include "PID.h"
 #include "Pins.h"
 #include "RX.h"
+#include "SPI.h"
 #include "StepResponse.h"
 #include "Time.h"
 #include "UART.h"
@@ -75,6 +76,7 @@ int main(void) {
     initAltitudeHold();
 #endif
 #if USE_FLOW_SENSOR
+    initSPI();
     initADNS3080();
 #endif
     initBluetooth();

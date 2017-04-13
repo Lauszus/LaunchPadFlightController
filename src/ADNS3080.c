@@ -55,6 +55,9 @@
 #define GPIO_RESET_BASE                GPIO_PORTF_BASE
 #define GPIO_RESET_PIN                 GPIO_PIN_4
 
+// Registers should be bitwise OR with this value when writing
+#define ADNS3080_WRITE_REG_VALUE       0x80
+
 static void reset(void) {
     GPIOPinWrite(GPIO_RESET_BASE, GPIO_RESET_PIN, GPIO_RESET_PIN); // Set high
     delayMicroseconds(10);
@@ -63,8 +66,6 @@ static void reset(void) {
 }
 
 void initADNS3080(void) {
-    initSPI();
-
     // Set reset pin as output
     SysCtlPeripheralEnable(GPIO_RESET_PERIPH); // Enable GPIO peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
@@ -84,7 +85,7 @@ void initADNS3080(void) {
     }
 
     uint8_t config = spiRead(ADNS3080_CONFIGURATION_BITS);
-    spiWrite(ADNS3080_CONFIGURATION_BITS, config | 0x10); // Set resolution to 1600 counts per inch
+    spiWrite(ADNS3080_CONFIGURATION_BITS | ADNS3080_WRITE_REG_VALUE, config | 0x10); // Set resolution to 1600 counts per inch
 }
 
 // Run: 'python ADNS3080ImageGrabber.py' in order to see the data
@@ -93,7 +94,7 @@ static void __attribute__((unused)) printPixelData(void) {
   bool isFirstPixel = true;
 
   // Write to frame capture register to force capture of frame
-  spiWrite(ADNS3080_FRAME_CAPTURE, 0x83);
+  spiWrite(ADNS3080_FRAME_CAPTURE | ADNS3080_WRITE_REG_VALUE, 0x83);
 
   // Wait 3 frame periods + 10 nanoseconds for frame to be captured
   delayMicroseconds(1510); // Minimum frame speed is 2000 frames/second so 1 frame = 500 nano seconds. So 500 x 3 + 10 = 1510
@@ -167,7 +168,7 @@ void getADNS3080Data(int32_t __attribute__((unused)) *x, int32_t __attribute__((
 
 // Will cause the Delta_X, Delta_Y, and internal motion registers to be cleared
 void clearMotion(int32_t *x, int32_t *y) {
-  spiWrite(ADNS3080_MOTION_CLEAR, 0xFF); // Writing anything to this register will clear the sensor's motion registers
+  spiWrite(ADNS3080_MOTION_CLEAR | ADNS3080_WRITE_REG_VALUE, 0xFF); // Writing anything to this register will clear the sensor's motion registers
   *x = *y = 0;
 }
 
