@@ -115,6 +115,10 @@ It is a good idea to confirm that the estimated angles are all correct by using 
 
 There is no need to calibrate the gyroscope, as this is done at every startup.
 
+### RX
+
+The minimum and maximum receiver values are hardcoded in [src/Config.h](src/Config.h) and might need to be adjusted as well.
+
 # Android application
 
 <a href="http://play.google.com/store/apps/details?id=com.lauszus.launchpadflightcontrollerandroid.app"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" alt="Google Play" width="200px"/></a>
