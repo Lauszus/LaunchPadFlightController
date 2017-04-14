@@ -100,9 +100,30 @@ void initBluetooth(void) {
     // Configure GPIO for use as a peripheral function (instead of GPIO).
     GPIOPinTypeUART(GPIO_BLUETOOTH_PIN_BASE, GPIO_RX_PIN_BLUETOOTH | GPIO_TX_PIN_BLUETOOTH);
 
-    UARTStdioConfig1(GPIO_UART_NR_BLUETOOTH, 115200, SysCtlClockGet()); // Mode is set to 8N1 at 115200
     UARTEchoSet1(false);
 
+    if (cfg.configureBtModule) {
+        // Configure the Bluetooth module in case it is the first time it is powered on
+        cfg.configureBtModule = false;
+        updateConfig();
+
+        UARTStdioConfig1(GPIO_UART_NR_BLUETOOTH, 9600, SysCtlClockGet()); // Mode is set to 8N1 at 9600
+        while (UARTBusy(GPIO_UART_BASE_BLUETOOTH)) {
+            // Wait until UART is ready
+        }
+
+        UARTprintf1("AT+NAMELaunchPad"); // Set the name to 'LaunchPad'
+        delay(1000); // The module waits 1 s before it considers a message complete
+        UARTprintf1("AT+PIN0000"); // Set the pin to '0000'
+        delay(1000); // The module waits 1 s before it considers a message complete
+        UARTprintf1("AT+BAUD8"); // Finally change the baud rate to '115200'
+
+#if UART_DEBUG
+        UARTprintf("Bluetooth module configured\n");
+#endif
+    }
+
+    UARTStdioConfig1(GPIO_UART_NR_BLUETOOTH, 115200, SysCtlClockGet()); // Mode is set to 8N1 at 115200
     while (UARTBusy(GPIO_UART_BASE_BLUETOOTH)) {
         // Wait until UART is ready
     }
