@@ -39,6 +39,7 @@ The report I wrote for my Bachelor's thesis can be found in the [docs](docs) fol
 * Ultrasound sensor aka sonar (HC-SR04)
 * [LIDAR-Lite v3](https://buy.garmin.com/en-US/US/p/557294)
     - Connect a 680 µF electrolytic capacitor from 5V to GND
+* Optical flow sensor (ADNS3080)
 * [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid)
 * OneShot125 ESC support
 * Buzzer feedback
@@ -56,24 +57,38 @@ The report I wrote for my Bachelor's thesis can be found in the [docs](docs) fol
 
 # Pinout
 
-| Pin  |         Connection      |
-|------|-------------------------|
-| PB6  |          Motor 1        |
-| PB7  |          Motor 2        |
-| PB4  |          Motor 3        |
-| PB5  |          Motor 4        |
-| PC6  |         CPPM input      |
-| PA6  |           SCL           |
-| PA7  |           SDA           |
-| PE2  |  MPU-6500/MPU-9250 INT  |
-| PC5  |        Sonar echo       |
-| PE0  |       Sonar trigger     |
-| PB0* |         UART1 RX        |
-| PB1* |         UART1 TX        |
-| PD2  |          Buzzer         |
-| PE3  |       HMC5883L DRDY     |
+| Pin  |        Connection       |   Hardware peripheral   |
+|------|-------------------------|-------------------------|
+| PA0  |         UART RX         |     U0RX (UART0 RX)     |
+| PA1  |         UART TX         |     U0TX (UART0 TX)     |
+| PA2  |         SPI CLK         |         SSI0CLK         |
+| PA3  |         SPI SS          |         SSI0Fss         |
+| PA4  |         SPI MISO        |         SSI0Rx          |
+| PA5  |         SPI MOSI        |         SSI0Tx          |
+| PA6  |           SCL           |         I2C1SCL         |
+| PA7  |           SDA           |         I2C1SDA         |
+| PB0* |       Bluetooth RX      |     U1RX (UART1 RX)     |
+| PB1* |       Bluetooth TX      |     U1TX (UART1 TX)     |
+| PB4  |         Motor 3         |         M0PWM2          |
+| PB5  |         Motor 4         |         M0PWM3          |
+| PB6  |         Motor 1         |         M0PWM0          |
+| PB7  |         Motor 2         |         M0PWM1          |
+| PC5  |        Sonar echo       |   WTimer0B (WT0CCP1)    |
+| PC6  |        CPPM input       |   WTimer1A (WT1CCP0)    |
+| PD0  |      ADNS3080 reset     |                         |
+| PD2  |          Buzzer         |                         |
+| PE0  |       Sonar trigger     |                         |
+| PE2  |  MPU-6500/MPU-9250 INT  |                         |
+| PE3  |       HMC5883L DRDY     |                         |
+| PF0  |         Switch 1        |                         |
+| PF1  |         Red LED         |                         |
+| PF2  |        Blue LED         |                         |
+| PF3  |        Green LED        |                         |
+| PF4  |         Switch 2        |                         |
 
 \* UART1 is connected to an HC-06 Bluetooth module running at a baudrate of 115200. __Not 5V tolerant!__, so make sure your Bluetooth module outputs 3.3 voltage level or use a logic level converter.
+
+Furthermore WTimer1B is used to turn off motors if the connection to the RX is lost. SysTick counter is used for time basic time keeping functionality.
 
 The MPU-6500/MPU-9250, HMC5883L, BMP180 and LIDAR-Lite v3 are connected via I<sup>2</sup>C if they are used.
 
