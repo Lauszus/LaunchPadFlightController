@@ -86,7 +86,11 @@ clean:
 # The rule to build and flash the object file.
 #
 flash: all
+ifeq ($(OS),Windows_NT)
+	@LMFlash -r -v $(COMPILER)/$(TARGET).bin
+else
 	@lm4flash -v $(COMPILER)/$(TARGET).bin
+endif
 
 #
 # The rule to create the target directory.
