@@ -1,6 +1,10 @@
-language: c
+language: python
 
+# Cache PlatformIO packages using Travis CI container-based infrastructure
 sudo: false
+cache:
+    directories:
+        - "~/.platformio"
 
 addons:
     apt:
@@ -21,9 +25,6 @@ env:
     - TRAVIS_CI=1 USE_MAG=1 USE_BARO=0 USE_SONAR=0 USE_LIDAR_LITE=1 USE_FLOW_SENSOR=0 UART_DEBUG=1 ONESHOT125=1
     - TRAVIS_CI=1 USE_MAG=1 USE_BARO=0 USE_SONAR=0 USE_LIDAR_LITE=0 USE_FLOW_SENSOR=1 UART_DEBUG=1 ONESHOT125=1
 
-compiler:
-    - gcc
-
 install:
     - wget "https://launchpad.net/gcc-arm-embedded/4.8/4.8-2014-q3-update/+download/gcc-arm-none-eabi-4_8-2014q3-20140805-linux.tar.bz2"
     - tar -xf gcc-arm-none-eabi-4_8-2014q3-20140805-linux.tar.bz2
@@ -31,10 +32,12 @@ install:
     - git clone https://github.com/utzig/lm4tools.git
     - make -C lm4tools/lm4flash all
     - export PATH=$PATH:$PWD/lm4tools/lm4flash
+    - pip install -U platformio
 
 before_script:
     - arm-none-eabi-gcc --version
     - lm4flash -V
+    - platformio ci --project-conf=platformio.ini --lib=lib/* ./src
 
 script:
     - cd src/ && make -j2

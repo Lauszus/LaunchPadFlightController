@@ -29,3 +29,4 @@ src/.cproject
 src/.settings/
 *.s#?
 *.b#?
+.pioenvs/
