@@ -148,11 +148,45 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
 
 # Build instructions
 
-In order to built this project you need to download Keil µVision IDE 5 or use [Make](http://www.gnu.org/software/make/).
+## PlatformIO
 
-If you are using Keil µVision IDE 5, then simply open the [project file](LaunchPadFlightController.uvprojx).
+[PlatformIO](http://platformio.org) is a cross-platform build system, which makes it easy to compile and upload the code on both Windows, Linux and Mac. This is the recommended way to compile the code for novice users.
 
-If you are using Make, then you will need to first download and install [gcc-arm-none-eabi](https://launchpad.net/gcc-arm-embedded/4.8/4.8-2014-q3-update) and then install [lm4tools](https://github.com/utzig/lm4tools).
+Please follow these instructions in order to install Python 2.7 and PlatformIO: <http://docs.platformio.org/en/latest/installation.html>.
+
+On Windows be sure to select "Add python.exe to Path" when installing Python 2.7.
+
+Open a terminal (search for ```cmd.exe``` on Windows) and navigate to the root of the project:
+
+```bash
+cd LaunchPadFlightController
+```
+
+Now compile the code:
+
+```bash
+platformio run
+```
+
+The program should now be compiled.
+
+In order to upload the code simply type:
+
+```bash
+platformio run -t upload
+```
+
+I recommend installing the [PlatformIO IDE](http://platformio.org/get-started/ide?install) if using PlatformIO.
+
+## Keil µVision IDE 5
+
+In order to built this project you need to download Keil µVision IDE 5 and then simply open the [project file](LaunchPadFlightController.uvprojx).
+
+## Manual installation
+
+In order to built this project you will need to use [Make](http://www.gnu.org/software/make/).
+
+First download and install [gcc-arm-none-eabi](https://launchpad.net/gcc-arm-embedded/4.8/4.8-2014-q3-update) and then install [lm4tools](https://github.com/utzig/lm4tools).
 
 lm4tools can be installed like so:
 
@@ -170,7 +204,21 @@ $ brew update
 $ brew install gcc-arm-none-eabi
 ```
 
-## Hardware debugging using OpenOCD
+Now simply compile the code by navigating to the [src](src) and running the following command:
+
+```bash
+make
+```
+
+And to upload the code:
+
+```bash
+make flash
+```
+
+Some information on configuring Eclipse for use with this project can be the [Wiki](https://github.com/Lauszus/LaunchPadFlightController/wiki).
+
+### Hardware debugging using OpenOCD
 
 OpenOCD can be installed via [Homebrew](http://brew.sh) as well:
 
