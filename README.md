@@ -75,9 +75,9 @@ The report I wrote for my Bachelor's thesis can be found in the [docs](docs) fol
 | PB7  |         Motor 2         |         M0PWM1          |
 | PC5  |        Sonar echo       |   WTimer0B (WT0CCP1)    |
 | PC6  |        CPPM input       |   WTimer1A (WT1CCP0)    |
-| PD0  |      ADNS3080 reset     |                         |
 | PD2  |          Buzzer         |                         |
 | PE0  |       Sonar trigger     |                         |
+| PE1  |      ADNS3080 reset     |                         |
 | PE2  |  MPU-6500/MPU-9250 INT  |                         |
 | PE3  |       HMC5883L DRDY     |                         |
 | PF0  |         Switch 1        |                         |
