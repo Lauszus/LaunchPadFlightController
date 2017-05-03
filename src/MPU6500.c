@@ -205,6 +205,8 @@ void initMPU6500(mpu6500_t *mpu6500) {
     mpu6500->gyroScaleFactor = MPU6500_GYRO_SCALE_FACTOR_2000;
     mpu6500->accScaleFactor = MPU6500_ACC_SCALE_FACTOR_8;
 
+    mpu6500->accBodyFrame.axis.Z = mpu6500->accScaleFactor; // Assume that it starts horizontal
+
     /* Enable Raw Data Ready Interrupt on INT pin and enable bypass/passthrough mode */
     i2cBuffer[0] = (1 << 5) | (1 << 4) | (1 << 1); // Enable LATCH_INT_EN, INT_ANYRD_2CLEAR and BYPASS_EN
                                                    // When this bit is equal to 1, the INT pin is held high until the interrupt is cleared
