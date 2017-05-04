@@ -2,8 +2,8 @@
 #
 # Copyright DIY Drone: https://github.com/diydrones/ardupilot/tree/5ddbcc296dd6dd9ac9ed6316ac3134c736ae8a78/libraries/AP_OpticalFlow/examples/ADNS3080ImageGrabber
 # File: ADNS3080ImageGrabber.py
+# Modified by Kristian Sloth Lauszus
 
-import string
 from serial import Serial, SerialException
 from Tkinter import Tk, Frame, StringVar, Button, Canvas, OptionMenu
 from threading import Timer
@@ -28,11 +28,9 @@ def serial_ports():
 class App:
     grid_size = 15
     num_pixels = 30
-    image_started = False
-    image_current_row = 0
     ser = None
-    pixel_dictionary = {}
     t = None
+    pixel_dictionary = {}
 
     def __init__(self, master):
         # Set main window's title
@@ -56,20 +54,11 @@ class App:
         baudrates = apply(OptionMenu, (frame, self.baudrateStr) + tuple(Serial.BAUDRATES))
         baudrates.grid(row=0, column=1)
 
-        button = Button(frame, text="Open", command=self.open_serial)
+        button = Button(frame, text="Open", command=self.open)
         button.grid(row=0, column=2)
 
         button = Button(frame, text="Close", command=self.close)
         button.grid(row=0, column=3)
-
-        # self.entryStr = StringVar()
-        # self.entry = Entry(frame, textvariable=self.entryStr)
-        # self.entry.grid(row=0, column=3)
-        # self.entry.delete(0, END)
-        # self.entry.insert(0, "I")
-        #
-        # self.send_button = Button(frame, text="Send", command=self.send_to_serial)
-        # self.send_button.grid(row=0, column=4)
 
         self.canvas = Canvas(master, width=self.grid_size*self.num_pixels, height=self.grid_size*self.num_pixels)
         self.canvas.grid(row=1)
@@ -81,42 +70,35 @@ class App:
         self.stop_read_loop()
         self.close_serial()
 
+    def open(self):
+        # Close the serial port
+        self.close_serial()
+
+        # Open the serial port
+        try:
+            self.ser = Serial(port=self.comPortStr.get(), baudrate=self.baudrateStr.get(), timeout=.1)
+            print("Serial port '" + self.comPortStr.get() + "' opened at " + self.baudrateStr.get())
+            self.read_loop()  # Read from serial port
+        except SerialException:
+            print("Failed to open serial port '" + self.comPortStr.get() + "'")
+
     def close_serial(self):
         if self.ser and self.ser.isOpen():
             try:
                 self.ser.close()
                 print("Closed serial port")
-            except (IOError, SerialException):
+            except SerialException:
                 pass  # Do nothing
-
-    def open_serial(self):
-        # Close the serial port
-        self.close_serial()
-        # Open the serial port
-        try:
-            self.ser = Serial(port=self.comPortStr.get(), baudrate=self.baudrateStr.get(), timeout=0.1)
-            print("Serial port '" + self.comPortStr.get() + "' opened at " + self.baudrateStr.get())
-            # Start attempts to read from serial port
-            self.read_loop()
-        except SerialException:
-            print("Failed to open serial port '" + self.comPortStr.get() + "'")
-
-    # def send_to_serial(self):
-    #     if self.ser.isOpen():
-    #         self.ser.write(self.entryStr.get())
-    #         print("Sent '" + self.entryStr.get() + "' to " + self.ser.portstr)
-    #     else:
-    #         print("Serial port not open!")
 
     def read_loop(self):
         if self.t:
-            self.t.cancel()
-        # print("reading")
+            self.stop_read_loop()
+
         if self.ser.isOpen():
             try:
                 self.read_from_serial()
-            except IOError:
-                self.close()
+            except (IOError, TypeError):
+                pass
 
         self.t = Timer(0.0, self.read_loop)
         self.t.start()
@@ -129,52 +111,36 @@ class App:
 
     def read_from_serial(self):
         while self.ser and self.ser.isOpen() and self.ser.inWaiting() > 0:
-            line_processed = False
-            line = self.ser.readline()
-
             # Process the line read
-            if line.find("-------------------------") == 0:
-                line_processed = True
-                self.image_started = False
-                self.image_current_row = 0
-
-            if self.image_started:
-                if self.image_current_row >= self.num_pixels:
-                    self.image_started = False
-                else:
-                    words = string.split(line, ",")
-                    if len(words) >= self.num_pixels:
-                        line_processed = True
-                        x = 0
-                        for v in words:
+            line = self.ser.readline()
+            if line.find("start") == 0:
+                # print('Started reading image')
+                pixels = self.ser.read(self.num_pixels * self.num_pixels)
+                if len(pixels) == self.num_pixels * self.num_pixels:
+                    for row in range(self.num_pixels):
+                        # print(row)
+                        col = 0
+                        for p in pixels[row * self.num_pixels:(row + 1) * self.num_pixels]:
                             try:
-                                colour = int(v)
-                            except ValueError:
+                                colour = ord(p)
+                            except TypeError:
                                 colour = 0
-                            # self.display_pixel(x,self.image_current_row,colour)
-                            self.display_pixel(self.num_pixels-1-self.image_current_row, self.num_pixels-1-x, colour)
-                            x += 1
-                        self.image_current_row += 1
-                    else:
-                        print("Line " + str(self.image_current_row) + "incomplete (" + str(len(words)) + " of "
-                              + str(self.num_pixels) + "), ignoring")
-                        # print("Bad line: " + line);
-
-            if line.find("image data") >= 0:
-                line_processed = True
-                self.image_started = True
-                self.image_current_row = 0
-                # Clear canvas
-                # self.canvas.delete(ALL)  # Remove all items
-
-            # Display the line if we couldn't understand it
-            if not line_processed:
-                print(line)
+                            # print('Colour', colour)
+                            self.display_pixel(self.num_pixels - 1 - row, self.num_pixels - 1 - col, colour)
+                            col += 1
+                    # print('Done reading image')
+                else:
+                    print(len(pixels))
+                    # print("Bad line: " + pixels)
+            else:
+                # Display the line if we couldn't understand it
+                print('Error while processing string:', line)
+                self.ser.flushInput()  # Flush the input, as this was likely caused by a timeout
 
     def display_default_image(self):
         # Display the grid
-        for x in range(0, self.num_pixels-1):
-            for y in range(0, self.num_pixels-1):
+        for x in range(self.num_pixels):
+            for y in range(self.num_pixels):
                 colour = x * y / 3.53
                 self.display_pixel(x, y, colour)
 
@@ -194,16 +160,12 @@ class App:
 
 
 root = Tk()
-# root.withdraw()
 
 # Create main display
 app = App(root)
 app.display_default_image()
 
-print("Entering main loop!")
-
+print("Entering main loop")
 root.mainloop()
-
-app.stop_read_loop()
-
+app.close()
 print("Exiting")

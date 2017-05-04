@@ -106,12 +106,9 @@ static void __attribute__((unused)) printPixelData(void) {
           goto reset;
       }
       isFirstPixel = false;
-      uint8_t pixelValue = regValue << 2; // Only lower 6 bits contains data
-      UARTprintf("%u", pixelValue);
-      if (j != ADNS3080_PIXELS_X - 1)
-          UARTwrite(",", 1);
+      char pixelValue = regValue << 2; // Only lower 6 bits contains data
+      UARTwrite(&pixelValue, 1); // Send pixels as raw bytes
     }
-    UARTwrite("\n", 1);
     UARTFlushTx(false);
   }
 
@@ -156,11 +153,10 @@ void getADNS3080Data(int32_t __attribute__((unused)) *x, int32_t __attribute__((
         UARTprintf("%02X\n", motion);
 #endif
 #else
-    UARTprintf("image data --------------\n");
+    UARTprintf("start\n");
     printPixelData();
-    UARTprintf("-------------------------\n");
     UARTFlushTx(false);
-    delay(1500);
+    delay(250);
 #endif
 }
 
