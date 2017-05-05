@@ -21,8 +21,8 @@
 #include <math.h>
 
 #include "IMU.h"
+#include "LowPassFilter.h"
 #include "MPU6500.h"
-#include "Types.h"
 
 #if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
@@ -40,22 +40,19 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
 #else
     static const float invGyroComplimentaryFilterFactor = (1.0f / (gyro_cmpf_factor + 1.0f));
 #endif
-    static const float acc_lpf_Fc = 53.05f; // Cutoff frequency in Hz - TODO: Set in Android app
-#ifdef DEBUG
-    const float acc_lpf_tau = 1.0f/(2.0f*M_PIf*acc_lpf_Fc); // tau = 1.0f/(2.0f*Pi*Fc) = .0030
-#else
-    static const float acc_lpf_tau = 1.0f/(2.0f*M_PIf*acc_lpf_Fc); // tau = 1.0f/(2.0f*Pi*Fc) = .0030
-#endif
-    const float acc_alpha = dt/(acc_lpf_tau + dt); // alpha = dt/(tau + dt) = .25
+    static low_pass_t acc_low_pass[3] = { // Cutoff frequency in Hz - TODO: Set in Android app
+        { .Fc = 53.05f },
+        { .Fc = 53.05f },
+        { .Fc = 53.05f },
+    };
 
-    static sensor_t accLPF; // Accelerometer values after low pass filter
-    float accMagSquared = 0; // Accelerometer magneturde squared
     sensor_t gyro; // Gyro readings in rad/s
+    sensor_t accLPF; // Accelerometer values after low pass filter
+    float accMagSquared = 0; // Accelerometer magnitude squared
 
     for (uint8_t axis = 0; axis < 3; axis++) {
         gyro.data[axis] = mpu6500->gyroRate.data[axis] * DEG_TO_RAD; // Convert from deg/s to rad/s
-        // Apply exponential smoothing: https://en.wikipedia.org/wiki/Exponential_smoothing
-        accLPF.data[axis] = accLPF.data[axis] + acc_alpha*((float)mpu6500->acc.data[axis] - accLPF.data[axis]); // y(n) = y(n-1) + alpha*(u(n) - y(n-1))
+        accLPF.data[axis] = applyLowPass(&acc_low_pass[axis], mpu6500->acc.data[axis], dt); // Apply low-pass filter
         accMagSquared += accLPF.data[axis] * accLPF.data[axis]; // Update magnitude
     }
 
