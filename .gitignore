@@ -34,3 +34,4 @@ src/.settings/
 .clang_complete
 .gcc-flags.json
 lib/readme.txt
+.idea/
