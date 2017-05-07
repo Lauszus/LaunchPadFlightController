@@ -1,4 +1,4 @@
-/* Copyright (C) 2015 Kristian Sloth Lauszus. All rights reserved.
+/* Copyright (C) 2017 Kristian Sloth Lauszus. All rights reserved.
 
  This software may be distributed and modified under the terms of the GNU
  General Public License version 2 (GPL2) as published by the Free Software
@@ -15,33 +15,18 @@
  e-mail   :  lauszus@gmail.com
 */
 
-#ifndef __types_h__
-#define __types_h__
+#ifndef __low_pass_filter__
+#define __low_pass_filter__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-typedef union {
-    struct {
-        int16_t X, Y, Z;
-    } __attribute__((packed)) axis;
-    int16_t data[3];
-} sensorRaw_t;
+typedef struct {
+    float prevOutput, Fc; // Previous output and cutoff frequency in Hz
+} low_pass_t;
 
-typedef union {
-    struct {
-        float X, Y, Z;
-    } __attribute__((packed)) axis;
-    float data[3];
-} sensor_t;
-
-typedef union {
-    struct {
-        float roll, pitch, yaw;
-    } __attribute__((packed)) axis;
-    float data[3];
-} angle_t;
+float applyLowPass(low_pass_t *low_pass, float input, float dt);
 
 #ifdef __cplusplus
 }
