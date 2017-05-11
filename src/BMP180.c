@@ -197,19 +197,19 @@ void initBMP180(bmp180_t *bmp180) {
 
     // Read calibration values
     i2cReadData(BMP180_ADDRESS, BMP185_CAL_AC1, buf, BMP185_CAL_LENGTH);
-    bmp180->cal.AC1 = (buf[0] << 8) | buf[1];
-    bmp180->cal.AC2 = (buf[2] << 8) | buf[3];
-    bmp180->cal.AC3 = (buf[4] << 8) | buf[5];
-    bmp180->cal.AC4 = (buf[6] << 8) | buf[7];
-    bmp180->cal.AC5 = (buf[8] << 8) | buf[9];
-    bmp180->cal.AC6 = (buf[10] << 8) | buf[11];
+    bmp180->cal.AC1 = (int16_t)((buf[0] << 8) | buf[1]);
+    bmp180->cal.AC2 = (int16_t)((buf[2] << 8) | buf[3]);
+    bmp180->cal.AC3 = (int16_t)((buf[4] << 8) | buf[5]);
+    bmp180->cal.AC4 = (uint16_t)((buf[6] << 8) | buf[7]);
+    bmp180->cal.AC5 = (uint16_t)((buf[8] << 8) | buf[9]);
+    bmp180->cal.AC6 = (uint16_t)((buf[10] << 8) | buf[11]);
 
-    bmp180->cal.B1  = (buf[12] << 8) | buf[13];
-    bmp180->cal.B2  = (buf[14] << 8) | buf[15];
+    bmp180->cal.B1  = (int16_t)((buf[12] << 8) | buf[13]);
+    bmp180->cal.B2  = (int16_t)((buf[14] << 8) | buf[15]);
 
     // The MB calibration value is newer used
-    bmp180->cal.MC  = (buf[18] << 8) | buf[19];
-    bmp180->cal.MD  = (buf[20] << 8) | buf[21];
+    bmp180->cal.MC  = (int16_t)((buf[18] << 8) | buf[19]);
+    bmp180->cal.MD  = (int16_t)((buf[20] << 8) | buf[21]);
 
     bmp180State = START_TEMP; // Reset state machine
 
