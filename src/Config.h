@@ -49,8 +49,8 @@ extern "C" {
 #define GPIO_BLUETOOTH_PIN_BASE         GPIO_PORTB_BASE
 #define GPIO_RX_PIN_BLUETOOTH           GPIO_PIN_0
 #define GPIO_TX_PIN_BLUETOOTH           GPIO_PIN_1
-#define GPIO_UART_NR_BLUETOOTH          1
-#define GPIO_UART_BASE_BLUETOOTH        UART1_BASE
+#define UART_NR_BLUETOOTH               1
+#define UART_BASE_BLUETOOTH             UART1_BASE
 
 // Buzzer.c
 #define SYSCTL_PERIPH_BUZZER            SYSCTL_PERIPH_GPIOD
@@ -132,8 +132,8 @@ extern "C" {
 #define GPIO_UART_PIN_BASE              GPIO_PORTA_BASE
 #define GPIO_RX_PIN_UART                GPIO_PIN_0
 #define GPIO_TX_PIN_UART                GPIO_PIN_1
-#define GPIO_UART_NR_UART               0
-#define GPIO_UART_BASE_UART             UART0_BASE
+#define UART_NR_UART                    0
+#define UART_BASE_UART                  UART0_BASE
 
 #ifdef __cplusplus
 }

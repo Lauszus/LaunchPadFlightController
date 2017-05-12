@@ -45,10 +45,10 @@ void initUART(void) {
     // Configure for use as a peripheral function (instead of GPIO).
     GPIOPinTypeUART(GPIO_UART_PIN_BASE, GPIO_RX_PIN_UART | GPIO_TX_PIN_UART);
 
-    UARTStdioConfig(GPIO_UART_NR_UART, 115200, SysCtlClockGet()); // Mode is set to 8N1 at 115200
+    UARTStdioConfig(UART_NR_UART, 115200, SysCtlClockGet()); // Mode is set to 8N1 at 115200
     UARTEchoSet(false);
 
-    while (UARTBusy(GPIO_UART_BASE_UART)) {
+    while (UARTBusy(UART_BASE_UART)) {
         // Wait until UART is ready
     }
 

@@ -107,8 +107,8 @@ void initBluetooth(void) {
         cfg.configureBtModule = false;
         updateConfig();
 
-        UARTStdioConfig1(GPIO_UART_NR_BLUETOOTH, 9600, SysCtlClockGet()); // Mode is set to 8N1 at 9600
-        while (UARTBusy(GPIO_UART_BASE_BLUETOOTH)) {
+        UARTStdioConfig1(UART_NR_BLUETOOTH, 9600, SysCtlClockGet()); // Mode is set to 8N1 at 9600
+        while (UARTBusy(UART_BASE_BLUETOOTH)) {
             // Wait until UART is ready
         }
 
@@ -123,8 +123,8 @@ void initBluetooth(void) {
 #endif
     }
 
-    UARTStdioConfig1(GPIO_UART_NR_BLUETOOTH, 115200, SysCtlClockGet()); // Mode is set to 8N1 at 115200
-    while (UARTBusy(GPIO_UART_BASE_BLUETOOTH)) {
+    UARTStdioConfig1(UART_NR_BLUETOOTH, 115200, SysCtlClockGet()); // Mode is set to 8N1 at 115200
+    while (UARTBusy(UART_BASE_BLUETOOTH)) {
         // Wait until UART is ready
     }
 }
