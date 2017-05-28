@@ -309,3 +309,5 @@ int main(void) {
         // Experiment with different configurations
         // Use seperate PID values for sonar and Lidar
     // Add RX calibration routine
+        // Show live values in the app
+    // Configure AUX switches via the app

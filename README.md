@@ -96,7 +96,7 @@ All pins are defined in [src/Config.h](src/Config.h) and can be overriden by cre
 
 # Notes
 
-The motor layout follows the Naze32 in x-configuration i.e. motor 1 is bottom right, motor 2 is top right, motor 3 is bottom left and motor 4 is top left when looking from the back.
+The motor layout follows the Naze32 in x-configuration i.e. motor 1 is bottom right, motor 2 is top right, motor 3 is bottom left and motor 4 is top left when looking from the back. Motor 1 and 4 should be spinning clockwise and motor 2 and 3 should be spinning counterclockwise.
 
 Make sure that roll increases when tilting quadcopter to the right, pitch increases when pitching quadcopter upward and yaw increases when rotation quadcopter clockwise. This can be displayed using the graph menu in the [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid).
 

@@ -27,7 +27,7 @@
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
 
-static const uint32_t configVersion = 20; // Must be bumped every time config_t is changed
+static const uint32_t configVersion = 21; // Must be bumped every time config_t is changed
 config_t cfg;
 
 void initEEPROM(void) {
