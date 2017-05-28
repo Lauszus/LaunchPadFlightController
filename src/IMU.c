@@ -67,15 +67,16 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
 
     // Source: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf eq. 25 and eq. 26
     // atan2 outputs the value of -p to p (radians) - see http://en.wikipedia.org/wiki/Atan2
+    // Note that the app-note assumes that the accelerometer is reading +1g when aligned with gravity, so the accelerations are inverted
     // It is then converted from radians to degrees
 #if 0 // Set to 0 to restrict roll to +-90deg instead - please read: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf
     // Eq. 25 and 26
-    angle->axis.roll = atan2f(mpu6500->accBodyFrame.axis.Y, mpu6500->accBodyFrame.axis.Z);
-    angle->axis.pitch  = atan2f(-mpu6500->accBodyFrame.axis.X, sqrtf(mpu6500->accBodyFrame.axis.Y * mpu6500->accBodyFrame.axis.Y + mpu6500->accBodyFrame.axis.Z * mpu6500->accBodyFrame.axis.Z)); // Use atan2 here anyway, to prevent division by 0
+    angle->axis.roll = atan2f(-mpu6500->accBodyFrame.axis.Y, -mpu6500->accBodyFrame.axis.Z);
+    angle->axis.pitch  = atan2f(mpu6500->accBodyFrame.axis.X, sqrtf(mpu6500->accBodyFrame.axis.Y * mpu6500->accBodyFrame.axis.Y + mpu6500->accBodyFrame.axis.Z * mpu6500->accBodyFrame.axis.Z)); // Use atan2 here anyway, to prevent division by 0
 #else
     // Eq. 28 and 29
-    angle->axis.roll = atan2f(mpu6500->accBodyFrame.axis.Y, sqrtf(mpu6500->accBodyFrame.axis.X * mpu6500->accBodyFrame.axis.X + mpu6500->accBodyFrame.axis.Z * mpu6500->accBodyFrame.axis.Z)); // Use atan2 here anyway, to prevent division by 0
-    angle->axis.pitch  = atan2f(-mpu6500->accBodyFrame.axis.X, mpu6500->accBodyFrame.axis.Z);
+    angle->axis.roll = atan2f(-mpu6500->accBodyFrame.axis.Y, sqrtf(mpu6500->accBodyFrame.axis.X * mpu6500->accBodyFrame.axis.X + mpu6500->accBodyFrame.axis.Z * mpu6500->accBodyFrame.axis.Z)); // Use atan2 here anyway, to prevent division by 0
+    angle->axis.pitch  = atan2f(mpu6500->accBodyFrame.axis.X, -mpu6500->accBodyFrame.axis.Z);
 #endif
 
 #if USE_MAG

@@ -172,8 +172,8 @@ void getAltitude(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6500, alt
     rotateV(&accInertialFrame, &rotAngle);
 
     /* Estimate altitude and velocity using acceleration */
-    // Subtract subtract 1g datasheet value, so it reads 0g when it is flat and invert z-axis so it is pointing upward
-    float accelerationZ = -(accInertialFrame.axis.Z - mpu6500->accScaleFactor);
+    // Add 1g datasheet value, so it reads 0g when it is flat and invert z-axis so it is pointing upward
+    float accelerationZ = -(accInertialFrame.axis.Z + mpu6500->accScaleFactor);
     // Convert into g's, then into m/s^2 and finally into cm/s^2
     static const float gravitationalAcceleration = 9.80665f * 100.0f; // See: https://en.wikipedia.org/wiki/Gravitational_acceleration
     altitude->acceleration = accelerationZ / mpu6500->accScaleFactor * gravitationalAcceleration;
