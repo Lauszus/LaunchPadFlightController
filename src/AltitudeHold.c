@@ -30,6 +30,7 @@
 #include "Buzzer.h"
 #include "IMU.h"
 #include "LidarLiteV3.h"
+#include "LowPassFilter.h"
 #include "MPU6500.h"
 #include "StepResponse.h"
 #include "PID.h"
@@ -77,7 +78,7 @@ void initAltitudeHold(void) {
 
 // TODO: LPF mpu6500->accBodyFrame.axis.Z
 // TODO: Maybe the altitude should only be run when new barometer values have been read and then just use a moving average on the acceleration data
-// TODO: Reset acceleration estimate when unarmed, as we can assumed that it is at rest
+// TODO: Reset acceleration estimate when unarmed, as we can assumed that it is at rest, same goes for BMP180 ground altitude
 void getAltitude(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6500, altitude_t *altitude, uint32_t __attribute__((unused)) now, float __attribute__((unused)) dt) {
 #if USE_SONAR
     if (triggerSonar()) { // Trigger sonar
@@ -141,11 +142,10 @@ void getAltitude(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6500, alt
     }
 
     /* Estimate altitude and velocity using barometer */
-    static float baro_noise_lpf = 0.95f; // TODO: Set via app
-    static float baroAltitude;
-
-    float lastBaroAltitude = baroAltitude;
-    baroAltitude = baro_noise_lpf * baroAltitude + (1.0f - baro_noise_lpf) * (bmp180.absoluteAltitude - bmp180.groundAltitude); // LPF to reduce baro noise
+    // Low-pass filter altitude estimate - see: https://en.wikipedia.org/wiki/Exponential_smoothing
+    static low_pass_t baro_low_pass = { .Fc = 8.38f }; // Cutoff frequency in Hz - TODO: Set in Android app
+    float lastBaroAltitude = baro_low_pass.prevOutput;
+    float baroAltitude = applyLowPass(&baro_low_pass, bmp180.absoluteAltitude - bmp180.groundAltitude, dt);
 
 #if USE_SONAR && 1
     // TODO: Add smooth transaction between sonar and barometer
@@ -172,8 +172,8 @@ void getAltitude(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6500, alt
     rotateV(&accInertialFrame, &rotAngle);
 
     /* Estimate altitude and velocity using acceleration */
-    // Subtract subtract 1g datasheet value, so it reads 0g when it is flat and invert z-axis so it is pointing upward
-    float accelerationZ = -(accInertialFrame.axis.Z - mpu6500->accScaleFactor);
+    // Add 1g datasheet value, so it reads 0g when it is flat and invert z-axis so it is pointing upward
+    float accelerationZ = -(accInertialFrame.axis.Z + mpu6500->accScaleFactor);
     // Convert into g's, then into m/s^2 and finally into cm/s^2
     static const float gravitationalAcceleration = 9.80665f * 100.0f; // See: https://en.wikipedia.org/wiki/Gravitational_acceleration
     altitude->acceleration = accelerationZ / mpu6500->accScaleFactor * gravitationalAcceleration;
@@ -189,8 +189,9 @@ void getAltitude(angle_t *angle, mpu6500_t __attribute__((unused)) *mpu6500, alt
     static const float altitude_cf = 0.965f; // TODO: Set in Android app
     altitude->altitude = altitude_cf * accAltitude + (1 - altitude_cf) * baroAltitude; // Estimate altitude using complimentary filter
 
-    static const float altitude_lpf = 0.995f; // TODO: Set in Android app
-    altitude->altitudeLpf = altitude_lpf * altitude->altitudeLpf + (1.0f - altitude_lpf) * altitude->altitude; // Low-pass filter altitude estimate
+    // Low-pass filter altitude estimate
+    static low_pass_t altitude_low_pass = { .Fc = .80 }; // Cutoff frequency in Hz - TODO: Set in Android app
+    altitude->altitudeLpf = applyLowPass(&altitude_low_pass, altitude->altitude, dt);
 
     //UARTprintf1("%d\t%d\n", (int32_t)baroAltitude, (int32_t)baroVelocity);
     //UARTprintf1("%d\t%d\t%d\t%d\n", (int32_t)accAltitude, (int32_t)accVelocity, (int32_t)altitude->acceleration, (int32_t)accelerationZ);
@@ -206,7 +207,6 @@ float updateAltitudeHold(float aux, altitude_t *altitude, float throttle, uint32
     static float altHoldInitialThrottle = -30.0f; // Throttle when altitude hold was activated
 
 #if USE_SONAR || USE_LIDAR_LITE
-    static const float throttle_noise_lpf = 1000.0f; // TODO: Set via app
     static float altHoldThrottle; // Low pass filtered throttle input
     static int16_t altHoldSetpoint; // Altitude hold set point
 
@@ -241,7 +241,8 @@ float updateAltitudeHold(float aux, altitude_t *altitude, float throttle, uint32
         throttle = stepResponse(getRXChannel(RX_AUX2_CHAN) > 90, throttle, input, step1, step2, interval, now);
 #endif
 
-        altHoldThrottle = altHoldThrottle * (1.0f - (1.0f / throttle_noise_lpf)) + throttle * (1.0f / throttle_noise_lpf); // LPF throttle input
+        static low_pass_t throttle_low_pass = { .Fc = .158995947f }; // Cutoff frequency in Hz - TODO: Set in Android app
+        altHoldThrottle = applyLowPass(&throttle_low_pass, throttle, dt); // LPF throttle input
 
         float setpoint;
 #if !STEP_ALTITUDE_HOLD

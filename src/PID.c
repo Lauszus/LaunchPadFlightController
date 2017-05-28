@@ -46,22 +46,22 @@ float updatePID(pid_t *pid, float setpoint, float input, float dt) {
     // D-term
     float deltaError = (error - pid->lastError) / dt; // Calculate difference and compensate for difference in time by dividing by dt
     pid->lastError = error;
-    // Use moving average here to reduce noise
-    float deltaSum = pid->deltaError1 + pid->deltaError2 + deltaError;
-    pid->deltaError2 = pid->deltaError1;
-    pid->deltaError1 = deltaError;
-    float dTerm = pid->values->Kd * deltaSum;
+
+    // Use exponential smoothing on the derivative to reduce the impact of noise: https://en.wikipedia.org/wiki/Exponential_smoothing
+    pid->low_pass.Fc = pid->values->Fc; // Set cutoff-frequency in case it has changed
+    float derivative = applyLowPass(&pid->low_pass, deltaError, dt);
+    float dTerm = pid->values->Kd * derivative;
 
     return pTerm + pid->iTerm + dTerm; // Return sum
 }
 
 void resetPIDRollPitchYaw(void) {
-    pidRoll.iTerm = pidRoll.lastError = pidRoll.deltaError1 = pidRoll.deltaError2 = 0.0f;
-    pidPitch.iTerm = pidPitch.lastError = pidPitch.deltaError1 = pidPitch.deltaError2 = 0.0f;
-    pidYaw.iTerm = pidYaw.lastError = pidYaw.deltaError1 = pidYaw.deltaError2 = 0.0f;
+    pidRoll.iTerm = pidRoll.lastError = pidRoll.low_pass.prevOutput = 0.0f;
+    pidPitch.iTerm = pidPitch.lastError = pidPitch.low_pass.prevOutput = 0.0f;
+    pidYaw.iTerm = pidYaw.lastError = pidYaw.low_pass.prevOutput = 0.0f;
 }
 
 void resetPIDAltHold(void) {
-    pidSonarAltHold.iTerm = pidSonarAltHold.lastError = pidSonarAltHold.deltaError1 = pidSonarAltHold.deltaError2 = 0.0f;
-    pidBaroAltHold.iTerm = pidBaroAltHold.lastError = pidBaroAltHold.deltaError1 = pidBaroAltHold.deltaError2 = 0.0f;
+    pidSonarAltHold.iTerm = pidSonarAltHold.lastError = pidSonarAltHold.low_pass.prevOutput = 0.0f;
+    pidBaroAltHold.iTerm = pidBaroAltHold.lastError = pidBaroAltHold.low_pass.prevOutput = 0.0f;
 }

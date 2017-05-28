@@ -21,6 +21,7 @@
 #include <math.h>
 
 #include "IMU.h"
+#include "LowPassFilter.h"
 #include "MPU6500.h"
 
 #if UART_DEBUG
@@ -33,21 +34,25 @@ static float calculateHeading(angle_t *angle, sensor_t *mag);
 // Make sure that roll increases when tilting quadcopter to the right, pitch increases
 // when pitching quadcopter upward and yaw increases when rotating quadcopter clockwise.
 void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
-    static const float acc_lpf_factor = 4.0f;
     static const float gyro_cmpf_factor = 600.0f;
 #ifdef DEBUG
     const float invGyroComplimentaryFilterFactor = (1.0f / (gyro_cmpf_factor + 1.0f));
 #else
     static const float invGyroComplimentaryFilterFactor = (1.0f / (gyro_cmpf_factor + 1.0f));
 #endif
+    static low_pass_t acc_low_pass[3] = { // Cutoff frequency in Hz - TODO: Set in Android app
+        { .Fc = 53.05f },
+        { .Fc = 53.05f },
+        { .Fc = 53.05f },
+    };
 
-    static sensor_t accLPF; // Accelerometer values after low pass filter
-    float accMagSquared = 0; // Accelerometer magneturde squared
     sensor_t gyro; // Gyro readings in rad/s
+    sensor_t accLPF; // Accelerometer values after low pass filter
+    float accMagSquared = 0; // Accelerometer magnitude squared
 
     for (uint8_t axis = 0; axis < 3; axis++) {
         gyro.data[axis] = mpu6500->gyroRate.data[axis] * DEG_TO_RAD; // Convert from deg/s to rad/s
-        accLPF.data[axis] = accLPF.data[axis] * (1.0f - (1.0f / acc_lpf_factor)) + (float)mpu6500->acc.data[axis] * (1.0f / acc_lpf_factor); // Apply low pass filter
+        accLPF.data[axis] = applyLowPass(&acc_low_pass[axis], mpu6500->acc.data[axis], dt); // Apply low-pass filter
         accMagSquared += accLPF.data[axis] * accLPF.data[axis]; // Update magnitude
     }
 
@@ -62,15 +67,16 @@ void getAngles(mpu6500_t *mpu6500, sensor_t *mag, angle_t *angle, float dt) {
 
     // Source: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf eq. 25 and eq. 26
     // atan2 outputs the value of -p to p (radians) - see http://en.wikipedia.org/wiki/Atan2
+    // Note that the app-note assumes that the accelerometer is reading +1g when aligned with gravity, so the accelerations are inverted
     // It is then converted from radians to degrees
 #if 0 // Set to 0 to restrict roll to +-90deg instead - please read: http://www.freescale.com/files/sensors/doc/app_note/AN3461.pdf
     // Eq. 25 and 26
-    angle->axis.roll = atan2f(mpu6500->accBodyFrame.axis.Y, mpu6500->accBodyFrame.axis.Z);
-    angle->axis.pitch  = atan2f(-mpu6500->accBodyFrame.axis.X, sqrtf(mpu6500->accBodyFrame.axis.Y * mpu6500->accBodyFrame.axis.Y + mpu6500->accBodyFrame.axis.Z * mpu6500->accBodyFrame.axis.Z)); // Use atan2 here anyway, to prevent division by 0
+    angle->axis.roll = atan2f(-mpu6500->accBodyFrame.axis.Y, -mpu6500->accBodyFrame.axis.Z);
+    angle->axis.pitch  = atan2f(mpu6500->accBodyFrame.axis.X, sqrtf(mpu6500->accBodyFrame.axis.Y * mpu6500->accBodyFrame.axis.Y + mpu6500->accBodyFrame.axis.Z * mpu6500->accBodyFrame.axis.Z)); // Use atan2 here anyway, to prevent division by 0
 #else
     // Eq. 28 and 29
-    angle->axis.roll = atan2f(mpu6500->accBodyFrame.axis.Y, sqrtf(mpu6500->accBodyFrame.axis.X * mpu6500->accBodyFrame.axis.X + mpu6500->accBodyFrame.axis.Z * mpu6500->accBodyFrame.axis.Z)); // Use atan2 here anyway, to prevent division by 0
-    angle->axis.pitch  = atan2f(-mpu6500->accBodyFrame.axis.X, mpu6500->accBodyFrame.axis.Z);
+    angle->axis.roll = atan2f(-mpu6500->accBodyFrame.axis.Y, sqrtf(mpu6500->accBodyFrame.axis.X * mpu6500->accBodyFrame.axis.X + mpu6500->accBodyFrame.axis.Z * mpu6500->accBodyFrame.axis.Z)); // Use atan2 here anyway, to prevent division by 0
+    angle->axis.pitch  = atan2f(mpu6500->accBodyFrame.axis.X, -mpu6500->accBodyFrame.axis.Z);
 #endif
 
 #if USE_MAG
