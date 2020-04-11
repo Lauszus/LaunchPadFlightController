@@ -23,6 +23,9 @@
 //*****************************************************************************
 
 #include <stdint.h>
+
+#include "Config.h"
+
 #include "inc/hw_nvic.h"
 #include "inc/hw_types.h"
 
@@ -89,8 +92,8 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // GPIO Port C
     IntDefaultHandler,                      // GPIO Port D
     IntDefaultHandler,                      // GPIO Port E
-    UARTStdioIntHandler,                    // UART0 Rx and Tx
-    UARTStdioIntHandler1,                   // UART1 Rx and Tx
+    UART0_HANDLER,                          // UART0 Rx and Tx
+    UART1_HANDLER,                          // UART1 Rx and Tx
     IntDefaultHandler,                      // SSI0 Rx and Tx
     IntDefaultHandler,                      // I2C0 Master and Slave
     IntDefaultHandler,                      // PWM Fault
@@ -117,7 +120,7 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // GPIO Port F
     IntDefaultHandler,                      // GPIO Port G
     IntDefaultHandler,                      // GPIO Port H
-    IntDefaultHandler,                      // UART2 Rx and Tx
+    UART2_HANDLER,                          // UART2 Rx and Tx
     IntDefaultHandler,                      // SSI1 Rx and Tx
     IntDefaultHandler,                      // Timer 3 subtimer A
     IntDefaultHandler,                      // Timer 3 subtimer B
@@ -143,11 +146,11 @@ void (* const g_pfnVectors[])(void) =
     IntDefaultHandler,                      // GPIO Port L
     IntDefaultHandler,                      // SSI2 Rx and Tx
     IntDefaultHandler,                      // SSI3 Rx and Tx
-    IntDefaultHandler,                      // UART3 Rx and Tx
-    IntDefaultHandler,                      // UART4 Rx and Tx
-    IntDefaultHandler,                      // UART5 Rx and Tx
-    IntDefaultHandler,                      // UART6 Rx and Tx
-    IntDefaultHandler,                      // UART7 Rx and Tx
+    UART3_HANDLER,                          // UART3 Rx and Tx
+    UART4_HANDLER,                          // UART4 Rx and Tx
+    UART5_HANDLER,                          // UART5 Rx and Tx
+    UART6_HANDLER,                          // UART6 Rx and Tx
+    UART7_HANDLER,                          // UART7 Rx and Tx
     0,                                      // Reserved
     0,                                      // Reserved
     0,                                      // Reserved

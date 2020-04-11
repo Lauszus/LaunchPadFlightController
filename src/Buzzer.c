@@ -19,15 +19,11 @@
 #include <stdbool.h>
 
 #include "Buzzer.h"
+#include "Config.h"
 #include "Time.h"
 
-#include "inc/hw_memmap.h"
 #include "driverlib/gpio.h"
 #include "driverlib/sysctl.h"
-
-#define SYSCTL_PERIPH_BUZZER    SYSCTL_PERIPH_GPIOD
-#define GPIO_BUZZER_BASE        GPIO_PORTD_BASE
-#define GPIO_PIN_BUZZER         GPIO_PIN_2
 
 void initBuzzer(void) {
     SysCtlPeripheralEnable(SYSCTL_PERIPH_BUZZER); // Enable peripheral

@@ -103,6 +103,8 @@ void setDefaultConfig(void) {
         cfg.magZero.data[axis] = 0;
     }
 
+    cfg.configureBtModule = true;
+
     uint32_t rcode = EEPROMProgram((uint32_t*)&configVersion, 0, sizeof(configVersion)); // Write version number to EEPROM
     if (rcode) {
 #if UART_DEBUG

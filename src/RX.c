@@ -19,24 +19,18 @@
 #include <stdbool.h>
 
 #include "Buzzer.h"
+#include "Config.h"
 #include "PPM.h"
 #include "RX.h"
 #include "Time.h"
 
-#include "inc/hw_memmap.h"
-#include "inc/hw_ints.h"
 #include "driverlib/gpio.h"
 #include "driverlib/interrupt.h"
-#include "driverlib/pin_map.h"
-#include "driverlib/sysctl.h"
 #include "driverlib/timer.h"
 #if UART_DEBUG
 //#include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
 
-// These are specific to my receiver and might need adjustment
-#define RX_MIN_INPUT 980
-#define RX_MAX_INPUT 2032
 #define RX_MID_INPUT ((RX_MAX_INPUT + RX_MIN_INPUT) / 2)
 
 volatile bool validRXData;
@@ -48,8 +42,8 @@ static void CaptureHandler(void) {
     static uint8_t channelIndex = 0;
     static uint32_t prev = 0;
 
-    TimerIntClear(WTIMER1_BASE, TIMER_CAPA_EVENT); // Clear interrupt
-    uint32_t curr = TimerValueGet(WTIMER1_BASE, TIMER_A); // Read capture value
+    TimerIntClear(RX_TIMER_BASE, RX_INT_FLAG); // Clear interrupt
+    uint32_t curr = TimerValueGet(RX_TIMER_BASE, RX_TIMER); // Read capture value
 
     uint32_t diff = curr - prev; // Calculate diff
     prev = curr; // Store previous value
@@ -62,7 +56,7 @@ static void CaptureHandler(void) {
                 validRXData = false;
         }
         if (validRXData)
-            TimerLoadSet(WTIMER1_BASE, TIMER_B, timerLoadValue); // Reset timeout value to 100ms
+            TimerLoadSet(RX_LOST_TIMER_BASE, RX_LOST_TIMER, timerLoadValue); // Reset timeout value to 100ms
 #if 0 && UART_DEBUG
         for (uint8_t i = 0; i < RX_NUM_CHANNELS; i++) {
             if (rxChannel[i] > 0)
@@ -77,7 +71,7 @@ static void CaptureHandler(void) {
 }
 
 static void TimeoutHandler(void) {
-    TimerIntClear(WTIMER1_BASE, TIMER_TIMB_TIMEOUT); // Clear interrupt
+    TimerIntClear(RX_LOST_TIMER_BASE, RX_LOST_INT_FLAG); // Clear interrupt
     writePPMAllOff(); // Turn all motors off
     validRXData = false; // Indicate that connection was lost
 #ifndef DEBUG
@@ -85,34 +79,47 @@ static void TimeoutHandler(void) {
 #endif
 }
 
-// WTimer1A is used to measure the width of the pulses
-// WTimer1B is used to turn off motors if the connection to the RX is lost
+// The first wide timer is used to measure the width of the pulses
+// The second wide timer is used to turn off motors if the connection to the RX is lost
 void initRX(void) {
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_WTIMER1); // Enable Wide Timer1 peripheral
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOC); // Enable GPIOC peripheral
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_RX_TIMER); // Enable timer peripheral
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_RX_LOST_TIMER); // Enable timer peripheral
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_RX); // Enable GPIO peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
-    GPIOPinConfigure(GPIO_PC6_WT1CCP0); // Use alternate function
-    GPIOPinTypeTimer(GPIO_PORTC_BASE, GPIO_PIN_6); // Use pin with timer peripheral
 
-    // Split timers and enable timer A event up-count timer and timer B as a periodic timer
-    TimerConfigure(WTIMER1_BASE, TIMER_CFG_SPLIT_PAIR | TIMER_CFG_A_CAP_TIME_UP | TIMER_CFG_B_PERIODIC);
+    GPIOPinConfigure(GPIO_RX_ALTERNATE); // Use alternate function
+    GPIOPinTypeTimer(GPIO_RX_BASE, GPIO_RX); // Use pin with timer peripheral
 
-    // Configure WTimer1A
-    TimerControlEvent(WTIMER1_BASE, TIMER_A, TIMER_EVENT_POS_EDGE); // Interrupt on positive edges
-    TimerIntRegister(WTIMER1_BASE, TIMER_A, CaptureHandler); // Register interrupt handler
-    TimerIntEnable(WTIMER1_BASE, TIMER_CAPA_EVENT); // Enable timer capture A event interrupt
-    IntPrioritySet(INT_WTIMER1A, 0); // Configure Wide Timer 1A interrupt priority as 0
-    IntEnable(INT_WTIMER1A); // Enable Wide Timer 1A interrupt
+    // Split timers and enable RX timer as event up-count timer and RX lost timer as a periodic timer
+#if RX_TIMER_BASE == RX_LOST_TIMER_BASE
+    TimerConfigure(RX_TIMER_BASE, TIMER_CFG_SPLIT_PAIR | RX_TIMER_CFG | RX_LOST_TIMER_CFG);
+#else
+    TimerConfigure(RX_TIMER_BASE, TIMER_CFG_SPLIT_PAIR | RX_TIMER_CFG);
+    TimerConfigure(RX_LOST_TIMER_BASE, TIMER_CFG_SPLIT_PAIR | RX_LOST_TIMER_CFG);
+#endif
 
-    // Configure WTimer1B
+    // Configure RX timer
+    TimerControlEvent(RX_TIMER_BASE, RX_TIMER, TIMER_EVENT_POS_EDGE); // Interrupt on positive edges
+    TimerIntRegister(RX_TIMER_BASE, RX_TIMER, CaptureHandler); // Register interrupt handler
+    TimerIntEnable(RX_TIMER_BASE, RX_INT_FLAG); // Enable timer capture event interrupt
+    IntPrioritySet(RX_TIMER_INT, 0); // Configure timer interrupt priority as 0
+    IntEnable(RX_TIMER_INT); // Enable timer interrupt
+
+    // Configure RX lost timer
     timerLoadValue = SysCtlClockGet() / 10 - 1; // Set to interrupt every 100ms
-    TimerLoadSet(WTIMER1_BASE, TIMER_B, timerLoadValue);
-    TimerIntRegister(WTIMER1_BASE, TIMER_B, TimeoutHandler); // Register interrupt handler
-    TimerIntEnable(WTIMER1_BASE, TIMER_TIMB_TIMEOUT); // Enable timer timeout interrupt
-    IntPrioritySet(INT_WTIMER1B, 0); // Configure Wide Timer 1B interrupt priority as 0
-    IntEnable(INT_WTIMER1B); // Enable Wide Timer 1B interrupt
+    TimerLoadSet(RX_LOST_TIMER_BASE, RX_LOST_TIMER, timerLoadValue);
+    TimerIntRegister(RX_LOST_TIMER_BASE, RX_LOST_TIMER, TimeoutHandler); // Register interrupt handler
+    TimerIntEnable(RX_LOST_TIMER_BASE, RX_LOST_INT_FLAG); // Enable timer timeout interrupt
+    IntPrioritySet(RX_LOST_TIMER_INT, 0); // Configure timer interrupt priority as 0
+    IntEnable(RX_LOST_TIMER_INT); // Enable timer interrupt
 
-    TimerEnable(WTIMER1_BASE, TIMER_BOTH); // Enable both timers
+    // Enable both timers
+#if RX_TIMER_BASE == RX_LOST_TIMER_BASE
+    TimerEnable(RX_TIMER_BASE, RX_TIMER | RX_LOST_TIMER);
+#else
+    TimerEnable(RX_TIMER_BASE, RX_TIMER);
+    TimerEnable(RX_LOST_TIMER_BASE, RX_LOST_TIMER);
+#endif
 
     validRXData = false;
 }

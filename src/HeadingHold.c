@@ -27,7 +27,7 @@
 #include "RX.h"
 
 #if !(STEP_ACRO_SELF_LEVEL || STEP_ALTITUDE_HOLD || STEP_HEADING_HOLD) // The logger will use the blue LED as indicator instead
-#include "Pins.h"
+#include "Config.h"
 #include "driverlib/gpio.h"
 #include "inc/hw_memmap.h"
 #endif

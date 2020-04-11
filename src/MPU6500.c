@@ -18,14 +18,13 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "Config.h"
 #include "EEPROM.h"
 #include "I2C.h"
 #include "MPU6500.h"
 #include "Time.h"
 
-#include "inc/hw_memmap.h"
 #include "driverlib/gpio.h"
-#include "driverlib/sysctl.h"
 #if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
@@ -44,10 +43,6 @@
 // Scale factor for +-2000deg/s and +-8g - see datasheet: http://www.invensense.com/mems/gyro/documents/PS-MPU-6500A-01.pdf at page 9-10
 #define MPU6500_GYRO_SCALE_FACTOR_2000      16.4f
 #define MPU6500_ACC_SCALE_FACTOR_8          4096.0f
-
-#define GPIO_MPU_INT_PERIPH                 SYSCTL_PERIPH_GPIOE
-#define GPIO_MPU_INT_BASE                   GPIO_PORTE_BASE
-#define GPIO_MPU_INT_PIN                    GPIO_PIN_2
 
 static sensorRaw_t gyroZero; // Gyroscope zero values are found at every power on
 
@@ -205,6 +200,8 @@ void initMPU6500(mpu6500_t *mpu6500) {
     // Set accelerometer and gyroscope scale factor from datasheet
     mpu6500->gyroScaleFactor = MPU6500_GYRO_SCALE_FACTOR_2000;
     mpu6500->accScaleFactor = MPU6500_ACC_SCALE_FACTOR_8;
+
+    mpu6500->accBodyFrame.axis.Z = mpu6500->accScaleFactor; // Assume that it starts horizontal
 
     /* Enable Raw Data Ready Interrupt on INT pin and enable bypass/passthrough mode */
     i2cBuffer[0] = (1 << 5) | (1 << 4) | (1 << 1); // Enable LATCH_INT_EN, INT_ANYRD_2CLEAR and BYPASS_EN

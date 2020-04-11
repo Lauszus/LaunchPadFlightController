@@ -21,41 +21,38 @@
 
 #if UART_DEBUG
 
+#include "Config.h"
 #include "EEPROM.h"
 #include "Time.h"
 #include "UART.h"
 
-#include "inc/hw_memmap.h"
 #include "driverlib/gpio.h"
-#include "driverlib/pin_map.h"
-#include "driverlib/sysctl.h"
 #include "driverlib/uart.h"
 #if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
 
 void initUART(void) {
-    SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOA); // Enable the GPIO port containing the pins that will be used.
+    SysCtlPeripheralEnable(SYSCTL_PERIPH_UART); // Enable the GPIO port containing the pins that will be used.
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
 
     // Configure the GPIO pin muxing for the UART function.
     // This is only necessary if your part supports GPIO pin function muxing.
     // Study the data sheet to see which functions are allocated per pin.
-    GPIOPinConfigure(GPIO_PA0_U0RX);
-    GPIOPinConfigure(GPIO_PA1_U0TX);
+    GPIOPinConfigure(GPIO_RX_UART);
+    GPIOPinConfigure(GPIO_TX_UART);
 
-    // Since GPIO A0 and A1 are used for the UART function, they must be
-    // configured for use as a peripheral function (instead of GPIO).
-    GPIOPinTypeUART(GPIO_PORTA_BASE, GPIO_PIN_0 | GPIO_PIN_1);
+    // Configure for use as a peripheral function (instead of GPIO).
+    GPIOPinTypeUART(GPIO_UART_PIN_BASE, GPIO_RX_PIN_UART | GPIO_TX_PIN_UART);
 
-    UARTStdioConfig(0, 115200, SysCtlClockGet()); // Mode is set to 8N1 on UART0
+    UARTStdioConfig(UART_NR_UART, 115200, SysCtlClockGet()); // Mode is set to 8N1 at 115200
     UARTEchoSet(false);
 
-    while (UARTBusy(UART0_BASE)) {
+    while (UARTBusy(UART_BASE_UART)) {
         // Wait until UART is ready
     }
 
-    UARTprintf("Started\n");
+    UARTprintf("\nStarted\n");
 }
 
 void printPIDValues(pid_values_t *pidValues) {

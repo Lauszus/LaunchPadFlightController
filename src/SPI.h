@@ -15,18 +15,24 @@
  e-mail   :  lauszus@gmail.com
 */
 
-#ifndef __pins_h__
-#define __pins_h__
+#if !defined(__spi_h__) && USE_FLOW_SENSOR
+#define __spi_h__
+
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define SYSCTL_PERIPH_LED   SYSCTL_PERIPH_GPIOF
-#define GPIO_LED_BASE       GPIO_PORTF_BASE
-#define GPIO_RED_LED        GPIO_PIN_1
-#define GPIO_BLUE_LED       GPIO_PIN_2
-#define GPIO_GREEN_LED      GPIO_PIN_3
+void initSPI(void);
+
+void spiWrite(uint8_t regAddr, uint8_t data);
+void spiWriteData(uint8_t regAddr, const uint8_t *data, uint32_t length);
+
+uint8_t spiRead(uint8_t regAddr);
+void spiReadData(uint8_t regAddr, uint8_t *data, uint32_t length);
+
+void spiTransfer(const uint8_t *header, uint16_t headerLength, const uint8_t *sendData, uint8_t *recvData, uint32_t dataLength);
 
 #ifdef __cplusplus
 }

@@ -1,5 +1,5 @@
 # LaunchPad Flight Controller
-#### Developed by Kristian Sloth Lauszus, 2015
+#### Developed by Kristian Sloth Lauszus, 2015-2017
 _________
 [![Build Status](https://travis-ci.org/Lauszus/LaunchPadFlightController.svg?branch=master)](https://travis-ci.org/Lauszus/LaunchPadFlightController)
 
@@ -13,7 +13,7 @@ More information can be found at the following blog posts: <http://blog.tkjelect
 
 Some video demonstrations of the flight controller can be seen at my [YouTube channel](https://www.youtube.com/playlist?list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg).
 
-<a href="https://www.youtube.com/watch?v=HXX-2L1hKgI&index=1&list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg" target="_blank"><img src="http://img.youtube.com/vi/HXX-2L1hKgI/0.jpg" width="400" height="300" border="10" /></a>
+<a href="https://www.youtube.com/watch?v=pgcV-pZrptI&list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg" target="_blank"><img src="http://img.youtube.com/vi/pgcV-pZrptI/0.jpg" width="400" height="300" border="10" /></a>
 
 # Report
 
@@ -39,6 +39,7 @@ The report I wrote for my Bachelor's thesis can be found in the [docs](docs) fol
 * Ultrasound sensor aka sonar (HC-SR04)
 * [LIDAR-Lite v3](https://buy.garmin.com/en-US/US/p/557294)
     - Connect a 680 µF electrolytic capacitor from 5V to GND
+* Optical flow sensor (ADNS3080)
 * [Android application](https://github.com/Lauszus/LaunchPadFlightControllerAndroid)
 * OneShot125 ESC support
 * Buzzer feedback
@@ -56,26 +57,42 @@ The report I wrote for my Bachelor's thesis can be found in the [docs](docs) fol
 
 # Pinout
 
-| Pin  |         Connection      |
-|------|-------------------------|
-| PB6  |          Motor 1        |
-| PB7  |          Motor 2        |
-| PB4  |          Motor 3        |
-| PB5  |          Motor 4        |
-| PC6  |         CPPM input      |
-| PA6  |           SCL           |
-| PA7  |           SDA           |
-| PE2  |  MPU-6500/MPU-9250 INT  |
-| PC5  |        Sonar echo       |
-| PE0  |       Sonar trigger     |
-| PB0* |         UART1 RX        |
-| PB1* |         UART1 TX        |
-| PD2  |          Buzzer         |
-| PE3  |       HMC5883L DRDY     |
+| Pin  |        Connection       |   Hardware peripheral   |
+|------|-------------------------|-------------------------|
+| PA0  |         UART RX         |     U0RX (UART0 RX)     |
+| PA1  |         UART TX         |     U0TX (UART0 TX)     |
+| PA2  |         SPI CLK         |         SSI0CLK         |
+| PA3  |         SPI SS          |         SSI0Fss         |
+| PA4  |         SPI MISO        |         SSI0Rx          |
+| PA5  |         SPI MOSI        |         SSI0Tx          |
+| PA6  |           SCL           |         I2C1SCL         |
+| PA7  |           SDA           |         I2C1SDA         |
+| PB0* |       Bluetooth RX      |     U1RX (UART1 RX)     |
+| PB1* |       Bluetooth TX      |     U1TX (UART1 TX)     |
+| PB4  |         Motor 3         |         M0PWM2          |
+| PB5  |         Motor 4         |         M0PWM3          |
+| PB6  |         Motor 1         |         M0PWM0          |
+| PB7  |         Motor 2         |         M0PWM1          |
+| PC5  |        Sonar echo       |   WTimer0B (WT0CCP1)    |
+| PC6  |        CPPM input       |   WTimer1A (WT1CCP0)    |
+| PD2  |          Buzzer         |                         |
+| PE0  |       Sonar trigger     |                         |
+| PE1  |      ADNS3080 reset     |                         |
+| PE2  |  MPU-6500/MPU-9250 INT  |                         |
+| PE3  |       HMC5883L DRDY     |                         |
+| PF0  |         Switch 1        |                         |
+| PF1  |         Red LED         |                         |
+| PF2  |        Blue LED         |                         |
+| PF3  |        Green LED        |                         |
+| PF4  |         Switch 2        |                         |
 
 \* UART1 is connected to an HC-06 Bluetooth module running at a baudrate of 115200. __Not 5V tolerant!__, so make sure your Bluetooth module outputs 3.3 voltage level or use a logic level converter.
 
+Furthermore WTimer1B is used to turn off motors if the connection to the RX is lost. SysTick counter is used for time basic time keeping functionality.
+
 The MPU-6500/MPU-9250, HMC5883L, BMP180 and LIDAR-Lite v3 are connected via I<sup>2</sup>C if they are used.
+
+All pins are defined in [src/Config.h](src/Config.h) and can be overriden by creating a file called "Config_custom.h" in the [src](src) directory allowing you to redefine the values.
 
 # Notes
 
@@ -113,6 +130,10 @@ It is a good idea to confirm that the estimated angles are all correct by using 
 
 There is no need to calibrate the gyroscope, as this is done at every startup.
 
+### RX
+
+The minimum and maximum receiver values are hardcoded in [src/Config.h](src/Config.h) and might need to be adjusted as well.
+
 # Android application
 
 <a href="http://play.google.com/store/apps/details?id=com.lauszus.launchpadflightcontrollerandroid.app"><img src="https://play.google.com/intl/en_us/badges/images/generic/en_badge_web_generic.png" alt="Google Play" width="200px"/></a>
@@ -127,19 +148,52 @@ A simple GUI can be found inside the [GUI](GUI) directory. It can be used to vis
 
 # Build instructions
 
-In order to built this project you need to download Keil µVision IDE 5 or use [Make](http://www.gnu.org/software/make/).
+## PlatformIO
 
-If you are using Keil µVision IDE 5, then simply open the [project file](LaunchPadFlightController.uvprojx).
+[PlatformIO](http://platformio.org) is a cross-platform build system, which makes it easy to compile and upload the code on both Windows, Linux and Mac. This is the recommended way to compile the code for novice users.
 
-If you are using Make, then you will need to first download and install [gcc-arm-none-eabi](https://launchpad.net/gcc-arm-embedded/4.8/4.8-2014-q3-update) and then install [lm4tools](https://github.com/utzig/lm4tools).
+Please follow these instructions in order to install Python 2.7 and PlatformIO: <http://docs.platformio.org/en/latest/installation.html>.
+
+On Windows be sure to select "Add python.exe to Path" when installing Python 2.7.
+
+Open a terminal (search for ```cmd.exe``` on Windows) and navigate to the root of the project:
+
+```bash
+cd LaunchPadFlightController
+```
+
+Now compile the code:
+
+```bash
+platformio run
+```
+
+The program should now be compiled.
+
+In order to upload the code simply type:
+
+```bash
+platformio run -t upload
+```
+
+I recommend installing the [PlatformIO IDE](http://platformio.org/get-started/ide?install) if using PlatformIO.
+
+## Keil µVision IDE 5
+
+In order to built this project you need to download Keil µVision IDE 5 and then simply open the [project file](LaunchPadFlightController.uvprojx).
+
+## Manual installation
+
+In order to built this project you will need to use [Make](http://www.gnu.org/software/make/).
+
+First download and install [gcc-arm-none-eabi](https://launchpad.net/gcc-arm-embedded/4.8/4.8-2014-q3-update) and then install [lm4tools](https://github.com/utzig/lm4tools).
 
 lm4tools can be installed like so:
 
 ```bash
 $ git clone https://github.com/utzig/lm4tools.git
-$ cd lm4tools/
-$ cd lm4flash/ && make
-$ sudo cp lm4flash /usr/bin/
+$ make -C lm4tools/lm4flash all
+$ sudo cp lm4tools/lm4flash/lm4flash /usr/bin/
 ```
 
 If you are on a Mac, I recommend installing gcc-arm-none-eabi using [Homebrew](http://brew.sh) like so:
@@ -150,7 +204,21 @@ $ brew update
 $ brew install gcc-arm-none-eabi
 ```
 
-## Hardware debugging using OpenOCD
+Now simply compile the code by navigating to the [src](src) and running the following command:
+
+```bash
+make
+```
+
+And to upload the code:
+
+```bash
+make flash
+```
+
+Some information on configuring Eclipse for use with this project can be the [Wiki](https://github.com/Lauszus/LaunchPadFlightController/wiki).
+
+### Hardware debugging using OpenOCD
 
 OpenOCD can be installed via [Homebrew](http://brew.sh) as well:
 

@@ -21,6 +21,7 @@
 
 #if USE_SONAR
 
+#include "Config.h"
 #include "EEPROM.h"
 #include "IMU.h"
 #include "Sonar.h"
@@ -36,23 +37,6 @@
 #if UART_DEBUG
 //#include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
-
-#define SYSCTL_PERIPH_TRIG          SYSCTL_PERIPH_GPIOE
-#define GPIO_SONAR_TRIG_BASE        GPIO_PORTE_BASE
-#define GPIO_SONAR_TRIG             GPIO_PIN_0
-
-#define SYSCTL_PERIPH_ECHO          SYSCTL_PERIPH_GPIOC
-#define GPIO_SONAR_ECHO_BASE        GPIO_PORTC_BASE
-#define GPIO_SONAR_ECHO             GPIO_PIN_5
-
-// Timer used to measure the width of the sonar echo pulse
-#define SYSCTL_PERIPH_SONAR_TIMER   SYSCTL_PERIPH_WTIMER0
-#define GPIO_SONAR_ALTERNATE        GPIO_PC5_WT0CCP1
-#define SONAR_TIMER_BASE            WTIMER0_BASE
-#define SONAR_TIMER_INT             INT_WTIMER0B
-#define SONAR_TIMER                 TIMER_B
-#define SONAR_CAP_EVENT             TIMER_CAPB_EVENT
-#define SONAR_TIMER_CFG             TIMER_CFG_B_CAP_TIME_UP
 
 // Implemented based on: http://che126.che.caltech.edu/28015-PING-Sensor-Product-Guide-v2.0.pdf
 

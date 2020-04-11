@@ -20,8 +20,10 @@
 #include <math.h>
 
 #include "AltitudeHold.h"
+#include "ADNS3080.h"
 #include "Bluetooth.h"
 #include "Buzzer.h"
+#include "Config.h"
 #include "EEPROM.h"
 #include "HeadingHold.h"
 #include "I2C.h"
@@ -30,8 +32,8 @@
 #include "MPU6500.h"
 #include "PPM.h"
 #include "PID.h"
-#include "Pins.h"
 #include "RX.h"
+#include "SPI.h"
 #include "StepResponse.h"
 #include "Time.h"
 #include "UART.h"
@@ -72,6 +74,10 @@ int main(void) {
 #endif
 #if USE_SONAR || USE_BARO || USE_LIDAR_LITE
     initAltitudeHold();
+#endif
+#if USE_FLOW_SENSOR
+    initSPI();
+    initADNS3080();
 #endif
     initBluetooth();
     IntMasterEnable(); // Enable all interrupts
@@ -293,6 +299,11 @@ int main(void) {
     // IMU driver should have MPU-6500 and HMC5883L instances, so they did not have to be in the main loop
     // Move all IMU related code into IMU driver
         // Also make generic accGyro driver
+    // Use SPI for MPU-9250/6500
+    // ADNS3080
+        // Implement configuration: https://github.com/diydrones/ardupilot/blob/5ddbcc296dd6dd9ac9ed6316ac3134c736ae8a78/libraries/AP_OpticalFlow/AP_OpticalFlow_ADNS3080.cpp#L68-L98
+        // Implement "update_conversion_factors"
+        // Implement 'dataReadyADNS3080'
     // LIDAR-Lite v3
         // Experiment with different configurations
         // Use seperate PID values for sonar and Lidar

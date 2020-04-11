@@ -19,9 +19,9 @@
 #include <stdbool.h>
 
 #include "Buzzer.h"
+#include "Config.h"
 #include "EEPROM.h"
 #include "PID.h"
-#include "Pins.h"
 #include "PPM.h"
 #include "Time.h"
 
@@ -35,11 +35,6 @@
 #if UART_DEBUG
 #include "utils/uartstdio.h" // Add "UART_BUFFERED" to preprocessor
 #endif
-
-#define SYSCTL_PERIPH_SW    SYSCTL_PERIPH_GPIOF
-#define GPIO_SW_BASE        GPIO_PORTF_BASE
-#define GPIO_SW1            GPIO_PIN_4
-#define GPIO_SW2            GPIO_PIN_0
 
 #ifndef ONESHOT125
 #define ONESHOT125 1
@@ -70,9 +65,9 @@ static void calibrateESCs(bool flag) {
 void initPPM(void) {
     SysCtlPeripheralEnable(SYSCTL_PERIPH_SW); // Enable peripheral
     SysCtlDelay(2); // Insert a few cycles after enabling the peripheral to allow the clock to be fully activated
-#ifdef PART_TM4C123GH6PM
+#if defined(PART_TM4C123GH6PM) && SYSCTL_PERIPH_SW == SYSCTL_PERIPH_GPIOF && (GPIO_SW1 == GPIO_PIN_0 || GPIO_SW2 == GPIO_PIN_0)
     GPIO_PORTF_LOCK_R = GPIO_LOCK_KEY; // Unlocks the GPIO_CR register
-    GPIO_PORTF_CR_R |= GPIO_SW2; // Allow changes to PF0
+    GPIO_PORTF_CR_R |= GPIO_PIN_0; // Allow changes to PF0
     GPIO_PORTF_LOCK_R = 0; // Lock register again
 #endif
     GPIOPinTypeGPIOInput(GPIO_SW_BASE, GPIO_SW1 | GPIO_SW2); // Set both switches as inputs

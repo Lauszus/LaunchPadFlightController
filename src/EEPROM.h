@@ -39,6 +39,7 @@ typedef struct {
     bool calibrateESCs; // Flag used to tell if it should calibrate ESCs at next power cycle
     sensorRaw_t accZero; // Accelerometer calibration values
     sensor_t magZero; // Magnetometer calibration values
+    bool configureBtModule; // Used in order to configure the Bluetooth module the first time it is powered on
 } config_t;
 
 extern config_t cfg;

@@ -15,20 +15,17 @@
  e-mail   :  lauszus@gmail.com
 */
 
-#ifndef __time_h__
-#define __time_h__
-
-#include <stdint.h>
+#if !defined(__adns3080_h__) && USE_FLOW_SENSOR
+#define __adns3080_h__
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void initTime(void);
-void delay(uint32_t ms);
-void delayMicroseconds(uint32_t us);
-uint32_t millis(void);
-uint32_t micros(void);
+void initADNS3080(void);
+bool dataReadyADNS3080(void);
+void getADNS3080Data(int32_t *x, int32_t *y);
+void clearMotion(int32_t *x, int32_t *y);
 
 #ifdef __cplusplus
 }
