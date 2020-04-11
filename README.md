@@ -13,7 +13,7 @@ More information can be found at the following blog posts: <http://blog.tkjelect
 
 Some video demonstrations of the flight controller can be seen at my [YouTube channel](https://www.youtube.com/playlist?list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg).
 
-<a href="https://www.youtube.com/watch?v=HXX-2L1hKgI&index=1&list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg" target="_blank"><img src="http://img.youtube.com/vi/HXX-2L1hKgI/0.jpg" width="400" height="300" border="10" /></a>
+<a href="https://www.youtube.com/watch?v=pgcV-pZrptI&list=PLRBI0ZWd8RfBnD1IZzrBdREjrzRAjWMqg" target="_blank"><img src="http://img.youtube.com/vi/pgcV-pZrptI/0.jpg" width="400" height="300" border="10" /></a>
 
 # Report
 
