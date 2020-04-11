@@ -35,3 +35,5 @@ src/.settings/
 .gcc-flags.json
 lib/readme.txt
 .idea/
+.pio/
+.vscode/
